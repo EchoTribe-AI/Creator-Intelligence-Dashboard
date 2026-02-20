@@ -719,6 +719,226 @@ function ScrapedProductCard({ product }) {
   );
 }
 
+function StorefrontLookup({ creator, onProductsLoaded }) {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+
+  const scrape = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setError(null);
+    setProducts([]);
+    setSelected(new Set());
+
+    try {
+      const res = await fetch('/api/storefront', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProducts(data.products);
+      } else {
+        setError(data.error);
+      }
+    } catch (e) {
+      setError('Request failed — is the server running?');
+    }
+    setLoading(false);
+  };
+
+  const toggleSelect = (asin) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(asin)) next.delete(asin);
+      else next.add(asin);
+      return next;
+    });
+  };
+
+  const generateForSelected = () => {
+    const selectedProducts = products.filter(p => selected.has(p.asin));
+    if (onProductsLoaded) onProductsLoaded(selectedProducts);
+  };
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '14px',
+      padding: '20px',
+      marginBottom: '20px'
+    }}>
+      <div style={{
+        fontSize: '11px', fontWeight: '700', color: '#FBBF24',
+        letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px'
+      }}>
+        🛍️ Pull Products from Storefront Collage
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+        <input
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="Paste Amazon storefront photo URL (amazon.com/shop/influencer-.../photo/...)"
+          style={{
+            flex: 1,
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '8px',
+            padding: '10px 14px',
+            color: '#E8E8F0',
+            fontSize: '13px',
+            outline: 'none'
+          }}
+          onKeyDown={e => e.key === 'Enter' && scrape()}
+        />
+        <button
+          onClick={scrape}
+          disabled={loading}
+          style={{
+            background: 'linear-gradient(135deg, #FBBF24, #F59E0B)',
+            color: '#000',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '10px 20px',
+            fontSize: '13px',
+            fontWeight: '700',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.7 : 1,
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {loading ? 'Scraping...' : 'Pull Products'}
+        </button>
+      </div>
+
+      {loading && (
+        <div style={{ fontSize: '12px', color: '#9CA3AF', padding: '10px 0' }}>
+          ⏳ Loading product tiles via Crawlbase — usually 5–10 seconds...
+        </div>
+      )}
+
+      {error && (
+        <div style={{
+          fontSize: '13px', color: '#FB923C', padding: '10px',
+          background: 'rgba(251,146,60,0.1)', borderRadius: '8px'
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {products.length > 0 && (
+        <>
+          <div style={{
+            fontSize: '12px', color: '#34D399', fontWeight: '600',
+            marginBottom: '12px'
+          }}>
+            ✓ Found {products.length} products — select which to generate ads for
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '10px',
+            marginBottom: '14px'
+          }}>
+            {products.map(p => {
+              const isSelected = selected.has(p.asin);
+              return (
+                <div
+                  key={p.asin}
+                  onClick={() => toggleSelect(p.asin)}
+                  style={{
+                    background: isSelected
+                      ? 'rgba(192,132,252,0.15)'
+                      : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${isSelected ? '#C084FC' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: '10px',
+                    padding: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    position: 'relative'
+                  }}
+                >
+                  {isSelected && (
+                    <div style={{
+                      position: 'absolute', top: '6px', right: '6px',
+                      background: '#C084FC', borderRadius: '50%',
+                      width: '16px', height: '16px',
+                      fontSize: '10px', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', color: '#fff'
+                    }}>✓</div>
+                  )}
+                  {(p.image || p.heroImage) ? (
+                    <img
+                      src={p.image || p.heroImage}
+                      alt={p.title}
+                      style={{
+                        width: '100%', height: '80px',
+                        objectFit: 'contain',
+                        borderRadius: '6px',
+                        background: '#fff',
+                        padding: '4px',
+                        marginBottom: '8px'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%', height: '80px',
+                      background: 'rgba(255,255,255,0.06)',
+                      borderRadius: '6px', marginBottom: '8px',
+                      display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: '20px'
+                    }}>📦</div>
+                  )}
+                  <div style={{
+                    fontSize: '11px', fontWeight: '600',
+                    color: '#E8E8F0', lineHeight: 1.3, marginBottom: '4px'
+                  }}>
+                    {(p.title || p.name || 'Unknown product').substring(0, 50)}
+                    {(p.title || p.name || '').length > 50 ? '...' : ''}
+                  </div>
+                  {(p.price) && (
+                    <div style={{ fontSize: '11px', color: '#34D399', fontWeight: '700' }}>
+                      {p.price}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px', fontFamily: 'monospace' }}>
+                    {p.asin}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            onClick={generateForSelected}
+            disabled={selected.size === 0}
+            style={{
+              width: '100%',
+              background: 'linear-gradient(135deg, #C084FC, #818CF8)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px',
+              fontSize: '14px',
+              fontWeight: '700',
+              cursor: selected.size === 0 ? 'not-allowed' : 'pointer',
+              opacity: selected.size === 0 ? 0.6 : 1
+            }}
+          >
+            Generate Ads for {selected.size} Selected Products
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Main App ───────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("home");
@@ -1049,6 +1269,26 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <button style={S.btn} onClick={generateCalendar}>📅 Build Content Calendar</button>
             <button style={{ ...S.btn, background: "linear-gradient(135deg, #34D399, #059669)" }} onClick={generateBoostRecs}>🚀 Boost Recommendations</button>
           </div>
+
+          <StorefrontLookup 
+            creator={selectedCreator}
+            onProductsLoaded={(products) => {
+              // Add all selected products to the scraped list and generate for the first one
+              const newProducts = products.map(p => ({
+                ...p,
+                id: `scraped-${Date.now()}-${p.asin}`,
+                name: p.title || p.name,
+                category: p.category || "General",
+                commission: "9%",
+                trend: "↑ New",
+                badge: "Scraped"
+              }));
+              setScrapedProducts(prev => [...newProducts, ...prev]);
+              if (newProducts.length > 0) {
+                generateContent(newProducts[0]);
+              }
+            }}
+          />
 
           <ProductLookup 
             creatorTone={selectedCreator.tone} 

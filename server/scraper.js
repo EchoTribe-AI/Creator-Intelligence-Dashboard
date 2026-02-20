@@ -155,3 +155,119 @@ export async function getProductData(inputUrl) {
 
   return product;
 }
+
+// ── Scrape all products from an Amazon storefront photo page ───────────────
+// Input: URL like https://www.amazon.com/shop/influencer-xxx/photo/amzn1.xxx
+// Output: array of { asin, title, brand, price, image, productUrl, affiliateTag }
+export async function getStorefrontProducts(storefrontUrl) {
+  if (!CRAWLBASE_JS_TOKEN) {
+    throw new Error('CRAWLBASE_JS_TOKEN not set in Replit Secrets');
+  }
+
+  console.log(`Scraping storefront photo: ${storefrontUrl}`);
+
+  // Use JS token with longer wait — page loads products dynamically
+  const crawlbaseUrl = `https://api.crawlbase.com/?token=${CRAWLBASE_JS_TOKEN}&url=${encodeURIComponent(storefrontUrl)}&wait=5000&ajax_wait=true&scroll=true`;
+
+  const response = await axios.get(crawlbaseUrl, { timeout: 45000 });
+  const html = response.data;
+  const $ = cheerio.load(html);
+
+  const products = [];
+  const seenAsins = new Set();
+
+  // ── Extract product links ─────────────────────────────────────────────
+  // Amazon storefront photo pages render product cards with dp/ links
+  $('a[href*="/dp/"]').each((_, el) => {
+    const href = $(el).attr('href') || '';
+    const asinMatch = href.match(/\/dp\/([A-Z0-9]{10})/);
+    if (!asinMatch) return;
+
+    const asin = asinMatch[1];
+    if (seenAsins.has(asin)) return;
+    seenAsins.add(asin);
+
+    // Build full product URL preserving affiliate tag if present
+    let productUrl = href.startsWith('http') ? href : `https://www.amazon.com${href}`;
+
+    // Extract affiliate tag from URL if present
+    const tagMatch = productUrl.match(/tag=([^&]+)/);
+    const affiliateTag = tagMatch ? tagMatch[1] : null;
+
+    // Clean URL to just the dp URL for scraping
+    const cleanUrl = `https://www.amazon.com/dp/${asin}`;
+
+    // Try to get product details from the card itself
+    const card = $(el).closest('[class*="card"], [class*="product"], [class*="item"], li, div').first();
+
+    // Product image — look within the card or the link itself
+    let image = '';
+    const imgEl = card.find('img').first().length ? card.find('img').first() : $(el).find('img').first();
+    image = imgEl.attr('src') || imgEl.attr('data-src') || '';
+
+    // Title — look for text near the image
+    let title = '';
+    const titleEl = card.find('[class*="title"], [class*="name"], h2, h3, span[class*="text"]').first();
+    title = titleEl.text().trim();
+
+    // Price
+    let price = '';
+    const priceEl = card.find('[class*="price"], .a-price').first();
+    price = priceEl.text().trim().replace(/\s+/g, ' ');
+
+    // Brand
+    let brand = '';
+    const brandEl = card.find('[class*="brand"]').first();
+    brand = brandEl.text().trim();
+
+    products.push({
+      asin,
+      title: title || null,
+      brand: brand || null,
+      price: price || null,
+      image: image || null,
+      productUrl: cleanUrl,
+      affiliateUrl: productUrl,
+      affiliateTag: affiliateTag || null,
+    });
+  });
+
+  // ── If card-level data was sparse, do a quick scrape of each product ──
+  // Only if we got ASINs but missing titles/images from the page
+  const needsEnrichment = products.filter(p => !p.title || !p.image);
+
+  if (needsEnrichment.length > 0 && products.length > 0) {
+    console.log(`Enriching ${needsEnrichment.length} products with individual scrapes...`);
+
+    // Scrape up to 8 products concurrently (rate limit friendly)
+    const enriched = await Promise.allSettled(
+      needsEnrichment.slice(0, 8).map(async (p) => {
+        try {
+          const full = await scrapeAmazonProduct(p.productUrl);
+          return { asin: p.asin, ...full };
+        } catch {
+          return p; // return original if scrape fails
+        }
+      })
+    );
+
+    // Merge enriched data back
+    enriched.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        const idx = products.findIndex(p => p.asin === needsEnrichment[i].asin);
+        if (idx !== -1) {
+          const resValue = result.value;
+          products[idx] = {
+            ...products[idx],
+            ...resValue,
+            affiliateTag: products[idx].affiliateTag,
+            affiliateUrl: products[idx].affiliateUrl,
+          };
+        }
+      }
+    });
+  }
+
+  console.log(`Found ${products.length} products in storefront photo`);
+  return products;
+}
