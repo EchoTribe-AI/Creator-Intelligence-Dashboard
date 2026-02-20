@@ -66,6 +66,18 @@ const CREATORS = [
       avg_commission_rate: "8%",
       basket_size_avg: "UPLOAD_CSV",
     },
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
+      epc_24h: "CONNECT_AFFILIATE_API",
+      epc_7d: "CONNECT_AFFILIATE_API",
+      clicks_24h: "CONNECT_AFFILIATE_API",
+      orders_7d: "CONNECT_AFFILIATE_API",
+      revenue_7d: "CONNECT_AFFILIATE_API",
+      conversion_rate: "CONNECT_AFFILIATE_API",
+      top_category: "Fashion",
+      avg_commission_rate: "9%",
+      basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
   },
   {
     id: "caseyLeigh",
@@ -101,8 +113,8 @@ const CREATORS = [
       top_creative_type: "static",          // Confirmed 65/72 ads are static image
       active_ad_count: 72,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API — SubID required",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -110,8 +122,20 @@ const CREATORS = [
       revenue_7d: "CONNECT_AFFILIATE_API",
       conversion_rate: "CONNECT_AFFILIATE_API",
       top_category: "Fashion",
-      avg_commission_rate: "8%",
+      avg_commission_rate: "9%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Fashion",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -148,8 +172,8 @@ const CREATORS = [
       top_creative_type: "video",
       active_ad_count: 14,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -159,6 +183,18 @@ const CREATORS = [
       top_category: "Fashion",
       avg_commission_rate: "9%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Fashion",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -195,8 +231,8 @@ const CREATORS = [
       top_creative_type: "video",
       active_ad_count: 11,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -206,6 +242,18 @@ const CREATORS = [
       top_category: "Fashion",
       avg_commission_rate: "9%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Fashion",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -289,8 +337,8 @@ const CREATORS = [
       top_creative_type: "video",
       active_ad_count: 9,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -300,6 +348,18 @@ const CREATORS = [
       top_category: "Fashion",
       avg_commission_rate: "9%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Fashion",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
