@@ -66,18 +66,6 @@ const CREATORS = [
       avg_commission_rate: "8%",
       basket_size_avg: "UPLOAD_CSV",
     },
-    walmartData: {
-      _note: "Connect via Impact affiliate API — SubID required",
-      epc_24h: "CONNECT_AFFILIATE_API",
-      epc_7d: "CONNECT_AFFILIATE_API",
-      clicks_24h: "CONNECT_AFFILIATE_API",
-      orders_7d: "CONNECT_AFFILIATE_API",
-      revenue_7d: "CONNECT_AFFILIATE_API",
-      conversion_rate: "CONNECT_AFFILIATE_API",
-      top_category: "Fashion",
-      avg_commission_rate: "9%",
-      basket_size_avg: "CONNECT_AFFILIATE_API",
-    },
   },
   {
     id: "caseyLeigh",
@@ -290,8 +278,8 @@ const CREATORS = [
       top_creative_type: "mixed",           // 3 video, 3 static — key comparison creator
       active_ad_count: 6,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -301,6 +289,18 @@ const CREATORS = [
       top_category: "Home/Travel",
       avg_commission_rate: "8%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Home/Travel",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -396,8 +396,8 @@ const CREATORS = [
       top_creative_type: "video",
       active_ad_count: 15,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -407,6 +407,18 @@ const CREATORS = [
       top_category: "Kids/Travel",
       avg_commission_rate: "7%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Kids/Travel",
+      avg_commission_rate: "7%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -443,8 +455,8 @@ const CREATORS = [
       top_creative_type: "mixed",
       active_ad_count: 3,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -454,6 +466,18 @@ const CREATORS = [
       top_category: "Fashion/Home",
       avg_commission_rate: "8%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Fashion/Home",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -490,8 +514,8 @@ const CREATORS = [
       top_creative_type: "video",
       active_ad_count: 12,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -501,6 +525,18 @@ const CREATORS = [
       top_category: "Home Decor",
       avg_commission_rate: "8%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Home Decor",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -537,8 +573,8 @@ const CREATORS = [
       top_creative_type: "video",
       active_ad_count: 9,
     },
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API",
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",
       epc_7d: "CONNECT_AFFILIATE_API",
       clicks_24h: "CONNECT_AFFILIATE_API",
@@ -548,6 +584,18 @@ const CREATORS = [
       top_category: "Kids/Home",
       avg_commission_rate: "7%",
       basket_size_avg: "CONNECT_AFFILIATE_API",
+    },
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Kids/Home",
+      avg_commission_rate: "7%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
 ];
