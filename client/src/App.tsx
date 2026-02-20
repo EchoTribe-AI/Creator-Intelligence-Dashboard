@@ -731,6 +731,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [scrapedProducts, setScrapedProducts] = useState([]);
 
   const selectCreator = (creator) => {
     setSelectedCreator(creator);
@@ -1055,15 +1056,39 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               // Add the scraped product to the creator's product list temporarily for generation
               const newProduct = {
                 ...product,
+                id: `scraped-${Date.now()}`,
                 name: product.title,
                 category: product.category || "General",
                 commission: "9%", // default estimate
                 trend: "↑ New",
                 badge: "Scraped"
               };
+              setScrapedProducts(prev => [newProduct, ...prev]);
               generateContent(newProduct);
             }} 
           />
+
+          {scrapedProducts.length > 0 && (
+            <>
+              <div style={S.sectionLabel}>🔍 Recently Scraped Products</div>
+              <div style={{ marginBottom: "20px" }}>
+                {scrapedProducts.map((p) => (
+                  <div key={p.id} style={S.productRow} className="pr" onClick={() => generateContent(p)}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div style={{ width: "40px", height: "40px", borderRadius: "6px", background: "#1F2937", overflow: "hidden" }}>
+                        {p.heroImage && <img src={p.heroImage} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "14px", fontWeight: "700" }}>{p.name.length > 40 ? p.name.substring(0, 40) + "..." : p.name}</div>
+                        <div style={{ fontSize: "11px", color: "#9CA3AF" }}>{p.category} · {p.price}</div>
+                      </div>
+                    </div>
+                    <button style={S.btnOutline} onClick={(e) => { e.stopPropagation(); generateContent(p); }}>Regenerate</button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* ── META DATA PLACEHOLDERS ── */}
           <div style={S.sectionLabel}>📡 Meta Ads Performance — Live Data Connection</div>
