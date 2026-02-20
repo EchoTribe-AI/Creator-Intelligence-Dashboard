@@ -1054,6 +1054,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             onProductLoaded={(product) => {
               // Add the scraped product to the creator's product list temporarily for generation
               const newProduct = {
+                ...product,
                 name: product.title,
                 category: product.category || "General",
                 commission: "9%", // default estimate
