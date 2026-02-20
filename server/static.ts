@@ -11,7 +11,7 @@ export function serveStatic(app: Express) {
     const altPath = path.resolve(process.cwd(), "public");
     if (fs.existsSync(altPath)) {
       app.use(express.static(altPath));
-      app.use("*", (_req, res) => {
+      app.get("*", (_req, res) => {
         res.sendFile(path.resolve(altPath, "index.html"));
       });
       return;
