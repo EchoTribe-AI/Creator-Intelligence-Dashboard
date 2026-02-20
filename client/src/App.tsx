@@ -1052,9 +1052,12 @@ Generate a JSON object (no markdown, raw JSON only) with this structure:
     setLoadingMsg("Building your content calendar...");
     setScreen("calendar");
 
+    const allProducts = [...selectedCreator.products, ...scrapedProducts];
+    const productList = allProducts.map(p => p.name || p.title).join(", ");
+
     const prompt = `You are a content strategist. Create a 1-week content calendar for ${selectedCreator.name}, a ${selectedCreator.niche} creator who primarily uses ${selectedCreator.adType} ads.
 
-Their products: ${selectedCreator.products.map(p => p.name).join(", ")}
+Their products: ${productList}
 Tone: ${selectedCreator.tone}
 Ad format preference: ${selectedCreator.adType}
 
