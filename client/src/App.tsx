@@ -1467,6 +1467,41 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <button style={{ ...S.btn, background: "#22C55E" }} onClick={generateBoostRecs}>🚀 Boost Recommendations</button>
           </div>
 
+          {/* ── EXISTING ADS ── */}
+          <div style={S.sectionLabel}>Existing Ads — Real Ad Library Data</div>
+          {selectedCreator.existingAds.map((ad, i) => (
+            <div key={i} style={S.adRow}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
+                  {ad.hasStatic && <span style={{ ...S.tag, background: "rgba(244,114,182,0.15)", color: "#F472B6" }}>🖼️ Static</span>}
+                  {!ad.hasVideo && !ad.hasStatic && <span style={{ ...S.tag, background: "rgba(107,114,128,0.15)", color: "#888888" }}>📄 Text</span>}
+                </div>
+                <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
+              </div>
+              <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5 }}>{ad.copy.substring(0, 200)}...</div>
+            </div>
+          ))}
+
+          {/* ── PRODUCTS ── */}
+          <div style={S.sectionLabel}>Products — Click to Generate AI Ad Variations</div>
+          {selectedCreator.products.map((p, i) => (
+            <div key={i} className="pr" style={S.productRow} onClick={() => generateContent(p)}>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "600" }}>{p.name}</div>
+                <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{p.category}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E" }}>{p.badge}</span>}
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
+                  <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
+                </div>
+                <span style={{ color: "#C9A96E", fontSize: "18px" }}>→</span>
+              </div>
+            </div>
+          ))}
+
           <StorefrontLookup 
             creator={selectedCreator}
             onProductsLoaded={(products) => {
@@ -1683,41 +1718,6 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               <span>Daily File: <span style={{ ...S.placeholder, display: "inline", padding: "2px 8px", borderColor: 'rgba(201,169,110,0.3)', color: '#C9A96E' }}>awaiting_csv_upload</span></span>
             </div>
           </div>
-
-          {/* ── EXISTING ADS ── */}
-          <div style={S.sectionLabel}>Existing Ads — Real Ad Library Data</div>
-          {selectedCreator.existingAds.map((ad, i) => (
-            <div key={i} style={S.adRow}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <div style={{ display: "flex", gap: "6px" }}>
-                  {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
-                  {ad.hasStatic && <span style={{ ...S.tag, background: "rgba(244,114,182,0.15)", color: "#F472B6" }}>🖼️ Static</span>}
-                  {!ad.hasVideo && !ad.hasStatic && <span style={{ ...S.tag, background: "rgba(107,114,128,0.15)", color: "#888888" }}>📄 Text</span>}
-                </div>
-                <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
-              </div>
-              <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5 }}>{ad.copy.substring(0, 200)}...</div>
-            </div>
-          ))}
-
-          {/* ── PRODUCTS ── */}
-          <div style={S.sectionLabel}>Products — Click to Generate AI Ad Variations</div>
-          {selectedCreator.products.map((p, i) => (
-            <div key={i} className="pr" style={S.productRow} onClick={() => generateContent(p)}>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: "600" }}>{p.name}</div>
-                <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{p.category}</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E" }}>{p.badge}</span>}
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
-                  <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
-                </div>
-                <span style={{ color: "#C9A96E", fontSize: "18px" }}>→</span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     );
