@@ -502,7 +502,7 @@ async function callClaude(prompt, maxTokens = 800) {
   return data.content?.[0]?.text || "";
 }
 
-function ProductLookup({ creatorTone, onProductLoaded }) {
+function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState(null);
@@ -523,6 +523,15 @@ function ProductLookup({ creatorTone, onProductLoaded }) {
       const data = await res.json();
       if (data.success) {
         setProduct(data.product);
+        // Auto-save to persistent storage
+        await fetch('/api/product/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            creatorId: creatorId,
+            product: data.product
+          })
+        });
         if (onProductLoaded) onProductLoaded(data.product);
       } else {
         setError(data.error);
@@ -742,6 +751,14 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
       const data = await res.json();
       if (data.success) {
         setProducts(data.products);
+        // Auto-save to persistent storage
+        for (const p of data.products) {
+          await fetch('/api/product/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ creatorId: creator.id, product: p })
+          });
+        }
       } else {
         setError(data.error);
       }
@@ -952,6 +969,29 @@ export default function App() {
   const [loadingMsg, setLoadingMsg] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [scrapedProducts, setScrapedProducts] = useState([]);
+  const [savedProducts, setSavedProducts] = useState([]);
+
+  const persistProduct = async (creatorId, product) => {
+    try {
+      await fetch('/api/product/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creatorId, product })
+      });
+    } catch (e) {
+      console.warn('Could not persist product:', e);
+    }
+  };
+
+  const loadSavedProducts = async (creatorId) => {
+    try {
+      const res = await fetch(`/api/products/${creatorId}`);
+      const data = await res.json();
+      if (data.success) setSavedProducts(data.products);
+    } catch (e) {
+      console.warn('Could not load saved products:', e);
+    }
+  };
 
   const selectCreator = (creator) => {
     setSelectedCreator(creator);
@@ -959,6 +999,7 @@ export default function App() {
     setScrapedProduct(null);
     setGeneratedContent(null);
     setScreen("profile");
+    loadSavedProducts(creator.id);
   };
 
   const generateContent = async (product) => {
@@ -1291,11 +1332,13 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               if (newProducts.length > 0) {
                 generateContent(newProducts[0]);
               }
+              loadSavedProducts(selectedCreator.id);
             }}
           />
 
           <ProductLookup 
             creatorTone={selectedCreator.tone} 
+            creatorId={selectedCreator.id}
             onProductLoaded={(product) => {
               // Add the scraped product to the creator's product list temporarily for generation
               const newProduct = {
@@ -1310,29 +1353,104 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               };
               setScrapedProducts(prev => [newProduct, ...prev]);
               generateContent(newProduct);
+              loadSavedProducts(selectedCreator.id);
             }} 
           />
 
-          {scrapedProducts.length > 0 && (
-            <>
-              <div style={S.sectionLabel}>🔍 Recently Scraped Products</div>
-              <div style={{ marginBottom: "20px" }}>
-                {scrapedProducts.map((p) => (
-                  <div key={p.id} style={S.productRow} className="pr" onClick={() => generateContent(p)}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{ width: "40px", height: "40px", borderRadius: "6px", background: "#1F2937", overflow: "hidden" }}>
-                        {p.heroImage && <img src={p.heroImage} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: "14px", fontWeight: "700" }}>{p.name.length > 40 ? p.name.substring(0, 40) + "..." : p.name}</div>
-                        <div style={{ fontSize: "11px", color: "#9CA3AF" }}>{p.category} · {p.price}</div>
-                      </div>
+          {/* ── SAVED PRODUCT HISTORY ── */}
+          {savedProducts.length > 0 && (
+            <div>
+              <div style={S.sectionLabel}>
+                📦 Saved Products — {savedProducts.length} total
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '10px',
+                marginBottom: '24px'
+              }}>
+                {savedProducts.map(p => (
+                  <div
+                    key={p._id}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      cursor: 'pointer',
+                      position: 'relative',
+                    }}
+                    onClick={() => generateContent({
+                      name: p.title?.substring(0, 60) || p.name,
+                      category: p.category || 'Amazon',
+                      commission: p.commission || '~8%',
+                      trend: '→ Saved',
+                      badge: 'History',
+                      heroImage: p.heroImage || p.image,
+                      additionalImages: p.additionalImages || [],
+                      bullets: p.bullets || [],
+                      brand: p.brand,
+                      price: p.price,
+                      asin: p.asin,
+                    })}
+                  >
+                    {/* Delete button */}
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await fetch(`/api/product/${p._id}`, { method: 'DELETE' });
+                        loadSavedProducts(selectedCreator.id);
+                      }}
+                      style={{
+                        position: 'absolute', top: '6px', right: '6px',
+                        background: 'rgba(251,146,60,0.2)',
+                        border: 'none', borderRadius: '50%',
+                        width: '18px', height: '18px',
+                        fontSize: '10px', cursor: 'pointer',
+                        color: '#FB923C', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        lineHeight: 1
+                      }}
+                    >
+                      ×
+                    </button>
+
+                    {(p.heroImage || p.image) && (
+                      <img
+                        src={p.heroImage || p.image}
+                        alt={p.title || p.name}
+                        style={{
+                          width: '100%', height: '70px',
+                          objectFit: 'contain',
+                          background: '#fff',
+                          borderRadius: '6px',
+                          padding: '3px',
+                          marginBottom: '8px'
+                        }}
+                      />
+                    )}
+                    <div style={{
+                      fontSize: '11px', fontWeight: '600',
+                      color: '#E8E8F0', lineHeight: 1.3,
+                      marginBottom: '4px'
+                    }}>
+                      {(p.title || p.name || '').substring(0, 45)}...
                     </div>
-                    <button style={S.btnOutline} onClick={(e) => { e.stopPropagation(); generateContent(p); }}>Regenerate</button>
+                    {p.price && (
+                      <div style={{ fontSize: '11px', color: '#34D399', fontWeight: '700' }}>
+                        {p.price}
+                      </div>
+                    )}
+                    <div style={{
+                      fontSize: '10px', color: '#6B7280',
+                      marginTop: '4px'
+                    }}>
+                      {new Date(p.savedAt).toLocaleDateString()}
+                    </div>
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
 
           {/* ── META DATA PLACEHOLDERS ── */}

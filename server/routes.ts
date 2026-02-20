@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getProductData, getStorefrontProducts } from "./scraper.js";
+import { saveProduct, getProductsByCreator, getAllProducts, deleteProduct } from './db.js';
 
 export async function registerRoutes(
   httpServer: Server,
@@ -67,6 +68,55 @@ export async function registerRoutes(
       res.json({ success: true, count: products.length, products });
     } catch (err: any) {
       console.error('Storefront scraper error:', err.message);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── POST /api/product/save ─────────────────────────────────────────────────
+  // Save a scraped product to persistent storage
+  // Body: { creatorId: string, product: object }
+  app.post('/api/product/save', (req, res) => {
+    const { creatorId, product } = req.body;
+    if (!creatorId || !product) {
+      return res.status(400).json({ error: 'creatorId and product required' });
+    }
+    try {
+      const saved = saveProduct(creatorId, product);
+      res.json({ success: true, product: saved });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── GET /api/products/:creatorId ───────────────────────────────────────────
+  // Get all saved products for a specific creator
+  app.get('/api/products/:creatorId', (req, res) => {
+    try {
+      const products = getProductsByCreator(req.params.creatorId);
+      res.json({ success: true, products });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── GET /api/products ──────────────────────────────────────────────────────
+  // Get all saved products across all creators
+  app.get('/api/products', (req, res) => {
+    try {
+      const products = getAllProducts();
+      res.json({ success: true, products });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── DELETE /api/product/:id ────────────────────────────────────────────────
+  // Delete a saved product by its _id
+  app.delete('/api/product/:id', (req, res) => {
+    try {
+      deleteProduct(req.params.id);
+      res.json({ success: true });
+    } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
   });
