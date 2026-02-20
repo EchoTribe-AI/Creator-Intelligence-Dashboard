@@ -1,0 +1,226 @@
+Replit Agent Instructions — Add Product Data Card to Generator Screen
+In App.jsx, find the generator screen (screen === "generator").
+At the top of that screen, just below the creator name/niche line and ABOVE the
+"Video vs Static Insight" box, add a product data card that displays everything
+that was scraped.
+Step 1: Pass product data through to the generator screen
+First, update the generateContent function signature. The product object passed in
+may now contain scraped fields: heroImage, additionalImages, bullets, brand, price,
+asin. Make sure these are stored in state so the generator screen can access them.
+Add this state variable if it doesn't exist:
+javascriptconst [scrapedProduct, setScrapedProduct] = useState(null);
+At the top of the generateContent function, add:
+javascriptsetScrapedProduct(product.heroImage ? product : null);
+Step 2: Update the Claude prompt to use scraped product details
+Inside generateContent, replace the existing prompt with this richer version that
+uses real product data when available:
+javascriptconst productContext = product.bullets?.length
+  ? `
+Product details from Amazon listing:
+- Title: ${product.name}
+- Brand: ${product.brand || 'unknown'}
+- Price: ${product.price || 'unknown'}
+- Key features:
+${product.bullets?.map(b => `  • ${b}`).join('\n') || '  • No details available'}
+`
+  : `Product: ${product.name} (${product.category}, ${product.commission} commission)`;
+
+const prompt = `You are an AI content strategist for creator commerce.
+
+Creator: ${selectedCreator.name}
+Niche: ${selectedCreator.niche}
+Tone: ${selectedCreator.tone}
+Audience: ${selectedCreator.audience}
+Current ad format: ${selectedCreator.adType}
+
+${productContext}
+
+Here are 3 of this creator's REAL existing ad copies for tone reference:
+${existingSamples}
+
+Generate a JSON object (no markdown, raw JSON only) with this structure:
+{
+  "hook_angles": ["hook1", "hook2", "hook3"],
+  "ad_variations": [
+    {
+      "type": "Video Ad",
+      "hook": "opening hook line — specific to THIS product's actual features",
+      "caption": "full ad caption 2-3 sentences in creator's exact tone, referencing real product details",
+      "cta": "call to action",
+      "disclosure": "#ad #amazonfinds"
+    },
+    {
+      "type": "Static Image Ad",
+      "hook": "punchy headline for image overlay — use a specific feature or price point",
+      "caption": "shorter caption for static — punchy and visual, references real product detail",
+      "cta": "call to action",
+      "disclosure": "#ad"
+    },
+    {
+      "type": "Carousel Ad",
+      "hook": "carousel opening line",
+      "caption": "caption that could map to 3-4 carousel slides, each highlighting a different product feature",
+      "slides": ["slide 1 text", "slide 2 text", "slide 3 text"],
+      "cta": "call to action",
+      "disclosure": "#ad #amazonfinds"
+    }
+  ],
+  "format_insight": "1 sentence on video vs static for this creator",
+  "boost_recommendation": "1-2 sentence recommendation referencing 24hr EPC signal threshold"
+}`;
+Step 3: Add the product data card component
+Add this component inside App.jsx (above the return statement of App,
+alongside other components):
+javascriptfunction ScrapedProductCard({ product }) {
+  if (!product) return null;
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: '14px',
+      padding: '20px',
+      marginBottom: '20px',
+      display: 'flex',
+      gap: '20px',
+      alignItems: 'flex-start'
+    }}>
+      {/* Product Images */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+        {product.heroImage && (
+          <img
+            src={product.heroImage}
+            alt={product.name}
+            style={{
+              width: '110px',
+              height: '110px',
+              objectFit: 'contain',
+              borderRadius: '10px',
+              background: '#fff',
+              padding: '6px'
+            }}
+          />
+        )}
+        {/* Thumbnail strip */}
+        {product.additionalImages?.length > 0 && (
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxWidth: '110px' }}>
+            {product.additionalImages.slice(0, 4).map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt=""
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  objectFit: 'contain',
+                  borderRadius: '4px',
+                  background: '#fff',
+                  padding: '2px',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Product Details */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Title */}
+        <div style={{
+          fontSize: '14px',
+          fontWeight: '700',
+          color: '#E8E8F0',
+          marginBottom: '8px',
+          lineHeight: 1.4
+        }}>
+          {product.name}
+        </div>
+
+        {/* Meta row */}
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          {product.brand && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>Brand </span>
+              <span style={{ color: '#C084FC', fontWeight: '600' }}>{product.brand}</span>
+            </div>
+          )}
+          {product.price && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>Price </span>
+              <span style={{ color: '#34D399', fontWeight: '700' }}>{product.price}</span>
+            </div>
+          )}
+          {product.commission && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>Commission </span>
+              <span style={{ color: '#34D399', fontWeight: '600' }}>{product.commission}</span>
+            </div>
+          )}
+          {product.asin && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>ASIN </span>
+              <span style={{ color: '#9CA3AF', fontFamily: 'monospace' }}>{product.asin}</span>
+            </div>
+          )}
+          {product.rating && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#FBBF24' }}>⭐ {product.rating}</span>
+              {product.reviewCount && (
+                <span style={{ color: '#6B7280' }}> · {product.reviewCount}</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bullet points */}
+        {product.bullets?.length > 0 && (
+          <div>
+            <div style={{
+              fontSize: '10px',
+              fontWeight: '700',
+              color: '#6B7280',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              marginBottom: '6px'
+            }}>
+              Product Features — Used in Ad Generation
+            </div>
+            {product.bullets.slice(0, 4).map((b, i) => (
+              <div key={i} style={{
+                fontSize: '12px',
+                color: '#9CA3AF',
+                marginBottom: '4px',
+                lineHeight: 1.4,
+                display: 'flex',
+                gap: '6px'
+              }}>
+                <span style={{ color: '#C084FC', flexShrink: 0 }}>•</span>
+                <span>{b.length > 120 ? b.substring(0, 120) + '...' : b}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+Step 4: Render the card in the generator screen
+In the generator screen JSX, find this line:
+javascript<div style={{ fontSize: "11px", color: "#C084FC"...}}>AI Generated · {selectedCreator?.name}</div>
+Add the ScrapedProductCard immediately after the subtitle line
+(after the commission/trend line, before the Video vs Static insight box):
+javascript<ScrapedProductCard product={scrapedProduct} />
+Step 5: Also show product card when using hardcoded products
+When a hardcoded product (not scraped) is clicked, scrapedProduct will be null
+and the card won't render — that's correct behavior. The card only appears
+when real scraped data exists.
+Summary of what this adds
+
+Product hero image displayed prominently
+Thumbnail strip of additional product images
+Brand, price, commission, ASIN, rating all visible at a glance
+Bullet points from the Amazon listing shown with a label clarifying
+they feed into ad generation
+Claude prompt updated to use real bullet points so generated ad copy
+references actual product features instead of generic hooks

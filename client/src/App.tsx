@@ -584,11 +584,147 @@ function ProductLookup({ creatorTone, onProductLoaded }) {
   );
 }
 
+function ScrapedProductCard({ product }) {
+  if (!product) return null;
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: '14px',
+      padding: '20px',
+      marginBottom: '20px',
+      display: 'flex',
+      gap: '20px',
+      alignItems: 'flex-start'
+    }}>
+      {/* Product Images */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+        {product.heroImage && (
+          <img
+            src={product.heroImage}
+            alt={product.name}
+            style={{
+              width: '110px',
+              height: '110px',
+              objectFit: 'contain',
+              borderRadius: '10px',
+              background: '#fff',
+              padding: '6px'
+            }}
+          />
+        )}
+        {/* Thumbnail strip */}
+        {product.additionalImages?.length > 0 && (
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxWidth: '110px' }}>
+            {product.additionalImages.slice(0, 4).map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt=""
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  objectFit: 'contain',
+                  borderRadius: '4px',
+                  background: '#fff',
+                  padding: '2px',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Product Details */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Title */}
+        <div style={{
+          fontSize: '14px',
+          fontWeight: '700',
+          color: '#E8E8F0',
+          marginBottom: '8px',
+          lineHeight: 1.4
+        }}>
+          {product.name}
+        </div>
+
+        {/* Meta row */}
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          {product.brand && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>Brand </span>
+              <span style={{ color: '#C084FC', fontWeight: '600' }}>{product.brand}</span>
+            </div>
+          )}
+          {product.price && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>Price </span>
+              <span style={{ color: '#34D399', fontWeight: '700' }}>{product.price}</span>
+            </div>
+          )}
+          {product.commission && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>Commission </span>
+              <span style={{ color: '#34D399', fontWeight: '600' }}>{product.commission}</span>
+            </div>
+          )}
+          {product.asin && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#6B7280' }}>ASIN </span>
+              <span style={{ color: '#9CA3AF', fontFamily: 'monospace' }}>{product.asin}</span>
+            </div>
+          )}
+          {product.rating && (
+            <div style={{ fontSize: '12px' }}>
+              <span style={{ color: '#FBBF24' }}>⭐ {product.rating}</span>
+              {product.reviewCount && (
+                <span style={{ color: '#6B7280' }}> · {product.reviewCount}</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bullet points */}
+        {product.bullets?.length > 0 && (
+          <div>
+            <div style={{
+              fontSize: '10px',
+              fontWeight: '700',
+              color: '#6B7280',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              marginBottom: '6px'
+            }}>
+              Product Features — Used in Ad Generation
+            </div>
+            {product.bullets.slice(0, 4).map((b, i) => (
+              <div key={i} style={{
+                fontSize: '12px',
+                color: '#9CA3AF',
+                marginBottom: '4px',
+                lineHeight: 1.4,
+                display: 'flex',
+                gap: '6px'
+              }}>
+                <span style={{ color: '#C084FC', flexShrink: 0 }}>•</span>
+                <span>{b.length > 120 ? b.substring(0, 120) + '...' : b}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main App ───────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [scrapedProduct, setScrapedProduct] = useState(null);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [calendar, setCalendar] = useState({});
   const [boostRecs, setBoostRecs] = useState([]);
@@ -599,17 +735,30 @@ export default function App() {
   const selectCreator = (creator) => {
     setSelectedCreator(creator);
     setSelectedProduct(null);
+    setScrapedProduct(null);
     setGeneratedContent(null);
     setScreen("profile");
   };
 
   const generateContent = async (product) => {
     setSelectedProduct(product);
+    setScrapedProduct(product.heroImage ? product : null);
     setLoading(true);
     setLoadingMsg("Analyzing creator tone & generating variations...");
     setScreen("generator");
 
     const existingSamples = selectedCreator.existingAds.map(a => a.copy).join("\n---\n");
+
+    const productContext = product.bullets?.length
+      ? `
+Product details from Amazon listing:
+- Title: ${product.name}
+- Brand: ${product.brand || 'unknown'}
+- Price: ${product.price || 'unknown'}
+- Key features:
+${product.bullets?.map(b => `  • ${b}`).join('\n') || '  • No details available'}
+`
+      : `Product: ${product.name} (${product.category}, ${product.commission} commission)`;
 
     const prompt = `You are an AI content strategist for creator commerce.
 
@@ -617,9 +766,9 @@ Creator: ${selectedCreator.name}
 Niche: ${selectedCreator.niche}
 Tone: ${selectedCreator.tone}
 Audience: ${selectedCreator.audience}
-Current ad format: ${selectedCreator.adType} (${selectedCreator.adType === 'static' ? 'this creator runs ONLY static image ads — generate variations optimized for static' : selectedCreator.adType === 'video' ? 'this creator runs video-first — generate video primary with static and carousel options' : 'this creator runs both video and static — generate variations for both'})
+Current ad format: ${selectedCreator.adType}
 
-Product to promote: ${product.name} (${product.category}, ${product.commission} commission)
+${productContext}
 
 Here are 3 of this creator's REAL existing ad copies for tone reference:
 ${existingSamples}
@@ -630,28 +779,29 @@ Generate a JSON object (no markdown, raw JSON only) with this structure:
   "ad_variations": [
     {
       "type": "Video Ad",
-      "hook": "opening hook line",
-      "caption": "full ad caption 2-3 sentences in creator's exact tone",
+      "hook": "opening hook line — specific to THIS product's actual features",
+      "caption": "full ad caption 2-3 sentences in creator's exact tone, referencing real product details",
       "cta": "call to action",
       "disclosure": "#ad #amazonfinds"
     },
     {
       "type": "Static Image Ad",
-      "hook": "punchy headline for image overlay",
-      "caption": "shorter caption for static — punchy and visual",
+      "hook": "punchy headline for image overlay — use a specific feature or price point",
+      "caption": "shorter caption for static — punchy and visual, references real product detail",
       "cta": "call to action",
       "disclosure": "#ad"
     },
     {
       "type": "Carousel Ad",
       "hook": "carousel opening line",
-      "caption": "caption emphasizing multiple features across slides",
+      "caption": "caption that could map to 3-4 carousel slides, each highlighting a different product feature",
+      "slides": ["slide 1 text", "slide 2 text", "slide 3 text"],
       "cta": "call to action",
       "disclosure": "#ad #amazonfinds"
     }
   ],
-  "format_insight": "1 sentence insight on whether video or static would likely perform better for this creator based on their existing ad format and tone",
-  "boost_recommendation": "1-2 sentence recommendation on which variation to boost first and why, referencing the 24hr EPC signal threshold"
+  "format_insight": "1 sentence on video vs static for this creator",
+  "boost_recommendation": "1-2 sentence recommendation referencing 24hr EPC signal threshold"
 }`;
 
     try {
@@ -1019,6 +1169,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         <div style={{ fontSize: "11px", color: "#C084FC", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>AI Generated · {selectedCreator?.name}</div>
         <h2 style={{ ...S.heading, marginBottom: "4px" }}>{selectedProduct?.name}</h2>
         <div style={{ fontSize: "13px", color: "#9CA3AF", marginBottom: "20px" }}>{selectedProduct?.category} · {selectedProduct?.commission} commission · {selectedProduct?.trend}</div>
+
+        <ScrapedProductCard product={scrapedProduct} />
 
         {generatedContent.format_insight && (
           <div style={{ ...S.insightBox, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "20px" }}>
