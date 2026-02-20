@@ -502,6 +502,88 @@ async function callClaude(prompt, maxTokens = 800) {
   return data.content?.[0]?.text || "";
 }
 
+function ProductLookup({ creatorTone, onProductLoaded }) {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState(null);
+
+  const lookup = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setError(null);
+    setProduct(null);
+
+    try {
+      const res = await fetch('/api/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProduct(data.product);
+        if (onProductLoaded) onProductLoaded(data.product);
+      } else {
+        setError(data.error);
+      }
+    } catch (e) {
+      setError('Request failed — is the server running?');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '700', color: '#C084FC', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
+        🔗 Add Product from Amazon Link
+      </div>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+        <input
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="Paste Amazon or affiliate URL (amzn.to/... or full URL)"
+          style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px 14px', color: '#E8E8F0', fontSize: '13px', outline: 'none' }}
+          onKeyDown={e => e.key === 'Enter' && lookup()}
+        />
+        <button
+          onClick={lookup}
+          disabled={loading}
+          style={{ background: 'linear-gradient(135deg, #C084FC, #818CF8)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? 'Loading...' : 'Pull Product'}
+        </button>
+      </div>
+
+      {error && (
+        <div style={{ fontSize: '13px', color: '#FB923C', padding: '10px', background: 'rgba(251,146,60,0.1)', borderRadius: '8px' }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {product && (
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+          {product.heroImage && (
+            <img src={product.heroImage} alt={product.title} style={{ width: '90px', height: '90px', objectFit: 'contain', borderRadius: '8px', background: '#fff', padding: '4px' }} />
+          )}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#E8E8F0', marginBottom: '4px' }}>{product.title?.substring(0, 80)}...</div>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#9CA3AF', marginBottom: '8px' }}>
+              {product.brand && <span>Brand: <span style={{ color: '#C084FC' }}>{product.brand}</span></span>}
+              {product.price && <span>Price: <span style={{ color: '#34D399' }}>{product.price}</span></span>}
+              {product.rating && <span>⭐ {product.rating}</span>}
+              {product.asin && <span>ASIN: {product.asin}</span>}
+            </div>
+            {product.bullets?.slice(0, 2).map((b, i) => (
+              <div key={i} style={{ fontSize: '11px', color: '#9CA3AF', marginBottom: '2px' }}>• {b.substring(0, 100)}...</div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main App ───────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("home");
@@ -816,6 +898,21 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <button style={S.btn} onClick={generateCalendar}>📅 Build Content Calendar</button>
             <button style={{ ...S.btn, background: "linear-gradient(135deg, #34D399, #059669)" }} onClick={generateBoostRecs}>🚀 Boost Recommendations</button>
           </div>
+
+          <ProductLookup 
+            creatorTone={selectedCreator.tone} 
+            onProductLoaded={(product) => {
+              // Add the scraped product to the creator's product list temporarily for generation
+              const newProduct = {
+                name: product.title,
+                category: product.category || "General",
+                commission: "9%", // default estimate
+                trend: "↑ New",
+                badge: "Scraped"
+              };
+              generateContent(newProduct);
+            }} 
+          />
 
           {/* ── META DATA PLACEHOLDERS ── */}
           <div style={S.sectionLabel}>📡 Meta Ads Performance — Live Data Connection</div>

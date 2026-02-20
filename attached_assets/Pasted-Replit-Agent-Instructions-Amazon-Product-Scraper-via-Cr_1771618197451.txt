@@ -1,0 +1,343 @@
+Replit Agent Instructions — Amazon Product Scraper via Crawlbase
+Paste this entire message into Replit Agent:
+
+Add an Amazon product scraper to this project using Crawlbase's JavaScript API token.
+I already have CRAWLBASE_JS_TOKEN stored in Replit Secrets.
+1. Install dependencies
+bashnpm install express axios cheerio cors
+2. Create a new file: server/scraper.js
+javascriptimport axios from 'axios';
+import * as cheerio from 'cheerio';
+
+const CRAWLBASE_JS_TOKEN = process.env.CRAWLBASE_JS_TOKEN;
+
+// ── Resolve affiliate short URL to full Amazon URL ─────────────────────────
+async function resolveAffiliateUrl(url) {
+  try {
+    const res = await axios.get(url, {
+      maxRedirects: 5,
+      timeout: 10000,
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+    return res.request.res.responseUrl || url;
+  } catch (e) {
+    // Even if request fails, axios may have followed redirects
+    if (e.request?.res?.responseUrl) return e.request.res.responseUrl;
+    return url;
+  }
+}
+
+// ── Extract ASIN from Amazon URL ───────────────────────────────────────────
+function extractAsin(url) {
+  const patterns = [
+    /\/dp\/([A-Z0-9]{10})/,
+    /\/gp\/product\/([A-Z0-9]{10})/,
+    /\/product\/([A-Z0-9]{10})/,
+    /\/ASIN\/([A-Z0-9]{10})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+// ── Scrape Amazon product page via Crawlbase JS token ─────────────────────
+async function scrapeAmazonProduct(amazonUrl) {
+  const crawlbaseUrl = `https://api.crawlbase.com/?token=${CRAWLBASE_JS_TOKEN}&url=${encodeURIComponent(amazonUrl)}&wait=3000&ajax_wait=true`;
+
+  const response = await axios.get(crawlbaseUrl, { timeout: 30000 });
+  const html = response.data;
+  const $ = cheerio.load(html);
+
+  // ── Title ──────────────────────────────────────────────────────────────
+  const title =
+    $('#productTitle').text().trim() ||
+    $('h1.a-size-large').text().trim() ||
+    $('h1').first().text().trim();
+
+  // ── Price ──────────────────────────────────────────────────────────────
+  const price =
+    $('.a-price .a-offscreen').first().text().trim() ||
+    $('#priceblock_ourprice').text().trim() ||
+    $('#priceblock_dealprice').text().trim() ||
+    $('.a-price-whole').first().text().trim();
+
+  // ── Hero image ─────────────────────────────────────────────────────────
+  // Amazon loads images via JS — look for the data attribute first
+  let heroImage = '';
+  const imgData = $('#imgTagWrapperId img, #landingImage, #main-image').first();
+  heroImage = imgData.attr('data-old-hires') ||
+              imgData.attr('data-a-dynamic-image') ||
+              imgData.attr('src') || '';
+
+  // data-a-dynamic-image is a JSON object of {url: [w,h]} — grab the largest
+  if (heroImage && heroImage.startsWith('{')) {
+    try {
+      const imgObj = JSON.parse(heroImage);
+      const sorted = Object.entries(imgObj).sort((a, b) => b[1][0] - a[1][0]);
+      heroImage = sorted[0]?.[0] || '';
+    } catch {
+      heroImage = '';
+    }
+  }
+
+  // Fallback — grab first .a-dynamic-image src
+  if (!heroImage) {
+    heroImage = $('img.a-dynamic-image').first().attr('src') || '';
+  }
+
+  // ── Additional images ──────────────────────────────────────────────────
+  const additionalImages = [];
+  $('#altImages img, #imageBlock img').each((_, el) => {
+    const src = $(el).attr('data-old-hires') || $(el).attr('src') || '';
+    if (src && !src.includes('sprite') && !additionalImages.includes(src)) {
+      additionalImages.push(src);
+    }
+  });
+
+  // ── Bullet points / features ───────────────────────────────────────────
+  const bullets = [];
+  $('#feature-bullets ul li, #featurebullets_feature_div li').each((_, el) => {
+    const text = $(el).text().trim();
+    if (text && !text.toLowerCase().includes('make sure this fits') && text.length > 10) {
+      bullets.push(text);
+    }
+  });
+
+  // ── Brand ──────────────────────────────────────────────────────────────
+  const brand =
+    $('#bylineInfo').text().trim().replace('Brand: ', '').replace('Visit the ', '').replace(' Store', '') ||
+    $('#brand').text().trim();
+
+  // ── Rating ─────────────────────────────────────────────────────────────
+  const rating = $('#acrPopover .a-size-base.a-color-base').first().text().trim() ||
+                 $('span[data-hook="rating-out-of-text"]').first().text().trim();
+
+  const reviewCount = $('#acrCustomerReviewText').first().text().trim();
+
+  // ── Category ───────────────────────────────────────────────────────────
+  const category = $('#wayfinding-breadcrumbs_feature_div .a-list-item').last().text().trim();
+
+  return {
+    asin: extractAsin(amazonUrl),
+    url: amazonUrl,
+    title: title || null,
+    brand: brand || null,
+    price: price || null,
+    rating: rating || null,
+    reviewCount: reviewCount || null,
+    category: category || null,
+    heroImage: heroImage || null,
+    additionalImages: additionalImages.slice(0, 5),
+    bullets: bullets.slice(0, 6),
+    scrapedAt: new Date().toISOString(),
+  };
+}
+
+// ── Main export: takes any Amazon or affiliate URL ─────────────────────────
+export async function getProductData(inputUrl) {
+  if (!CRAWLBASE_JS_TOKEN) {
+    throw new Error('CRAWLBASE_JS_TOKEN not set in Replit Secrets');
+  }
+
+  // Step 1: resolve short/affiliate URL to full Amazon URL
+  let amazonUrl = inputUrl;
+  if (!inputUrl.includes('amazon.com')) {
+    console.log('Resolving affiliate URL...');
+    amazonUrl = await resolveAffiliateUrl(inputUrl);
+  }
+
+  if (!amazonUrl.includes('amazon.com')) {
+    throw new Error(`Could not resolve to Amazon URL: ${amazonUrl}`);
+  }
+
+  console.log(`Scraping: ${amazonUrl}`);
+
+  // Step 2: scrape via Crawlbase
+  const product = await scrapeAmazonProduct(amazonUrl);
+
+  if (!product.title) {
+    throw new Error('Could not extract product data — page may not have loaded fully');
+  }
+
+  return product;
+}
+3. Create a new file: server/index.js
+javascriptimport express from 'express';
+import cors from 'cors';
+import { getProductData } from './scraper.js';
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// ── POST /api/product  ─────────────────────────────────────────────────────
+// Body: { url: "https://amzn.to/xyz" or full Amazon URL }
+// Returns: product title, images, bullets, price, brand, ASIN
+app.post('/api/product', async (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: 'url is required' });
+  }
+
+  try {
+    const product = await getProductData(url);
+    res.json({ success: true, product });
+  } catch (err) {
+    console.error('Scraper error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── GET /api/health ────────────────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', crawlbase: !!process.env.CRAWLBASE_JS_TOKEN });
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Scraper API running on port ${PORT}`));
+4. Update package.json
+Make sure package.json has "type": "module" and a server start script:
+json{
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server/index.js",
+    "start": "concurrently \"npm run dev\" \"npm run server\""
+  }
+}
+Also run:
+bashnpm install concurrently
+5. Update vite.config.js proxy to also forward /api/product
+Add this to the existing proxy config alongside the Anthropic proxy:
+javascript'/api/product': {
+  target: 'http://localhost:3001',
+  changeOrigin: true,
+},
+'/api/health': {
+  target: 'http://localhost:3001',
+  changeOrigin: true,
+}
+6. Add product lookup UI to App.jsx
+Add this ProductLookup component and drop it into the creator profile screen
+above the products section. It lets you paste any Amazon or affiliate URL
+and pulls the product data to pre-fill ad generation:
+javascriptfunction ProductLookup({ creatorTone, onProductLoaded }) {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState(null);
+
+  const lookup = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setError(null);
+    setProduct(null);
+
+    try {
+      const res = await fetch('/api/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProduct(data.product);
+        if (onProductLoaded) onProductLoaded(data.product);
+      } else {
+        setError(data.error);
+      }
+    } catch (e) {
+      setError('Request failed — is the server running?');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '700', color: '#C084FC', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
+        🔗 Add Product from Amazon Link
+      </div>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+        <input
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="Paste Amazon or affiliate URL (amzn.to/... or full URL)"
+          style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px 14px', color: '#E8E8F0', fontSize: '13px', outline: 'none' }}
+          onKeyDown={e => e.key === 'Enter' && lookup()}
+        />
+        <button
+          onClick={lookup}
+          disabled={loading}
+          style={{ background: 'linear-gradient(135deg, #C084FC, #818CF8)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? 'Loading...' : 'Pull Product'}
+        </button>
+      </div>
+
+      {error && (
+        <div style={{ fontSize: '13px', color: '#FB923C', padding: '10px', background: 'rgba(251,146,60,0.1)', borderRadius: '8px' }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {product && (
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+          {product.heroImage && (
+            <img src={product.heroImage} alt={product.title} style={{ width: '90px', height: '90px', objectFit: 'contain', borderRadius: '8px', background: '#fff', padding: '4px' }} />
+          )}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#E8E8F0', marginBottom: '4px' }}>{product.title?.substring(0, 80)}...</div>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#9CA3AF', marginBottom: '8px' }}>
+              {product.brand && <span>Brand: <span style={{ color: '#C084FC' }}>{product.brand}</span></span>}
+              {product.price && <span>Price: <span style={{ color: '#34D399' }}>{product.price}</span></span>}
+              {product.rating && <span>⭐ {product.rating}</span>}
+              {product.asin && <span>ASIN: {product.asin}</span>}
+            </div>
+            {product.bullets?.slice(0, 2).map((b, i) => (
+              <div key={i} style={{ fontSize: '12px', color: '#6B7280', marginBottom: '3px' }}>• {b.substring(0, 100)}</div>
+            ))}
+            <button
+              onClick={() => onProductLoaded && onProductLoaded(product)}
+              style={{ marginTop: '10px', background: 'linear-gradient(135deg, #34D399, #059669)', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+            >
+              Generate Ads for This Product →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+7. Wire ProductLookup into the creator profile screen
+In the existing profile screen JSX, find the line that renders the products section label and add the ProductLookup component just above it:
+javascript<ProductLookup
+  creatorTone={selectedCreator.tone}
+  onProductLoaded={(product) => {
+    // Convert scraped product into the same shape as hardcoded products
+    generateContent({
+      name: product.title?.substring(0, 60),
+      category: product.category || 'Amazon',
+      commission: '~8%',
+      trend: '→ New',
+      badge: 'Live Product',
+      // Pass full product data through for richer ad generation
+      heroImage: product.heroImage,
+      bullets: product.bullets,
+      brand: product.brand,
+      price: product.price,
+    });
+  }}
+/>
+8. Secrets needed
+Make sure these are in Replit Secrets:
+
+CRAWLBASE_JS_TOKEN — your Crawlbase JavaScript API token
+ANTHROPIC_API_KEY — already added
+
+9. Run the app
+bashnpm start
+This runs both the Vite frontend and the Express scraper server concurrently.
+The frontend proxies /api/* to the Express server on port 3001.
