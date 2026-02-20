@@ -626,6 +626,57 @@ async function callClaude(prompt, maxTokens = 800) {
 function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  const loadFavorites = async (creatorId: string) => {
+    try {
+      const res = await fetch(`/api/favorites/${creatorId}`);
+      const data = await res.json();
+      setFavorites(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load favorites", err);
+    }
+  };
+
+  const isFavorite = (type: 'product' | 'ad_copy', identifier: string) => {
+    return favorites.some(f => {
+      try {
+        const data = JSON.parse(f.data);
+        return f.type === type && (data.name === identifier || data.hook === identifier);
+      } catch (e) {
+        return false;
+      }
+    });
+  };
+
+  const toggleFavorite = async (type: 'product' | 'ad_copy', itemData: any) => {
+    if (!selectedCreator) return;
+    
+    const identifier = itemData.name || itemData.hook;
+    const existing = favorites.find(f => {
+      try {
+        const data = JSON.parse(f.data);
+        return f.type === type && (data.name === identifier || data.hook === identifier);
+      } catch (e) {
+        return false;
+      }
+    });
+    
+    if (existing) {
+      await fetch(`/api/favorites/${existing.id}`, { method: 'DELETE' });
+    } else {
+      await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creatorId: selectedCreator.id,
+          type,
+          data: JSON.stringify(itemData)
+        })
+      });
+    }
+    loadFavorites(selectedCreator.id);
+  };
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
 
@@ -852,6 +903,57 @@ function ScrapedProductCard({ product }) {
 function StorefrontLookup({ creator, onProductsLoaded }) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  const loadFavorites = async (creatorId: string) => {
+    try {
+      const res = await fetch(`/api/favorites/${creatorId}`);
+      const data = await res.json();
+      setFavorites(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load favorites", err);
+    }
+  };
+
+  const isFavorite = (type: 'product' | 'ad_copy', identifier: string) => {
+    return favorites.some(f => {
+      try {
+        const data = JSON.parse(f.data);
+        return f.type === type && (data.name === identifier || data.hook === identifier);
+      } catch (e) {
+        return false;
+      }
+    });
+  };
+
+  const toggleFavorite = async (type: 'product' | 'ad_copy', itemData: any) => {
+    if (!selectedCreator) return;
+    
+    const identifier = itemData.name || itemData.hook;
+    const existing = favorites.find(f => {
+      try {
+        const data = JSON.parse(f.data);
+        return f.type === type && (data.name === identifier || data.hook === identifier);
+      } catch (e) {
+        return false;
+      }
+    });
+    
+    if (existing) {
+      await fetch(`/api/favorites/${existing.id}`, { method: 'DELETE' });
+    } else {
+      await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creatorId: selectedCreator.id,
+          type,
+          data: JSON.stringify(itemData)
+        })
+      });
+    }
+    loadFavorites(selectedCreator.id);
+  };
   const [products, setProducts] = useState([]);
   const [error, setError] = useState(null);
   const [selected, setSelected] = useState(new Set());
@@ -1087,6 +1189,57 @@ export default function App() {
   const [calendar, setCalendar] = useState({});
   const [boostRecs, setBoostRecs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  const loadFavorites = async (creatorId: string) => {
+    try {
+      const res = await fetch(`/api/favorites/${creatorId}`);
+      const data = await res.json();
+      setFavorites(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load favorites", err);
+    }
+  };
+
+  const isFavorite = (type: 'product' | 'ad_copy', identifier: string) => {
+    return favorites.some(f => {
+      try {
+        const data = JSON.parse(f.data);
+        return f.type === type && (data.name === identifier || data.hook === identifier);
+      } catch (e) {
+        return false;
+      }
+    });
+  };
+
+  const toggleFavorite = async (type: 'product' | 'ad_copy', itemData: any) => {
+    if (!selectedCreator) return;
+    
+    const identifier = itemData.name || itemData.hook;
+    const existing = favorites.find(f => {
+      try {
+        const data = JSON.parse(f.data);
+        return f.type === type && (data.name === identifier || data.hook === identifier);
+      } catch (e) {
+        return false;
+      }
+    });
+    
+    if (existing) {
+      await fetch(`/api/favorites/${existing.id}`, { method: 'DELETE' });
+    } else {
+      await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creatorId: selectedCreator.id,
+          type,
+          data: JSON.stringify(itemData)
+        })
+      });
+    }
+    loadFavorites(selectedCreator.id);
+  };
   const [loadingMsg, setLoadingMsg] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [scrapedProducts, setScrapedProducts] = useState([]);
@@ -1491,8 +1644,24 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 <div style={{ fontSize: "14px", fontWeight: "600" }}>{p.name}</div>
                 <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{p.category}</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E" }}>{p.badge}</span>}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite('product', p);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  color: isFavorite('product', p.name) ? '#FF3B3B' : '#CCCCCC',
+                  padding: '4px'
+                }}
+              >
+                {isFavorite('product', p.name) ? '❤️' : '🤍'}
+              </button>
+              {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E" }}>{p.badge}</span>}
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
                   <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
@@ -1760,9 +1929,23 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         {generatedContent.ad_variations?.map((v, i) => (
           <div key={i} style={S.varCard}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <span style={{ ...S.tag, background: i === 0 ? "rgba(59,130,246,0.12)" : i === 1 ? "rgba(244,114,182,0.15)" : "rgba(52,211,153,0.15)", color: i === 0 ? "#3B82F6" : i === 1 ? "#F472B6" : "#34D399" }}>
-                {i === 0 ? "📹" : i === 1 ? "🖼️" : "🎠"} {v.type}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ ...S.tag, background: i === 0 ? "rgba(59,130,246,0.12)" : i === 1 ? "rgba(244,114,182,0.15)" : "rgba(52,211,153,0.15)", color: i === 0 ? "#3B82F6" : i === 1 ? "#F472B6" : "#34D399" }}>
+                  {i === 0 ? "📹" : i === 1 ? "🖼️" : "🎠"} {v.type}
+                </span>
+                <button 
+                  onClick={() => toggleFavorite('ad_copy', v)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    color: isFavorite('ad_copy', v.hook) ? '#FF3B3B' : '#CCCCCC',
+                  }}
+                >
+                  {isFavorite('ad_copy', v.hook) ? '❤️' : '🤍'}
+                </button>
+              </div>
               {i === 0 && selectedCreator?.adType === "video" && <span style={{ fontSize: "11px", color: "#34D399", fontWeight: "600" }}>✓ Matches current format — boost first</span>}
               {i === 1 && selectedCreator?.adType === "static" && <span style={{ fontSize: "11px", color: "#F472B6", fontWeight: "600" }}>✓ Matches current format — boost first</span>}
               {i === 0 && selectedCreator?.adType === "static" && <span style={{ fontSize: "11px", color: "#FBBF24", fontWeight: "600" }}>⚡ New format test — compare CPC vs static</span>}
