@@ -196,7 +196,13 @@ export async function getStorefrontProducts(storefrontUrl) {
       if (asinMatch) asin = asinMatch[1];
     }
 
-    if (!asin) return;
+    // Normalize ASIN (sometimes it comes with prefixes in storefronts)
+    if (asin && asin.includes('.')) {
+      const parts = asin.split('.');
+      asin = parts[parts.length - 1];
+    }
+
+    if (!asin || !/^[A-Z0-9]{10}$/.test(asin)) return;
     if (seenAsins.has(asin)) return;
     seenAsins.add(asin);
 
@@ -241,7 +247,29 @@ export async function getStorefrontProducts(storefrontUrl) {
     // Price
     let price = '';
     const priceEl = card.find('[class*="price"], .a-price, .a-color-price').first();
-    price = priceEl.text().trim().replace(/\s+/g, ' ');
+    price = priceEl.find('.a-offscreen').text().trim() || priceEl.text().trim().replace(/\s+/g, ' ');
+    
+    // Clean up price (remove duplicates like $19.99$19.99)
+    if (price) {
+      // First, try to handle common doubling pattern from mobile/storefront HTML
+      // e.g. "$19.99$19.99" or "$19.99$19.99List Price: $24.99"
+      const doubledPriceMatch = price.match(/^(\$[0-9,.]+)\1/);
+      if (doubledPriceMatch) {
+        const rest = price.substring(doubledPriceMatch[0].length);
+        price = doubledPriceMatch[1] + rest;
+      }
+      
+      // Now ensure we only take the relevant parts and clean whitespace
+      const listPriceMatch = price.match(/List Price:\s*(\$[0-9,.]+)/i);
+      const mainPriceMatch = price.match(/^(\$[0-9,.]+)/);
+      
+      if (mainPriceMatch) {
+        price = mainPriceMatch[1];
+        if (listPriceMatch) {
+          price += ` List Price: ${listPriceMatch[1]}`;
+        }
+      }
+    }
 
     products.push({
       asin,
