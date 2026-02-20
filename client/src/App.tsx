@@ -1277,6 +1277,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               const newProducts = products.map(p => ({
                 ...p,
                 id: `scraped-${Date.now()}-${p.asin}`,
+                heroImage: p.image || p.heroImage,
                 name: p.title || p.name,
                 category: p.category || "General",
                 commission: "9%",
@@ -1297,6 +1298,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               const newProduct = {
                 ...product,
                 id: `scraped-${Date.now()}`,
+                heroImage: product.heroImage || product.image,
                 name: product.title,
                 category: product.category || "General",
                 commission: "9%", // default estimate
