@@ -40,9 +40,9 @@ const CREATORS = [
       top_creative_type: "video",           // Derived from ad library scrape — confirmed video-only
       active_ad_count: 20,                  // From ad library scrape
     },
-    // ── AMAZON EARNINGS PLACEHOLDERS ──────────────────────────────────────
-    amazonData: {
-      _note: "Connect via Amazon Associates / Impact affiliate API — SubID required",
+    // ── WALMART EARNINGS (IMPACT API) ──────────────────────────────────────
+    walmartData: {
+      _note: "Connect via Impact affiliate API — SubID required",
       epc_24h: "CONNECT_AFFILIATE_API",     // GET /earnings?subid={creator_id}&window=24h
       epc_7d: "CONNECT_AFFILIATE_API",      // GET /earnings?subid={creator_id}&window=7d
       clicks_24h: "CONNECT_AFFILIATE_API",  // GET /clicks?subid={creator_id}&window=24h
@@ -52,6 +52,19 @@ const CREATORS = [
       top_category: "Fashion",              // Known from ad library scrape
       avg_commission_rate: "9%",            // Estimated from product data
       basket_size_avg: "CONNECT_AFFILIATE_API", // GET /orders?subid={creator_id}&fields=basket_value
+    },
+    // ── AMAZON EARNINGS (MANUAL/CSV) ────────────────────────────────────────
+    amazonData: {
+      _note: "Manual CSV Upload or Database Entry — No API available",
+      epc_24h: "UPLOAD_CSV",
+      epc_7d: "UPLOAD_CSV",
+      clicks_24h: "UPLOAD_CSV",
+      orders_7d: "UPLOAD_CSV",
+      revenue_7d: "UPLOAD_CSV",
+      conversion_rate: "UPLOAD_CSV",
+      top_category: "Fashion",
+      avg_commission_rate: "8%",
+      basket_size_avg: "UPLOAD_CSV",
     },
   },
   {
@@ -1479,10 +1492,10 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </div>
           </div>
 
-          {/* ── AMAZON DATA PLACEHOLDERS ── */}
-          <div style={S.sectionLabel}>🛍️ Amazon Earnings — Daily Affiliate Data</div>
+          {/* ── WALMART EARNINGS (IMPACT API) ── */}
+          <div style={S.sectionLabel}>💙 Walmart Earnings — Impact API Data</div>
           <div style={S.dataBox}>
-            <div style={{ fontSize: "12px", color: "#34D399", fontWeight: "600", marginBottom: "10px" }}>⚡ Connect Amazon Associates / Impact API → SubID: {selectedCreator.id} required</div>
+            <div style={{ fontSize: "12px", color: "#3B82F6", fontWeight: "600", marginBottom: "10px" }}>⚡ Connect Impact API → SubID: {selectedCreator.id} required</div>
             <div style={S.dataGrid}>
               {[
                 { label: "EPC 24hr", field: "epc_24h", icon: "⚡" },
@@ -1494,14 +1507,40 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               ].map(({ label, field, icon }) => (
                 <div key={field} style={S.dataCell}>
                   <div style={{ fontSize: "10px", color: "#999999", marginBottom: "4px" }}>{icon} {label}</div>
-                  <div style={S.placeholder}>Affiliate API →</div>
+                  <div style={S.placeholder}>Impact API →</div>
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#999999" }}>
-              <span>Top Category: <span style={{ color: "#34D399", fontWeight: "600" }}>{selectedCreator.amazonData.top_category}</span></span>
-              <span>Avg Commission: <span style={{ color: "#34D399", fontWeight: "600" }}>{selectedCreator.amazonData.avg_commission_rate}</span></span>
+              <span>Top Category: <span style={{ color: "#3B82F6", fontWeight: "600" }}>{selectedCreator.walmartData.top_category}</span></span>
+              <span>Avg Commission: <span style={{ color: "#3B82F6", fontWeight: "600" }}>{selectedCreator.walmartData.avg_commission_rate}</span></span>
               <span>Basket Size: <span style={S.placeholder}>Impact API →</span></span>
+            </div>
+          </div>
+
+          {/* ── AMAZON EARNINGS (MANUAL/CSV) ── */}
+          <div style={S.sectionLabel}>🛍️ Amazon Earnings — Manual Affiliate Data</div>
+          <div style={S.dataBox}>
+            <div style={{ fontSize: "12px", color: "#C9A96E", fontWeight: "600", marginBottom: "10px" }}>📁 Upload Amazon CSV or Database Update → No API connection</div>
+            <div style={S.dataGrid}>
+              {[
+                { label: "EPC 24hr", field: "epc_24h", icon: "⚡" },
+                { label: "EPC 7-Day", field: "epc_7d", icon: "📊" },
+                { label: "Clicks 24hr", field: "clicks_24h", icon: "🔗" },
+                { label: "Orders 7-Day", field: "orders_7d", icon: "📦" },
+                { label: "Revenue 7-Day", field: "revenue_7d", icon: "💵" },
+                { label: "Conversion Rate", field: "conversion_rate", icon: "🎯" },
+              ].map(({ label, field, icon }) => (
+                <div key={field} style={S.dataCell}>
+                  <div style={{ fontSize: "10px", color: "#888888", marginBottom: "4px" }}>{icon} {label}</div>
+                  <div style={{ ...S.placeholder, borderColor: 'rgba(201,169,110,0.3)', color: '#C9A96E' }}>Manual/CSV →</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#888888" }}>
+              <span>Top Category: <span style={{ color: "#C9A96E", fontWeight: "600" }}>{selectedCreator.amazonData.top_category}</span></span>
+              <span>Avg Commission: <span style={{ color: "#C9A96E", fontWeight: "600" }}>{selectedCreator.amazonData.avg_commission_rate}</span></span>
+              <span>Daily File: <span style={{ ...S.placeholder, display: "inline", padding: "2px 8px", borderColor: 'rgba(201,169,110,0.3)', color: '#C9A96E' }}>awaiting_csv_upload</span></span>
             </div>
           </div>
 
