@@ -2,12 +2,19 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, 'data', 'products.json');
+// Use a fallback for __dirname when bundled or in ESM
+const __dirname = typeof __filename !== 'undefined' 
+  ? path.dirname(__filename) 
+  : path.dirname(fileURLToPath(import.meta.url));
+
+// In bundled production, we want to look relative to the bundle location or a known persistent path
+// For Replit, we can use process.cwd() to ensure we are in the project root if needed, 
+// but usually __dirname in cjs points to the output dir.
+const DB_PATH = path.resolve(process.cwd(), 'server', 'data', 'products.json');
 
 // Ensure data directory exists
 function ensureDataDir() {
-  const dir = path.join(__dirname, 'data');
+  const dir = path.dirname(DB_PATH);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
