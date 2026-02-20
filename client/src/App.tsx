@@ -1502,6 +1502,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </div>
           ))}
 
+          {/* 
           <StorefrontLookup 
             creator={selectedCreator}
             onProductsLoaded={(products) => {
@@ -1523,6 +1524,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               loadSavedProducts(selectedCreator.id);
             }}
           />
+          */}
 
           <ProductLookup 
             creatorTone={selectedCreator.tone} 
