@@ -72,7 +72,7 @@ export async function registerRoutes(
   });
 
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', crawlbase: !!process.env.CRAWLBASE_JS_TOKEN });
+    res.json({ status: 'ok', scraper_active: !!process.env.CRAWLBASE_JS_TOKEN });
   });
 
   return httpServer;

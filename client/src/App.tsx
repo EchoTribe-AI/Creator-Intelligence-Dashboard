@@ -819,7 +819,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
 
       {loading && (
         <div style={{ fontSize: '12px', color: '#9CA3AF', padding: '10px 0' }}>
-          ⏳ Loading product tiles via Crawlbase — usually 5–10 seconds...
+          ⏳ Loading product tiles — usually 5–10 seconds...
         </div>
       )}
 
