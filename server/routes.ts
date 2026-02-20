@@ -121,6 +121,34 @@ export async function registerRoutes(
     }
   });
 
+  // ── FAVORITES ──────────────────────────────────────────────────────────────
+  app.get('/api/favorites/:creatorId', async (req, res) => {
+    try {
+      const favs = await storage.getFavorites(req.params.creatorId);
+      res.json(favs);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/favorites', async (req, res) => {
+    try {
+      const fav = await storage.addFavorite(req.body);
+      res.json(fav);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/favorites/:id', async (req, res) => {
+    try {
+      await storage.deleteFavorite(req.params.id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', scraper_active: !!process.env.CRAWLBASE_JS_TOKEN });
   });

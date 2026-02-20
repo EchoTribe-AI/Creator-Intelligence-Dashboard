@@ -1,4 +1,4 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type User, type InsertUser, type Favorite, type InsertFavorite } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 // modify the interface with any CRUD methods
@@ -8,13 +8,20 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Favorites
+  getFavorites(creatorId: string): Promise<Favorite[]>;
+  addFavorite(favorite: InsertFavorite): Promise<Favorite>;
+  deleteFavorite(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private favorites: Map<string, Favorite>;
 
   constructor() {
     this.users = new Map();
+    this.favorites = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -32,6 +39,25 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+
+  async getFavorites(creatorId: string): Promise<Favorite[]> {
+    return Array.from(this.favorites.values()).filter(f => f.creatorId === creatorId);
+  }
+
+  async addFavorite(insertFavorite: InsertFavorite): Promise<Favorite> {
+    const id = randomUUID();
+    const favorite: Favorite = { 
+      ...insertFavorite, 
+      id, 
+      createdAt: new Date().toISOString() 
+    };
+    this.favorites.set(id, favorite);
+    return favorite;
+  }
+
+  async deleteFavorite(id: string): Promise<void> {
+    this.favorites.delete(id);
   }
 }
 
