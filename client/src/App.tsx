@@ -482,7 +482,7 @@ const CREATORS = [
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const AD_TYPE_LABELS = {
-  video: { label: "Video Only", color: "#FF3B3B", bg: "rgba(255,59,59,0.15)" },
+  video: { label: "Video Only", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" },
   static: { label: "Static Only", color: "#F472B6", bg: "rgba(244,114,182,0.15)" },
   mixed: { label: "Video + Static", color: "#FBBF24", bg: "rgba(251,191,36,0.15)" },
 };
@@ -543,8 +543,8 @@ function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
   };
 
   return (
-    <div style={{ background: '#141414', border: '1px solid #2A2A2A', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '700', color: '#FF3B3B', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid #E8E5E0', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '700', color: '#C9A96E', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
         🔗 Add Product from Amazon Link
       </div>
       <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
@@ -552,13 +552,13 @@ function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
           value={url}
           onChange={e => setUrl(e.target.value)}
           placeholder="Paste Amazon or affiliate URL (amzn.to/... or full URL)"
-          style={{ flex: 1, background: '#252525', border: '1px solid #3A3A3A', borderRadius: '8px', padding: '10px 14px', color: '#FFFFFF', fontSize: '13px', outline: 'none' }}
+          style={{ flex: 1, background: '#E8E5E0', border: '1px solid #D0CBC3', borderRadius: '8px', padding: '10px 14px', color: '#1A1A1A', fontSize: '13px', outline: 'none' }}
           onKeyDown={e => e.key === 'Enter' && lookup()}
         />
         <button
           onClick={lookup}
           disabled={loading}
-          style={{ background: 'linear-gradient(135deg, #FF3B3B, #FF3B3B)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+          style={{ background: 'linear-gradient(135deg, #C9A96E, #C9A96E)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
         >
           {loading ? 'Loading...' : 'Pull Product'}
         </button>
@@ -576,15 +576,15 @@ function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
             <img src={product.heroImage} alt={product.title} style={{ width: '90px', height: '90px', objectFit: 'contain', borderRadius: '8px', background: '#fff', padding: '4px' }} />
           )}
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#FFFFFF', marginBottom: '4px' }}>{product.title?.substring(0, 80)}...</div>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#A0A0A0', marginBottom: '8px' }}>
-              {product.brand && <span>Brand: <span style={{ color: '#FF3B3B' }}>{product.brand}</span></span>}
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#1A1A1A', marginBottom: '4px' }}>{product.title?.substring(0, 80)}...</div>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#888888', marginBottom: '8px' }}>
+              {product.brand && <span>Brand: <span style={{ color: '#C9A96E' }}>{product.brand}</span></span>}
               {product.price && <span>Price: <span style={{ color: '#34D399' }}>{product.price}</span></span>}
               {product.rating && <span>⭐ {product.rating}</span>}
               {product.asin && <span>ASIN: {product.asin}</span>}
             </div>
             {product.bullets?.slice(0, 2).map((b, i) => (
-              <div key={i} style={{ fontSize: '11px', color: '#A0A0A0', marginBottom: '2px' }}>• {b.substring(0, 100)}...</div>
+              <div key={i} style={{ fontSize: '11px', color: '#888888', marginBottom: '2px' }}>• {b.substring(0, 100)}...</div>
             ))}
           </div>
         </div>
@@ -598,8 +598,8 @@ function ScrapedProductCard({ product }) {
 
   return (
     <div style={{
-      background: '#141414',
-      border: '1px solid #333333',
+      background: '#FFFFFF',
+      border: '1px solid #D5D0C8',
       borderRadius: '14px',
       padding: '20px',
       marginBottom: '20px',
@@ -638,7 +638,7 @@ function ScrapedProductCard({ product }) {
                   borderRadius: '4px',
                   background: '#fff',
                   padding: '2px',
-                  border: '1px solid #333333'
+                  border: '1px solid #D5D0C8'
                 }}
               />
             ))}
@@ -652,7 +652,7 @@ function ScrapedProductCard({ product }) {
         <div style={{
           fontSize: '14px',
           fontWeight: '700',
-          color: '#FFFFFF',
+          color: '#1A1A1A',
           marginBottom: '8px',
           lineHeight: 1.4
         }}>
@@ -663,33 +663,33 @@ function ScrapedProductCard({ product }) {
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '12px' }}>
           {product.brand && (
             <div style={{ fontSize: '12px' }}>
-              <span style={{ color: '#555555' }}>Brand </span>
-              <span style={{ color: '#FF3B3B', fontWeight: '600' }}>{product.brand}</span>
+              <span style={{ color: '#999999' }}>Brand </span>
+              <span style={{ color: '#C9A96E', fontWeight: '600' }}>{product.brand}</span>
             </div>
           )}
           {product.price && (
             <div style={{ fontSize: '12px' }}>
-              <span style={{ color: '#555555' }}>Price </span>
+              <span style={{ color: '#999999' }}>Price </span>
               <span style={{ color: '#34D399', fontWeight: '700' }}>{product.price}</span>
             </div>
           )}
           {product.commission && (
             <div style={{ fontSize: '12px' }}>
-              <span style={{ color: '#555555' }}>Commission </span>
+              <span style={{ color: '#999999' }}>Commission </span>
               <span style={{ color: '#34D399', fontWeight: '600' }}>{product.commission}</span>
             </div>
           )}
           {product.asin && (
             <div style={{ fontSize: '12px' }}>
-              <span style={{ color: '#555555' }}>ASIN </span>
-              <span style={{ color: '#A0A0A0', fontFamily: 'monospace' }}>{product.asin}</span>
+              <span style={{ color: '#999999' }}>ASIN </span>
+              <span style={{ color: '#888888', fontFamily: 'monospace' }}>{product.asin}</span>
             </div>
           )}
           {product.rating && (
             <div style={{ fontSize: '12px' }}>
               <span style={{ color: '#FBBF24' }}>⭐ {product.rating}</span>
               {product.reviewCount && (
-                <span style={{ color: '#555555' }}> · {product.reviewCount}</span>
+                <span style={{ color: '#999999' }}> · {product.reviewCount}</span>
               )}
             </div>
           )}
@@ -701,7 +701,7 @@ function ScrapedProductCard({ product }) {
             <div style={{
               fontSize: '10px',
               fontWeight: '700',
-              color: '#555555',
+              color: '#999999',
               letterSpacing: '1px',
               textTransform: 'uppercase',
               marginBottom: '6px'
@@ -711,13 +711,13 @@ function ScrapedProductCard({ product }) {
             {product.bullets.slice(0, 4).map((b, i) => (
               <div key={i} style={{
                 fontSize: '12px',
-                color: '#A0A0A0',
+                color: '#888888',
                 marginBottom: '4px',
                 lineHeight: 1.4,
                 display: 'flex',
                 gap: '6px'
               }}>
-                <span style={{ color: '#FF3B3B', flexShrink: 0 }}>•</span>
+                <span style={{ color: '#C9A96E', flexShrink: 0 }}>•</span>
                 <span>{b.length > 120 ? b.substring(0, 120) + '...' : b}</span>
               </div>
             ))}
@@ -784,8 +784,8 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
 
   return (
     <div style={{
-      background: '#141414',
-      border: '1px solid #2A2A2A',
+      background: '#FFFFFF',
+      border: '1px solid #E8E5E0',
       borderRadius: '14px',
       padding: '20px',
       marginBottom: '20px'
@@ -804,11 +804,11 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
           placeholder="Paste Amazon storefront photo URL (amazon.com/shop/influencer-.../photo/...)"
           style={{
             flex: 1,
-            background: '#252525',
-            border: '1px solid #3A3A3A',
+            background: '#E8E5E0',
+            border: '1px solid #D0CBC3',
             borderRadius: '8px',
             padding: '10px 14px',
-            color: '#FFFFFF',
+            color: '#1A1A1A',
             fontSize: '13px',
             outline: 'none'
           }}
@@ -835,7 +835,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
       </div>
 
       {loading && (
-        <div style={{ fontSize: '12px', color: '#A0A0A0', padding: '10px 0' }}>
+        <div style={{ fontSize: '12px', color: '#888888', padding: '10px 0' }}>
           ⏳ Loading product tiles — usually 5–10 seconds...
         </div>
       )}
@@ -872,9 +872,9 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
                   onClick={() => toggleSelect(p.asin)}
                   style={{
                     background: isSelected
-                      ? 'rgba(255,59,59,0.15)'
-                      : '#141414',
-                    border: `1px solid ${isSelected ? '#FF3B3B' : '#2A2A2A'}`,
+                      ? 'rgba(201,169,110,0.15)'
+                      : '#FFFFFF',
+                    border: `1px solid ${isSelected ? '#C9A96E' : '#E8E5E0'}`,
                     borderRadius: '10px',
                     padding: '10px',
                     cursor: 'pointer',
@@ -885,7 +885,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
                   {isSelected && (
                     <div style={{
                       position: 'absolute', top: '6px', right: '6px',
-                      background: '#FF3B3B', borderRadius: '50%',
+                      background: '#C9A96E', borderRadius: '50%',
                       width: '16px', height: '16px',
                       fontSize: '10px', display: 'flex',
                       alignItems: 'center', justifyContent: 'center', color: '#fff'
@@ -907,7 +907,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
                   ) : (
                     <div style={{
                       width: '100%', height: '80px',
-                      background: '#252525',
+                      background: '#E8E5E0',
                       borderRadius: '6px', marginBottom: '8px',
                       display: 'flex', alignItems: 'center',
                       justifyContent: 'center', fontSize: '20px'
@@ -915,7 +915,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
                   )}
                   <div style={{
                     fontSize: '11px', fontWeight: '600',
-                    color: '#FFFFFF', lineHeight: 1.3, marginBottom: '4px'
+                    color: '#1A1A1A', lineHeight: 1.3, marginBottom: '4px'
                   }}>
                     {(p.title || p.name || 'Unknown product').substring(0, 50)}
                     {(p.title || p.name || '').length > 50 ? '...' : ''}
@@ -925,7 +925,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
                       {p.price}
                     </div>
                   )}
-                  <div style={{ fontSize: '10px', color: '#555555', marginTop: '2px', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '10px', color: '#999999', marginTop: '2px', fontFamily: 'monospace' }}>
                     {p.asin}
                   </div>
                 </div>
@@ -937,7 +937,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
             disabled={selected.size === 0}
             style={{
               width: '100%',
-              background: 'linear-gradient(135deg, #FF3B3B, #FF3B3B)',
+              background: 'linear-gradient(135deg, #C9A96E, #C9A96E)',
               color: '#fff',
               border: 'none',
               borderRadius: '8px',
@@ -1181,32 +1181,32 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
 
   // ── Styles ────────────────────────────────────────────────────────────────
   const S = {
-    app: { minHeight: "100vh", background: "#0A0A0A", color: "#FFFFFF", fontFamily: "'Inter', sans-serif" },
-    nav: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px", background: "#000000", borderBottom: "1px solid #222222", position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(12px)" },
-    navBrand: { fontSize: "16px", fontWeight: "800", color: "#FFFFFF", letterSpacing: "-0.3px" },
-    navBadge: { fontSize: "10px", background: "#FF3B3B", color: "#fff", padding: "3px 8px", borderRadius: "4px", fontWeight: "700", letterSpacing: "0.5px", textTransform: "uppercase", marginLeft: "8px" },
+    app: { minHeight: "100vh", background: "#FAFAF8", color: "#1A1A1A", fontFamily: "'Inter', sans-serif" },
+    nav: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px", background: "#FFFFFF", borderBottom: "1px solid #E8E5E0", position: "sticky" as const, top: 0, zIndex: 100, backdropFilter: "blur(12px)" },
+    navBrand: { fontSize: "16px", fontWeight: "800", color: "#1A1A1A", letterSpacing: "-0.3px" },
+    navBadge: { fontSize: "10px", background: "#C9A96E", color: "#fff", padding: "3px 8px", borderRadius: "4px", fontWeight: "700", letterSpacing: "0.5px", textTransform: "uppercase" as const, marginLeft: "8px" },
     container: { maxWidth: "1000px", margin: "0 auto", padding: "32px 24px" },
-    heading: { fontSize: "28px", fontWeight: "800", marginBottom: "6px", lineHeight: 1.2 },
-    sub: { fontSize: "14px", color: "#A0A0A0", marginBottom: "28px" },
-    btn: { background: "#FF3B3B", color: "#fff", border: "none", borderRadius: "8px", padding: "12px 22px", fontSize: "14px", fontWeight: "700", cursor: "pointer", letterSpacing: "0.2px", transition: "background 0.15s" },
-    btnOutline: { background: "transparent", color: "#FF3B3B", border: "1px solid #FF3B3B", borderRadius: "8px", padding: "10px 18px", fontSize: "13px", fontWeight: "600", cursor: "pointer" },
-    btnFilter: (active) => ({ background: active ? "rgba(255,59,59,0.12)" : "#141414", color: active ? "#FF3B3B" : "#A0A0A0", border: active ? "1px solid rgba(255,59,59,0.3)" : "1px solid #2A2A2A", borderRadius: "8px", padding: "6px 14px", fontSize: "12px", fontWeight: "600", cursor: "pointer" }),
+    heading: { fontSize: "28px", fontWeight: "800", marginBottom: "6px", lineHeight: 1.2, color: "#1A1A1A" },
+    sub: { fontSize: "14px", color: "#777777", marginBottom: "28px" },
+    btn: { background: "#C9A96E", color: "#fff", border: "none", borderRadius: "8px", padding: "12px 22px", fontSize: "14px", fontWeight: "700", cursor: "pointer", letterSpacing: "0.2px", transition: "background 0.15s" },
+    btnOutline: { background: "transparent", color: "#C9A96E", border: "1px solid #C9A96E", borderRadius: "8px", padding: "10px 18px", fontSize: "13px", fontWeight: "600", cursor: "pointer" },
+    btnFilter: (active: boolean) => ({ background: active ? "rgba(201,169,110,0.12)" : "#FFFFFF", color: active ? "#C9A96E" : "#888888", border: active ? "1px solid rgba(201,169,110,0.4)" : "1px solid #E0DDD8", borderRadius: "8px", padding: "6px 14px", fontSize: "12px", fontWeight: "600", cursor: "pointer" }),
     tag: { display: "inline-block", fontSize: "11px", fontWeight: "600", padding: "3px 10px", borderRadius: "4px", marginRight: "6px" },
-    card: { background: "#141414", border: "1px solid #2A2A2A", borderRadius: "14px", padding: "24px", cursor: "pointer", transition: "all 0.2s" },
-    insightBox: { background: "rgba(255,59,59,0.08)", border: "1px solid rgba(255,59,59,0.2)", borderRadius: "10px", padding: "14px 18px", marginBottom: "20px" },
-    dataBox: { background: "#111111", border: "1px solid #252525", borderRadius: "12px", padding: "16px 20px", marginBottom: "14px" },
-    sectionLabel: { fontSize: "11px", fontWeight: "700", letterSpacing: "1.5px", color: "#555555", textTransform: "uppercase", marginBottom: "14px", marginTop: "28px" },
-    adRow: { padding: "14px 18px", background: "#111111", border: "1px solid #252525", borderRadius: "12px", marginBottom: "10px" },
-    productRow: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", background: "#141414", border: "1px solid #2A2A2A", borderRadius: "12px", marginBottom: "10px" },
-    varCard: { background: "#141414", border: "1px solid #2A2A2A", borderRadius: "14px", padding: "20px", marginBottom: "14px" },
-    calCell: { background: "#141414", border: "1px solid #2A2A2A", borderRadius: "12px", padding: "14px", minHeight: "88px" },
-    boostCard: { background: "#141414", border: "1px solid #2A2A2A", borderRadius: "14px", padding: "22px", marginBottom: "14px" },
-    loadingBox: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: "16px" },
-    spinner: { width: "40px", height: "40px", border: "3px solid rgba(255,59,59,0.15)", borderTop: "3px solid #FF3B3B", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
-    highlight: { color: "#FF3B3B", fontWeight: "700" },
-    placeholder: { background: "rgba(251,191,36,0.08)", border: "1px dashed rgba(251,191,36,0.3)", borderRadius: "8px", padding: "8px 12px", fontSize: "11px", color: "#FBBF24", fontFamily: "monospace" },
+    card: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "14px", padding: "24px", cursor: "pointer", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" },
+    insightBox: { background: "rgba(201,169,110,0.06)", border: "1px solid rgba(201,169,110,0.2)", borderRadius: "10px", padding: "14px 18px", marginBottom: "20px" },
+    dataBox: { background: "#F7F5F2", border: "1px solid #E8E5E0", borderRadius: "12px", padding: "16px 20px", marginBottom: "14px" },
+    sectionLabel: { fontSize: "11px", fontWeight: "700", letterSpacing: "1.5px", color: "#999999", textTransform: "uppercase" as const, marginBottom: "14px", marginTop: "28px" },
+    adRow: { padding: "14px 18px", background: "#F7F5F2", border: "1px solid #E8E5E0", borderRadius: "12px", marginBottom: "10px" },
+    productRow: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "12px", marginBottom: "10px" },
+    varCard: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "14px", padding: "20px", marginBottom: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" },
+    calCell: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "12px", padding: "14px", minHeight: "88px" },
+    boostCard: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "14px", padding: "22px", marginBottom: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" },
+    loadingBox: { display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: "16px" },
+    spinner: { width: "40px", height: "40px", border: "3px solid rgba(201,169,110,0.2)", borderTop: "3px solid #C9A96E", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
+    highlight: { color: "#C9A96E", fontWeight: "700" },
+    placeholder: { background: "rgba(201,169,110,0.08)", border: "1px dashed rgba(201,169,110,0.3)", borderRadius: "8px", padding: "8px 12px", fontSize: "11px", color: "#C9A96E", fontFamily: "monospace" },
     dataGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "16px" },
-    dataCell: { background: "#111111", border: "1px solid #252525", borderRadius: "10px", padding: "12px 14px" },
+    dataCell: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "10px", padding: "12px 14px" },
   };
 
   const filteredCreators = filterType === "all" ? CREATORS : CREATORS.filter(c => c.adType === filterType);
@@ -1214,28 +1214,28 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
   // ── HOME ──────────────────────────────────────────────────────────────────
   if (screen === "home") return (
     <div style={S.app}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); @keyframes spin { to { transform: rotate(360deg); } } .cc:hover { border-color: rgba(255,59,59,0.4) !important; transform: translateY(-2px); background: #1C1C1C !important; }`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); @keyframes spin { to { transform: rotate(360deg); } } .cc:hover { border-color: rgba(201,169,110,0.5) !important; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }`}</style>
       <nav style={S.nav}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <span style={S.navBrand}>Markable</span>
           <span style={S.navBadge}>Creator Intelligence</span>
         </div>
-        <span style={{ fontSize: "12px", color: "#555555" }}>Demo · Feb 2026</span>
+        <span style={{ fontSize: "12px", color: "#999999" }}>Demo · Feb 2026</span>
       </nav>
       <div style={S.container}>
         <div style={{ marginBottom: "32px" }}>
-          <div style={{ fontSize: "12px", color: "#FF3B3B", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "10px" }}>Revenue System Demo</div>
+          <div style={{ fontSize: "12px", color: "#C9A96E", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "10px" }}>Revenue System Demo</div>
           <h1 style={{ ...S.heading, fontSize: "32px" }}>Creator Ad Intelligence</h1>
           <p style={{ ...S.sub, fontSize: "15px" }}>Select a creator to generate AI ad variations, build content calendars, and get signal-based boost recommendations.</p>
 
           <div style={S.insightBox}>
-            <div style={{ fontSize: "12px", fontWeight: "700", color: "#FF3B3B", marginBottom: "8px" }}>📊 Intelligence Layer — From Real Ad Library Scrape</div>
+            <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "8px" }}>📊 Intelligence Layer — From Real Ad Library Scrape</div>
             <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-              <div><span style={S.highlight}>7 creators</span> <span style={{ fontSize: "13px", color: "#E0E0E0" }}>video-only</span></div>
-              <div><span style={{ color: "#F472B6", fontWeight: "700" }}>1 creator</span> <span style={{ fontSize: "13px", color: "#E0E0E0" }}>static-only (Casey — 72 ads)</span></div>
-              <div><span style={{ color: "#FBBF24", fontWeight: "700" }}>2 creators</span> <span style={{ fontSize: "13px", color: "#E0E0E0" }}>mixed format</span></div>
+              <div><span style={S.highlight}>7 creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>video-only</span></div>
+              <div><span style={{ color: "#F472B6", fontWeight: "700" }}>1 creator</span> <span style={{ fontSize: "13px", color: "#444444" }}>static-only (Casey — 72 ads)</span></div>
+              <div><span style={{ color: "#FBBF24", fontWeight: "700" }}>2 creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>mixed format</span></div>
             </div>
-            <div style={{ fontSize: "13px", color: "#A0A0A0", marginTop: "8px" }}>Casey's static-only format is the critical data point: does lower CPC on static offset lower intent vs. video? This demo generates both to test.</div>
+            <div style={{ fontSize: "13px", color: "#888888", marginTop: "8px" }}>Casey's static-only format is the critical data point: does lower CPC on static offset lower intent vs. video? This demo generates both to test.</div>
           </div>
 
           <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
@@ -1258,8 +1258,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                   </div>
                 </div>
                 <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "3px" }}>{c.name}</div>
-                <div style={{ fontSize: "12px", color: "#A0A0A0", marginBottom: "10px" }}>{c.niche} · {c.audience}</div>
-                <div style={{ fontSize: "12px", color: "#555555" }}>Click to explore → generate variations, calendar, boost plan</div>
+                <div style={{ fontSize: "12px", color: "#888888", marginBottom: "10px" }}>{c.niche} · {c.audience}</div>
+                <div style={{ fontSize: "12px", color: "#999999" }}>Click to explore → generate variations, calendar, boost plan</div>
               </div>
             );
           })}
@@ -1274,7 +1274,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <div style={S.loadingBox}>
         <div style={S.spinner}></div>
-        <div style={{ fontSize: "15px", color: "#A0A0A0" }}>{loadingMsg}</div>
+        <div style={{ fontSize: "15px", color: "#888888" }}>{loadingMsg}</div>
       </div>
     </div>
   );
@@ -1284,7 +1284,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     const adMeta = AD_TYPE_LABELS[selectedCreator.adType];
     return (
       <div style={S.app}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); .pr:hover { border-color: rgba(255,59,59,0.3) !important; background: #1C1C1C !important; cursor: pointer; }`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); .pr:hover { border-color: rgba(201,169,110,0.4) !important; background: #F9F7F4 !important; cursor: pointer; }`}</style>
         <nav style={S.nav}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <span style={S.navBrand}>Markable</span>
@@ -1296,7 +1296,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
             <div>
               <div style={{ fontSize: "23px", fontWeight: "800", marginBottom: "4px" }}>{selectedCreator.emoji} {selectedCreator.name}</div>
-              <div style={{ fontSize: "13px", color: "#A0A0A0" }}>{selectedCreator.niche} · {selectedCreator.audience}</div>
+              <div style={{ fontSize: "13px", color: "#888888" }}>{selectedCreator.niche} · {selectedCreator.audience}</div>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color, fontSize: "12px", padding: "5px 12px" }}>{adMeta.label}</span>
@@ -1305,8 +1305,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           </div>
 
           <div style={S.insightBox}>
-            <div style={{ fontSize: "12px", fontWeight: "700", color: "#FF3B3B", marginBottom: "4px" }}>🧠 Tone Profile</div>
-            <div style={{ fontSize: "13px", color: "#E0E0E0" }}>{selectedCreator.tone}</div>
+            <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "4px" }}>🧠 Tone Profile</div>
+            <div style={{ fontSize: "13px", color: "#444444" }}>{selectedCreator.tone}</div>
           </div>
 
           <div style={{ display: "flex", gap: "10px", marginBottom: "28px", flexWrap: "wrap" }}>
@@ -1373,8 +1373,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                   <div
                     key={p._id}
                     style={{
-                      background: '#141414',
-                      border: '1px solid #2A2A2A',
+                      background: '#FFFFFF',
+                      border: '1px solid #E8E5E0',
                       borderRadius: '10px',
                       padding: '12px',
                       cursor: 'pointer',
@@ -1431,7 +1431,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     )}
                     <div style={{
                       fontSize: '11px', fontWeight: '600',
-                      color: '#FFFFFF', lineHeight: 1.3,
+                      color: '#1A1A1A', lineHeight: 1.3,
                       marginBottom: '4px'
                     }}>
                       {(p.title || p.name || '').substring(0, 45)}...
@@ -1442,7 +1442,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                       </div>
                     )}
                     <div style={{
-                      fontSize: '10px', color: '#555555',
+                      fontSize: '10px', color: '#999999',
                       marginTop: '4px'
                     }}>
                       {new Date(p.savedAt).toLocaleDateString()}
@@ -1467,12 +1467,12 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 { label: "7-Day Impressions", field: "impressions_7d", icon: "📣" },
               ].map(({ label, field, icon }) => (
                 <div key={field} style={S.dataCell}>
-                  <div style={{ fontSize: "10px", color: "#555555", marginBottom: "4px" }}>{icon} {label}</div>
+                  <div style={{ fontSize: "10px", color: "#999999", marginBottom: "4px" }}>{icon} {label}</div>
                   <div style={S.placeholder}>Meta API →</div>
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: "11px", color: "#555555" }}>
+            <div style={{ fontSize: "11px", color: "#999999" }}>
               Top Creative: <span style={{ ...S.placeholder, display: "inline", padding: "2px 8px" }}>GET /act_&#123;id&#125;/ads?sort=spend</span>
               &nbsp;&nbsp;|&nbsp;&nbsp;
               Format confirmed from scrape: <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color }}>{adMeta.label}</span>
@@ -1493,12 +1493,12 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 { label: "Conversion Rate", field: "conversion_rate", icon: "🎯" },
               ].map(({ label, field, icon }) => (
                 <div key={field} style={S.dataCell}>
-                  <div style={{ fontSize: "10px", color: "#555555", marginBottom: "4px" }}>{icon} {label}</div>
+                  <div style={{ fontSize: "10px", color: "#999999", marginBottom: "4px" }}>{icon} {label}</div>
                   <div style={S.placeholder}>Affiliate API →</div>
                 </div>
               ))}
             </div>
-            <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#555555" }}>
+            <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#999999" }}>
               <span>Top Category: <span style={{ color: "#34D399", fontWeight: "600" }}>{selectedCreator.amazonData.top_category}</span></span>
               <span>Avg Commission: <span style={{ color: "#34D399", fontWeight: "600" }}>{selectedCreator.amazonData.avg_commission_rate}</span></span>
               <span>Basket Size: <span style={S.placeholder}>Impact API →</span></span>
@@ -1511,13 +1511,13 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <div key={i} style={S.adRow}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                 <div style={{ display: "flex", gap: "6px" }}>
-                  {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(255,59,59,0.15)", color: "#FF3B3B" }}>📹 Video</span>}
+                  {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
                   {ad.hasStatic && <span style={{ ...S.tag, background: "rgba(244,114,182,0.15)", color: "#F472B6" }}>🖼️ Static</span>}
-                  {!ad.hasVideo && !ad.hasStatic && <span style={{ ...S.tag, background: "rgba(107,114,128,0.15)", color: "#A0A0A0" }}>📄 Text</span>}
+                  {!ad.hasVideo && !ad.hasStatic && <span style={{ ...S.tag, background: "rgba(107,114,128,0.15)", color: "#888888" }}>📄 Text</span>}
                 </div>
-                <span style={{ fontSize: "11px", color: "#555555" }}>{ad.started}</span>
+                <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
               </div>
-              <div style={{ fontSize: "13px", color: "#E0E0E0", lineHeight: 1.5 }}>{ad.copy.substring(0, 200)}...</div>
+              <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5 }}>{ad.copy.substring(0, 200)}...</div>
             </div>
           ))}
 
@@ -1527,15 +1527,15 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <div key={i} className="pr" style={S.productRow} onClick={() => generateContent(p)}>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: "600" }}>{p.name}</div>
-                <div style={{ fontSize: "12px", color: "#A0A0A0", marginTop: "2px" }}>{p.category}</div>
+                <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{p.category}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {p.badge && <span style={{ ...S.tag, background: "rgba(255,59,59,0.15)", color: "#FF3B3B" }}>{p.badge}</span>}
+                {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E" }}>{p.badge}</span>}
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
-                  <div style={{ fontSize: "11px", color: "#555555" }}>{p.trend}</div>
+                  <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
                 </div>
-                <span style={{ color: "#FF3B3B", fontSize: "18px" }}>→</span>
+                <span style={{ color: "#C9A96E", fontSize: "18px" }}>→</span>
               </div>
             </div>
           ))}
@@ -1555,23 +1555,23 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         <button style={S.btnOutline} onClick={() => setScreen("profile")}>← Back</button>
       </nav>
       <div style={S.container}>
-        <div style={{ fontSize: "11px", color: "#FF3B3B", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>AI Generated · {selectedCreator?.name}</div>
+        <div style={{ fontSize: "11px", color: "#C9A96E", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>AI Generated · {selectedCreator?.name}</div>
         <h2 style={{ ...S.heading, marginBottom: "4px" }}>{selectedProduct?.name}</h2>
-        <div style={{ fontSize: "13px", color: "#A0A0A0", marginBottom: "20px" }}>{selectedProduct?.category} · {selectedProduct?.commission} commission · {selectedProduct?.trend}</div>
+        <div style={{ fontSize: "13px", color: "#888888", marginBottom: "20px" }}>{selectedProduct?.category} · {selectedProduct?.commission} commission · {selectedProduct?.trend}</div>
 
         <ScrapedProductCard product={scrapedProduct} />
 
         {generatedContent.format_insight && (
           <div style={{ ...S.insightBox, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "20px" }}>
             <div style={{ fontSize: "12px", fontWeight: "700", color: "#FBBF24", marginBottom: "4px" }}>📺 Video vs Static Insight</div>
-            <div style={{ fontSize: "13px", color: "#E0E0E0" }}>{generatedContent.format_insight}</div>
+            <div style={{ fontSize: "13px", color: "#444444" }}>{generatedContent.format_insight}</div>
           </div>
         )}
 
         <div style={S.sectionLabel}>Hook Angles</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
           {generatedContent.hook_angles?.map((h, i) => (
-            <span key={i} style={{ ...S.tag, background: "rgba(255,59,59,0.1)", color: "#FF3B3B", fontSize: "12px", padding: "6px 12px" }}>{h}</span>
+            <span key={i} style={{ ...S.tag, background: "rgba(201,169,110,0.1)", color: "#C9A96E", fontSize: "12px", padding: "6px 12px" }}>{h}</span>
           ))}
         </div>
 
@@ -1579,7 +1579,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         {generatedContent.ad_variations?.map((v, i) => (
           <div key={i} style={S.varCard}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <span style={{ ...S.tag, background: i === 0 ? "rgba(255,59,59,0.15)" : i === 1 ? "rgba(244,114,182,0.15)" : "rgba(52,211,153,0.15)", color: i === 0 ? "#FF3B3B" : i === 1 ? "#F472B6" : "#34D399" }}>
+              <span style={{ ...S.tag, background: i === 0 ? "rgba(59,130,246,0.12)" : i === 1 ? "rgba(244,114,182,0.15)" : "rgba(52,211,153,0.15)", color: i === 0 ? "#3B82F6" : i === 1 ? "#F472B6" : "#34D399" }}>
                 {i === 0 ? "📹" : i === 1 ? "🖼️" : "🎠"} {v.type}
               </span>
               {i === 0 && selectedCreator?.adType === "video" && <span style={{ fontSize: "11px", color: "#34D399", fontWeight: "600" }}>✓ Matches current format — boost first</span>}
@@ -1587,18 +1587,18 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               {i === 0 && selectedCreator?.adType === "static" && <span style={{ fontSize: "11px", color: "#FBBF24", fontWeight: "600" }}>⚡ New format test — compare CPC vs static</span>}
               {i === 1 && selectedCreator?.adType === "video" && <span style={{ fontSize: "11px", color: "#FBBF24", fontWeight: "600" }}>⚡ New format test — compare CPC vs video</span>}
             </div>
-            <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "8px", color: "#fff" }}>"{v.hook}"</div>
-            <div style={{ fontSize: "13px", color: "#E0E0E0", lineHeight: 1.6, marginBottom: "10px" }}>{v.caption}</div>
+            <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "8px", color: "#1A1A1A" }}>"{v.hook}"</div>
+            <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.6, marginBottom: "10px" }}>{v.caption}</div>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              <span style={{ ...S.tag, background: "#1A1A1A", color: "#A0A0A0" }}>CTA: {v.cta}</span>
-              <span style={{ ...S.tag, background: "#1A1A1A", color: "#A0A0A0" }}>{v.disclosure}</span>
+              <span style={{ ...S.tag, background: "#F0EDE8", color: "#888888" }}>CTA: {v.cta}</span>
+              <span style={{ ...S.tag, background: "#F0EDE8", color: "#888888" }}>{v.disclosure}</span>
             </div>
           </div>
         ))}
 
         <div style={S.insightBox}>
-          <div style={{ fontSize: "12px", fontWeight: "700", color: "#FF3B3B", marginBottom: "6px" }}>🚀 Boost Recommendation</div>
-          <div style={{ fontSize: "13px", color: "#E0E0E0" }}>{generatedContent.boost_recommendation}</div>
+          <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "6px" }}>🚀 Boost Recommendation</div>
+          <div style={{ fontSize: "13px", color: "#444444" }}>{generatedContent.boost_recommendation}</div>
         </div>
 
         <div style={{ display: "flex", gap: "10px" }}>
@@ -1620,26 +1620,26 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         <button style={S.btnOutline} onClick={() => setScreen("profile")}>← Back</button>
       </nav>
       <div style={S.container}>
-        <div style={{ fontSize: "11px", color: "#FF3B3B", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>Content Calendar · {selectedCreator?.name}</div>
+        <div style={{ fontSize: "11px", color: "#C9A96E", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>Content Calendar · {selectedCreator?.name}</div>
         <h2 style={{ ...S.heading, marginBottom: "4px" }}>Weekly Plan</h2>
         <p style={S.sub}>AI-generated — creator reviews, edits, and manually posts. System handles everything else.</p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "8px", marginBottom: "24px" }}>
           {DAYS.map(day => {
             const entry = calendar[day] || {};
-            const tc = { Video: "#FF3B3B", Static: "#F472B6", Carousel: "#34D399", Rest: "#404040" };
-            const color = tc[entry.type] || "#404040";
+            const tc = { Video: "#3B82F6", Static: "#F472B6", Carousel: "#34D399", Rest: "#AAAAAA" };
+            const color = tc[entry.type] || "#AAAAAA";
             return (
               <div key={day} style={{ ...S.calCell, borderTop: `2px solid ${color}` }}>
-                <div style={{ fontSize: "10px", fontWeight: "800", color: "#555555", letterSpacing: "0.5px", marginBottom: "8px" }}>{day.toUpperCase()}</div>
+                <div style={{ fontSize: "10px", fontWeight: "800", color: "#999999", letterSpacing: "0.5px", marginBottom: "8px" }}>{day.toUpperCase()}</div>
                 {entry.type && entry.type !== "Rest" ? (
                   <>
                     <span style={{ ...S.tag, background: `${color}20`, color, fontSize: "10px", padding: "2px 6px", marginBottom: "6px", display: "inline-block" }}>{entry.type}</span>
-                    <div style={{ fontSize: "11px", fontWeight: "600", color: "#FFFFFF", marginBottom: "4px", lineHeight: 1.3 }}>{entry.product}</div>
-                    <div style={{ fontSize: "10px", color: "#A0A0A0", lineHeight: 1.4 }}>{entry.hook}</div>
+                    <div style={{ fontSize: "11px", fontWeight: "600", color: "#1A1A1A", marginBottom: "4px", lineHeight: 1.3 }}>{entry.product}</div>
+                    <div style={{ fontSize: "10px", color: "#888888", lineHeight: 1.4 }}>{entry.hook}</div>
                   </>
                 ) : (
-                  <div style={{ fontSize: "10px", color: "#404040", lineHeight: 1.4, marginTop: "4px" }}>{entry.hook || "Rest"}</div>
+                  <div style={{ fontSize: "10px", color: "#AAAAAA", lineHeight: 1.4, marginTop: "4px" }}>{entry.hook || "Rest"}</div>
                 )}
               </div>
             );
@@ -1647,8 +1647,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         </div>
 
         <div style={S.insightBox}>
-          <div style={{ fontSize: "12px", fontWeight: "700", color: "#FF3B3B", marginBottom: "6px" }}>🔄 Creator Workflow</div>
-          <div style={{ fontSize: "13px", color: "#E0E0E0" }}>Posts are generated and staged. Creator gets a notification to review, edit if needed, and manually hit post — preserving authenticity while cutting prep time ~70%.</div>
+          <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "6px" }}>🔄 Creator Workflow</div>
+          <div style={{ fontSize: "13px", color: "#444444" }}>Posts are generated and staged. Creator gets a notification to review, edit if needed, and manually hit post — preserving authenticity while cutting prep time ~70%.</div>
         </div>
 
         <button style={{ ...S.btn, background: "#22C55E" }} onClick={generateBoostRecs}>🚀 View Boost Recommendations →</button>
@@ -1667,30 +1667,30 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         <button style={S.btnOutline} onClick={() => setScreen("profile")}>← Back</button>
       </nav>
       <div style={S.container}>
-        <div style={{ fontSize: "11px", color: "#FF3B3B", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>Boost Intelligence · {selectedCreator?.name}</div>
+        <div style={{ fontSize: "11px", color: "#C9A96E", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>Boost Intelligence · {selectedCreator?.name}</div>
         <h2 style={{ ...S.heading, marginBottom: "4px" }}>Signal-Based Boost Plan</h2>
         <p style={S.sub}>Ranked by commission rate, content trend, and format signal. Includes video vs. static comparison guidance.</p>
 
         {boostRecs.map((rec, i) => {
-          const pc = { "🔥 Boost Now": "#FB923C", "⚡ Test Next": "#FF3B3B", "👀 Watch": "#60A5FA" };
-          const color = pc[rec.priority] || "#FF3B3B";
+          const pc = { "🔥 Boost Now": "#FB923C", "⚡ Test Next": "#8B5CF6", "👀 Watch": "#60A5FA" };
+          const color = pc[rec.priority] || "#C9A96E";
           return (
             <div key={i} style={{ ...S.boostCard, borderLeft: `3px solid ${color}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                 <span style={{ ...S.tag, background: `${color}20`, color, fontSize: "12px", padding: "4px 12px" }}>{rec.priority}</span>
-                <span style={{ ...S.tag, background: "#1A1A1A", color: "#A0A0A0" }}>{rec.content_type}</span>
+                <span style={{ ...S.tag, background: "#F0EDE8", color: "#888888" }}>{rec.content_type}</span>
               </div>
               <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "6px" }}>{rec.product}</div>
-              <div style={{ fontSize: "13px", color: "#E0E0E0", lineHeight: 1.5, marginBottom: "10px" }}>{rec.rationale}</div>
+              <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5, marginBottom: "10px" }}>{rec.rationale}</div>
               {rec.format_note && (
                 <div style={{ fontSize: "12px", color: "#FBBF24", background: "rgba(251,191,36,0.08)", borderRadius: "8px", padding: "8px 12px", marginBottom: "12px" }}>
                   📺 {rec.format_note}
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                {[["BUDGET", rec.suggested_budget, "#34D399"], ["WATCH FOR", rec.expected_signal, "#FFFFFF"], ["STOP LOSS", rec.stop_loss, "#FB923C"]].map(([label, val, col]) => (
-                  <div key={label} style={{ background: "#141414", borderRadius: "8px", padding: "10px" }}>
-                    <div style={{ fontSize: "10px", color: "#555555", marginBottom: "4px" }}>{label}</div>
+                {[["BUDGET", rec.suggested_budget, "#34D399"], ["WATCH FOR", rec.expected_signal, "#1A1A1A"], ["STOP LOSS", rec.stop_loss, "#FB923C"]].map(([label, val, col]) => (
+                  <div key={label} style={{ background: "#FFFFFF", borderRadius: "8px", padding: "10px" }}>
+                    <div style={{ fontSize: "10px", color: "#999999", marginBottom: "4px" }}>{label}</div>
                     <div style={{ fontSize: "11px", color: col, fontWeight: label === "BUDGET" ? "700" : "400" }}>{val}</div>
                   </div>
                 ))}
@@ -1700,8 +1700,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         })}
 
         <div style={S.insightBox}>
-          <div style={{ fontSize: "12px", fontWeight: "700", color: "#FF3B3B", marginBottom: "6px" }}>📡 Signal Detection + Data Connections Needed</div>
-          <div style={{ fontSize: "13px", color: "#E0E0E0", marginBottom: "10px" }}>System monitors EPC and CPC every 24hrs. Scale criteria trigger budget increase; underperformers are killed before spend compounds. When Meta API + Amazon affiliate API are connected, these decisions become fully automated.</div>
+          <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "6px" }}>📡 Signal Detection + Data Connections Needed</div>
+          <div style={{ fontSize: "13px", color: "#444444", marginBottom: "10px" }}>System monitors EPC and CPC every 24hrs. Scale criteria trigger budget increase; underperformers are killed before spend compounds. When Meta API + Amazon affiliate API are connected, these decisions become fully automated.</div>
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <span style={S.placeholder}>Meta API: CPC by creative type</span>
             <span style={S.placeholder}>Amazon API: EPC 24hr by SubID</span>
