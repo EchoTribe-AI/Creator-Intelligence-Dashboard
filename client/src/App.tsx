@@ -1262,6 +1262,14 @@ If this creator is static-only, use Static for most days and avoid Video days.`;
 
     const prompt = `You are a paid media strategist for creator commerce.
 
+Real-world retail affiliate signal benchmarks to use for thresholds:
+- Strong CPC target: $0.06–$0.10 (Q4 can hit $0.063; off-peak expect $0.08–$0.15)
+- Stop-loss CPC: $0.18–$0.25 depending on commission rate
+- EPC target for profitability: $0.06–$0.09 before bonus tiers
+- CTR benchmark: 5–8% strong, 8%+ exceptional
+- Never suggest CPC thresholds above $0.30 for standard retail affiliate
+- Signal ratio (EPC/CPC) >= 1 = scale, < 1 = watch or kill
+
 Creator: ${selectedCreator.name}
 Current ad format: ${selectedCreator.adType}
 NOTE: Meta video ads typically have higher CPM but stronger engagement. Static image ads often have lower CPC but may have lower conversion intent. This creator runs ${selectedCreator.adType === 'static' ? 'ONLY static — so we are adding video variations as NEW tests' : selectedCreator.adType === 'video' ? 'ONLY video — so we are adding static image variations as NEW tests' : 'both — compare performance across formats'}.
@@ -1292,9 +1300,33 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       setBoostRecs(JSON.parse(cleaned));
     } catch (e) {
       setBoostRecs([
-        { priority: "🔥 Boost Now", content_type: selectedCreator.adType === "static" ? "Static Image" : "Video", product: selectedCreator.products[0]?.name, rationale: "Matches creator's proven format — highest probability of strong EPC signal.", suggested_budget: "$25/day", expected_signal: "EPC > $0.15 within 48hrs, CPC < $1.20", stop_loss: "Kill if CPC > $1.80 after 24hrs", format_note: selectedCreator.adType === "static" ? "Static-only creator — start here, then test video as a new format to compare CPC." : "Video-first creator — start here, then test static image to compare CPM and CPC." },
-        { priority: "⚡ Test Next", content_type: selectedCreator.adType === "static" ? "Video" : "Static Image", product: selectedCreator.products[1]?.name, rationale: "Test the opposite format to this creator's current style — key insight for the pilot.", suggested_budget: "$15/day", expected_signal: "CTR > 1.2% within 48hrs, EPC > $0.10", stop_loss: "Kill if no conversions after $30 spend", format_note: "This is the critical video vs. static comparison — data from this test informs the full portfolio strategy." },
-        { priority: "👀 Watch", content_type: "Carousel", product: selectedCreator.products[2]?.name, rationale: "Carousel format not yet tested — build now, launch when signal from first two tests confirms.", suggested_budget: "Hold", expected_signal: "Wait for organic engagement signal first", stop_loss: "N/A — prep only", format_note: "Carousel may bridge video and static — worth testing after baseline is established." },
+        {
+          priority: "🔥 Boost Now",
+          content_type: "Video",
+          product: selectedCreator.products[0]?.name,
+          rationale: "Highest commission category with strong trend signal — video format already proven. Amplify what's working before testing new formats.",
+          suggested_budget: "$25/day",
+          expected_signal: "CPC under $0.10 and EPC above $0.06 within 48hrs",
+          stop_loss: "Kill if CPC exceeds $0.18 after 24hrs"
+        },
+        {
+          priority: "⚡ Test Next",
+          content_type: "Static Image",
+          product: selectedCreator.products[1]?.name,
+          rationale: "No static variations exist for this product. Lower CPM on static may reduce CPC below video baseline — worth a small test to compare format efficiency.",
+          suggested_budget: "$15/day",
+          expected_signal: "CPC under $0.12 and CTR above 1.5% within 48hrs",
+          stop_loss: "Kill if CPC exceeds $0.20 or no conversions after $30 spend"
+        },
+        {
+          priority: "👀 Watch",
+          content_type: "Carousel",
+          product: selectedCreator.products[2]?.name,
+          rationale: "Trending product — build carousel creative now and hold until organic engagement confirms purchase intent signal.",
+          suggested_budget: "Hold",
+          expected_signal: "Wait for organic saves/shares signal before paid push",
+          stop_loss: "N/A — prep only"
+        },
       ]);
     }
     setLoading(false);

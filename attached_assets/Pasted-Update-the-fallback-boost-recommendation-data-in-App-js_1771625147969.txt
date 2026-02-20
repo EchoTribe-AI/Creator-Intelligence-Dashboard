@@ -1,0 +1,42 @@
+Update the fallback boost recommendation data in App.jsx to use realistic signal thresholds based on actual retail affiliate performance data.
+Replace the hardcoded fallback boostRecs array with these corrected values:
+javascriptsetBoostRecs([
+  {
+    priority: "🔥 Boost Now",
+    content_type: "Video",
+    product: selectedCreator.products[0]?.name,
+    rationale: "Highest commission category with strong trend signal — video format already proven. Amplify what's working before testing new formats.",
+    suggested_budget: "$25/day",
+    expected_signal: "CPC under $0.10 and EPC above $0.06 within 48hrs",
+    stop_loss: "Kill if CPC exceeds $0.18 after 24hrs"
+  },
+  {
+    priority: "⚡ Test Next",
+    content_type: "Static Image",
+    product: selectedCreator.products[1]?.name,
+    rationale: "No static variations exist for this product. Lower CPM on static may reduce CPC below video baseline — worth a small test to compare format efficiency.",
+    suggested_budget: "$15/day",
+    expected_signal: "CPC under $0.12 and CTR above 1.5% within 48hrs",
+    stop_loss: "Kill if CPC exceeds $0.20 or no conversions after $30 spend"
+  },
+  {
+    priority: "👀 Watch",
+    content_type: "Carousel",
+    product: selectedCreator.products[2]?.name,
+    rationale: "Trending product — build carousel creative now and hold until organic engagement confirms purchase intent signal.",
+    suggested_budget: "Hold",
+    expected_signal: "Wait for organic saves/shares signal before paid push",
+    stop_loss: "N/A — prep only"
+  },
+]);
+```
+
+**Also update the Claude prompt** that generates boost recs dynamically. Add this context paragraph at the top of the prompt:
+```
+Real-world retail affiliate signal benchmarks to use for thresholds:
+- Strong CPC target: $0.06–$0.10 (Q4 can hit $0.063; off-peak expect $0.08–$0.15)
+- Stop-loss CPC: $0.18–$0.25 depending on commission rate
+- EPC target for profitability: $0.06–$0.09 before bonus tiers
+- CTR benchmark: 5–8% strong, 8%+ exceptional
+- Never suggest CPC thresholds above $0.30 for standard retail affiliate
+- Signal ratio (EPC/CPC) >= 1 = scale, < 1 = watch or kill
