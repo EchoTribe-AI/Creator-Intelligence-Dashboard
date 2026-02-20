@@ -1,1 +1,34 @@
-{"products": []}
+{
+  "products": [
+    {
+      "_key": "caseyLeigh_B0FG2W1BZS",
+      "_id": "1771621031474",
+      "creatorId": "caseyLeigh",
+      "savedAt": "2026-02-20T20:57:11.474Z",
+      "asin": "B0FG2W1BZS",
+      "url": "https://www.amazon.com/dp/B0FG2W1BZS?l",
+      "title": "PACKISM Clear Bag for Stadium Events - Clear Purses for Women Transparent Crossbody Messenger Bag for Concerts Game Day",
+      "brand": "PACKISM",
+      "price": "$16.99",
+      "rating": "4.7 out of 5",
+      "reviewCount": "(2,324)",
+      "category": "Shoulder Bags",
+      "heroImage": "https://m.media-amazon.com/images/I/71bgs0TEF2L._AC_SL1500_.jpg",
+      "additionalImages": [
+        "https://m.media-amazon.com/images/I/51mW5MRJfWL._AC_US40_.jpg",
+        "https://m.media-amazon.com/images/I/511iuMHNT-L._AC_US40_.jpg",
+        "https://m.media-amazon.com/images/I/51dz5JcJ00L._AC_US40_.jpg",
+        "https://m.media-amazon.com/images/I/41oWvo5DpaL._AC_US40_.jpg",
+        "https://m.media-amazon.com/images/I/41OAavSuHzL._AC_US40_.jpg"
+      ],
+      "bullets": [
+        "Extra Large Capacity: Measures 9 x 3.9 x 12 inches; significantly larger than standard mini clear bags; spacious enough to hold all your stadium essentials (phone, keys, wallet, tickets, mini power bank, sunglasses, and lipstick) and fits your day-trip comforts like a notebook, fan, and sunscreen. Everything has its place for effortless organization and easy access",
+        "Stadium-approved Clear Bag: Designed to maximize the allowable size for most stadiums and venues (typically under 12 x 6 x 12 inches); this clear bag for stadium events helps you get through security quickly without leaving your necessities behind",
+        "Adjustable for Any Occasion: Strap range 33-58 inches. Wear it crossbody at 58 inches or shoulder-length at 33 inches; Detach the strap for clutch-style use at baseball games; Switch from day to night with this versatile stadium purse",
+        "Long-lasting Water-resistant Design: Shield your phone and wallet with thick PVC material; Handles sudden rain or spilled drinks at tailgates; Clear crossbody bags for women built to survive all-season adventures",
+        "More Than Just Game Day: Ace airport security lines with this see through bag; Take it to beach days or Target runs; Great gift for music festival lovers or as a Christmas stocking stuffer"
+      ],
+      "scrapedAt": "2026-02-20T20:57:11.396Z"
+    }
+  ]
+}

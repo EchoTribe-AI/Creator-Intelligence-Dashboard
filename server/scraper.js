@@ -178,17 +178,33 @@ export async function getStorefrontProducts(storefrontUrl) {
 
   // ── Extract product links ─────────────────────────────────────────────
   // Amazon storefront photo pages render product cards with dp/ links
-  $('a[href*="/dp/"]').each((_, el) => {
-    const href = $(el).attr('href') || '';
-    const asinMatch = href.match(/\/dp\/([A-Z0-9]{10})/);
-    if (!asinMatch) return;
+  // Updated selector to find products more reliably in modern storefronts
+  const productSelectors = [
+    'a[href*="/dp/"]',
+    'a[href*="/gp/product/"]',
+    'div[data-asin]',
+    '[class*="product-card"]',
+    '[class*="shoppable-item"]'
+  ];
 
-    const asin = asinMatch[1];
+  $(productSelectors.join(', ')).each((_, el) => {
+    let asin = $(el).attr('data-asin');
+    let href = $(el).attr('href') || '';
+
+    if (!asin && href) {
+      const asinMatch = href.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/);
+      if (asinMatch) asin = asinMatch[1];
+    }
+
+    if (!asin) return;
     if (seenAsins.has(asin)) return;
     seenAsins.add(asin);
 
     // Build full product URL preserving affiliate tag if present
-    let productUrl = href.startsWith('http') ? href : `https://www.amazon.com${href}`;
+    let productUrl = href && href.startsWith('http') ? href : `https://www.amazon.com/dp/${asin}`;
+    if (href && !href.startsWith('http') && href.startsWith('/')) {
+        productUrl = `https://www.amazon.com${href}`;
+    }
 
     // Extract affiliate tag from URL if present
     const tagMatch = productUrl.match(/tag=([^&]+)/);
@@ -202,28 +218,35 @@ export async function getStorefrontProducts(storefrontUrl) {
 
     // Product image — look within the card or the link itself
     let image = '';
-    const imgEl = card.find('img').first().length ? card.find('img').first() : $(el).find('img').first();
-    image = imgEl.attr('src') || imgEl.attr('data-src') || '';
+    const imgSelectors = ['img[src*="media-amazon"]', 'img[src*="images-amazon"]', 'img'];
+    for (const sel of imgSelectors) {
+      const found = card.find(sel).first().length ? card.find(sel).first() : $(el).find(sel).first();
+      image = found.attr('src') || found.attr('data-src') || found.attr('data-a-dynamic-image') || '';
+      if (image) break;
+    }
+
+    // Handle dynamic image JSON
+    if (image && image.startsWith('{')) {
+        try {
+            const imgObj = JSON.parse(image);
+            image = Object.keys(imgObj)[0];
+        } catch (e) {}
+    }
 
     // Title — look for text near the image
     let title = '';
-    const titleEl = card.find('[class*="title"], [class*="name"], h2, h3, span[class*="text"]').first();
+    const titleEl = card.find('[class*="title"], [class*="name"], h2, h3, span[class*="text"], [class*="description"]').first();
     title = titleEl.text().trim();
 
     // Price
     let price = '';
-    const priceEl = card.find('[class*="price"], .a-price').first();
+    const priceEl = card.find('[class*="price"], .a-price, .a-color-price').first();
     price = priceEl.text().trim().replace(/\s+/g, ' ');
-
-    // Brand
-    let brand = '';
-    const brandEl = card.find('[class*="brand"]').first();
-    brand = brandEl.text().trim();
 
     products.push({
       asin,
       title: title || null,
-      brand: brand || null,
+      brand: null,
       price: price || null,
       image: image || null,
       productUrl: cleanUrl,
