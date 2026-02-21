@@ -1261,7 +1261,7 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
 // ── Main App ───────────────────────────────────────────────────────────────
 // ── MANUAL FLAG SYSTEM ────────────────────────────────────────────────────────
 const FLAG_REASONS = [
-  { id: 'collection_page', label: 'Links to collection page', color: '#F97316', icon: '⚠️' },
+  { id: 'wrong_page', label: 'Links to wrong page', color: '#F97316', icon: '⚠️' },
   { id: 'broken_link', label: 'Broken or dead link', color: '#EF4444', icon: '🚫' },
   { id: 'wrong_product', label: 'Wrong product in link', color: '#F97316', icon: '🎯' },
   { id: 'trademark_violation', label: 'Trademark/brand name used', color: '#EF4444', icon: '®️' },
