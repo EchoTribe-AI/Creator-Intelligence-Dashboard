@@ -1297,7 +1297,6 @@ ${product.bullets?.map(b => `  • ${b}`).join('\n') || '  • No details availa
       : `Product: ${product.name} (${product.category}, ${product.commission} commission)`;
 
     const prompt = `You are an AI content strategist for creator commerce.
-
 Creator: ${selectedCreator.name}
 Niche: ${selectedCreator.niche}
 Tone: ${selectedCreator.tone}
@@ -1315,30 +1314,54 @@ Generate a JSON object (no markdown, raw JSON only) with this structure:
   "ad_variations": [
     {
       "type": "Video Ad",
-      "hook": "opening hook line — specific to THIS product's actual features",
-      "caption": "full ad caption 2-3 sentences in creator's exact tone, referencing real product details",
-      "cta": "call to action",
-      "disclosure": "#ad #amazonfinds"
+      "hook": "...",
+      "caption": "...",
+      "cta": "...",
+      "disclosure": "#ad #amazonfinds",
+      "compliance_flags": []
     },
     {
       "type": "Static Image Ad",
-      "hook": "punchy headline for image overlay — use a specific feature or price point",
-      "caption": "shorter caption for static — punchy and visual, references real product detail",
-      "cta": "call to action",
-      "disclosure": "#ad"
+      "hook": "...",
+      "caption": "...",
+      "cta": "...",
+      "disclosure": "#ad",
+      "compliance_flags": []
     },
     {
       "type": "Carousel Ad",
-      "hook": "carousel opening line",
-      "caption": "caption that could map to 3-4 carousel slides, each highlighting a different product feature",
+      "hook": "...",
+      "caption": "...",
       "slides": ["slide 1 text", "slide 2 text", "slide 3 text"],
-      "cta": "call to action",
-      "disclosure": "#ad #amazonfinds"
+      "cta": "...",
+      "disclosure": "#ad #amazonfinds",
+      "compliance_flags": []
     }
   ],
-  "format_insight": "1 sentence on video vs static for this creator",
-  "boost_recommendation": "1-2 sentence recommendation referencing 24hr EPC signal threshold"
-}`;
+  "format_insight": "...",
+  "boost_recommendation": "...",
+  "policy_review": {
+    "overall_status": "approved" | "review_needed",
+    "flags": []
+  }
+}
+
+COMPLIANCE FLAGGING:
+For each ad variation, check against Meta Ad Policy and populate "compliance_flags" with any issues found. Use this format per flag:
+{ "rule": "rule name", "severity": "warning" | "block", "note": "brief explanation" }
+
+Common rules to check:
+- "trademark_reference": brand name used in copy
+- "unverified_superlative": best/most/number one without source
+- "body_image": before/after or transformation language
+- "deceptive_urgency": false scarcity claims
+- "earnings_claim": income or profit implied
+- "missing_disclosure": no #ad tag present
+
+Also populate "policy_review" at the response level:
+- overall_status = "approved" if no flags exist
+- overall_status = "review_needed" if any flags exist
+- flags = array of all unique rule violations across all variations`;
 
     try {
       const raw = await callClaude(prompt, 1000);
@@ -1357,6 +1380,7 @@ Generate a JSON object (no markdown, raw JSON only) with this structure:
           { type: "Carousel Ad", hook: "Here's why everyone's obsessed 👇", caption: `Swipe to see why ${product.name} is the most-requested product in my DMs this month.`, cta: "Shop Now", disclosure: "#ad #amazonfinds" },
         ],
         boost_recommendation: "Start with the format matching this creator's existing ads. Scale to alternative format after seeing 24hr EPC signal.",
+        policy_review: { overall_status: "approved", flags: [] },
       });
     }
     setLoading(false);
