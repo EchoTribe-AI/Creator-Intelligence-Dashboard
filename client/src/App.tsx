@@ -1297,6 +1297,18 @@ ${product.bullets?.map(b => `  • ${b}`).join('\n') || '  • No details availa
       : `Product: ${product.name} (${product.category}, ${product.commission} commission)`;
 
     const prompt = `You are an AI content strategist for creator commerce.
+
+COMPLIANCE RULES — follow these in every ad variation generated:
+1. TRADEMARK NAMES: Never reference competitor brand names or trademarked terms in ad copy (e.g., SPANX, Free People, Lululemon, Nike, Amazon, Walmart, Target). Use descriptive language instead (e.g., "buttery soft fabric" instead of brand names).
+2. META AD POLICY:
+   - No "before/after" framing.
+   - No unverified superlatives ("best", "#1").
+   - No deceptive urgency ("only 2 left").
+   - No income/earnings claims.
+   - Always include "#ad" or "#sponsored" in disclosure.
+3. AFFILIATE DISCLOSURE: Use "#ad #amazonfinds" for Amazon, "#ad #walmartfinds" for Walmart.
+4. SAFE LANGUAGE: Use "designer-inspired", "luxury feel", "sculpting waistband".
+
 Creator: ${selectedCreator.name}
 Niche: ${selectedCreator.niche}
 Tone: ${selectedCreator.tone}
