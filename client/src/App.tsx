@@ -6,13 +6,13 @@ import { useState } from "react";
 const checkCompliance = (copy: string) => {
   const flags = [];
   
-  // Trademark check
-  const trademarks = ["SPANX", "Free People", "Lululemon", "Nike", "Amazon", "Walmart", "Target"];
-  trademarks.forEach(tm => {
-    if (copy.toLowerCase().includes(tm.toLowerCase())) {
-      flags.push({ rule: "trademark_reference", severity: "block", note: `Contains restricted brand name: ${tm}` });
-    }
-  });
+    // Trademark check
+    const trademarks = ["SPANX", "Free People", "Lululemon", "Nike", "Walmart", "Target"];
+    trademarks.forEach(tm => {
+      if (copy.toLowerCase().includes(tm.toLowerCase())) {
+        flags.push({ rule: "trademark_reference", severity: "block", note: `Contains restricted brand name: ${tm}` });
+      }
+    });
 
   // Superlatives
   const superlatives = ["best", "most popular", "#1", "number one"];
@@ -33,9 +33,12 @@ const checkCompliance = (copy: string) => {
   }
 
   // Disclosure
+  // No disclosure check needed for Meta boosted ads
+  /*
   if (!copy.includes("#ad") && !copy.includes("#sponsored")) {
     flags.push({ rule: "missing_disclosure", severity: "warning", note: "Missing required #ad or #sponsored disclosure" });
   }
+  */
 
   return flags;
 };
@@ -1368,14 +1371,13 @@ ${product.bullets?.map(b => `  • ${b}`).join('\n') || '  • No details availa
     const prompt = `You are an AI content strategist for creator commerce.
 
 COMPLIANCE RULES — follow these in every ad variation generated:
-1. TRADEMARK NAMES: Never reference competitor brand names or trademarked terms in ad copy (e.g., SPANX, Free People, Lululemon, Nike, Amazon, Walmart, Target). Use descriptive language instead (e.g., "buttery soft fabric" instead of brand names).
+1. TRADEMARK NAMES: Never reference competitor brand names or trademarked terms in ad copy (e.g., SPANX, Free People, Lululemon, Nike, Walmart, Target). "Amazon" IS allowed. Use descriptive language instead for other brands (e.g., "buttery soft fabric" instead of brand names).
 2. META AD POLICY:
    - No "before/after" framing.
    - No unverified superlatives ("best", "#1").
    - No deceptive urgency ("only 2 left").
    - No income/earnings claims.
-   - Always include "#ad" or "#sponsored" in disclosure.
-3. AFFILIATE DISCLOSURE: Use "#ad #amazonfinds" for Amazon, "#ad #walmartfinds" for Walmart.
+3. AFFILIATE DISCLOSURE: Manual #ad tags are NOT required as Meta handles disclosure for boosted ads.
 4. SAFE LANGUAGE: Use "designer-inspired", "luxury feel", "sculpting waistband".
 
 Creator: ${selectedCreator.name}
@@ -1521,7 +1523,7 @@ If this creator is static-only, use Static for most days and avoid Video days.`;
     const prompt = `You are a paid media strategist for creator commerce.
 
 COMPLIANCE RULES — follow these in every recommendation:
-1. TRADEMARK NAMES: Never reference competitor brand names or trademarked terms (e.g., SPANX, Free People, Lululemon, Nike, Amazon, Walmart, Target).
+1. TRADEMARK NAMES: Never reference competitor brand names or trademarked terms (e.g., SPANX, Free People, Lululemon, Nike, Walmart, Target). "Amazon" IS allowed.
 2. META AD POLICY: No prohibited claims or misleading framing.
 3. SAFE LANGUAGE: Use descriptive terms, not brand comparisons.
 
