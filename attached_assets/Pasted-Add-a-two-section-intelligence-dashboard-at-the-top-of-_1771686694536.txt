@@ -1,0 +1,95 @@
+Add a two-section intelligence dashboard at the top of the home screen, powered by the parsed CSV creator data.
+The dashboard sits above the creator grid and has two sections: one for Revenue and one for Operations . All cards are clickable and navigate directly to that creator's profile. Before you begin, share anything else you’d recommend that we can include in this as well.
+
+Section 1 — Quick Stats Bar
+A single row of 4 stat tiles pulled from the live creators array:
+const stats = [
+  { label: 'Total Creators', value: creators.length },
+  { label: 'Total Ads', value: creators.reduce((sum, c) => sum + c.totalAds, 0) },
+  { label: 'Video Only', value: creators.filter(c => c.adFormat === 'Video Only').length },
+  { label: 'Static Only', value: creators.filter(c => c.adFormat === 'Static Only').length },
+];
+Render as a horizontal row of cards with a large number, small label below. Use the existing card style but compact — no border-left accent, just subtle background.
+
+Section 2 — Revenue Intelligence (for Joy & Danny)
+Label this section: 💰 REVENUE INTELLIGENCE
+Top Opportunity creators — the top 5 creators sorted by totalAds who are Video Only (meaning they have zero static creative, which is a direct expansion opportunity):
+const topOpportunities = creators
+  .filter(c => c.adFormat === 'Video Only')
+  .slice(0, 5)
+  .map(c => ({
+    name: c.name,
+    niche: c.niche,
+    totalAds: c.totalAds,
+    gap: 'No static creative — expansion opportunity',
+    creator: c,
+  }));
+Render each as a compact horizontal card with:
+* Creator name + niche on the left
+* Ad count badge in the middle
+* "↑ Expand to Static" tag on the right in green
+* Entire card clickable → selectCreator(c) then navigate to profile screen
+
+Section 3 — Operational Intelligence (for Roxanne)
+Label this section: ⚠️ OPERATIONAL FLAGS
+Compliance flags — scan each creator's existingAds array for ad copy containing known trademark terms. Flag the creator if any of their ads contain these terms:
+const TRADEMARK_TERMS = [
+  'spanx', 'lululemon', 'free people', 'anthropologie', 'zara', 
+  'nike', 'adidas', 'nordstrom', 'target', 'walmart',
+  'shein', 'temu', 'amazon' // amazon as brand comparison only
+];
+
+const complianceFlags = creators
+  .map(c => {
+    const flaggedAds = c.existingAds.filter(ad =>
+      TRADEMARK_TERMS.some(term => ad.copy.toLowerCase().includes(term))
+    );
+    if (flaggedAds.length === 0) return null;
+    const foundTerms = [...new Set(
+      flaggedAds.flatMap(ad =>
+        TRADEMARK_TERMS.filter(term => ad.copy.toLowerCase().includes(term))
+      )
+    )];
+    return {
+      name: c.name,
+      niche: c.niche,
+      flagCount: flaggedAds.length,
+      terms: foundTerms,
+      creator: c,
+    };
+  })
+  .filter(Boolean)
+  .slice(0, 5);
+Render each as a compact horizontal card with:
+* Creator name + niche on the left
+* Number of flagged ads in orange badge in the middle
+* The specific flagged terms shown as small red pills on the right (e.g. spanx lululemon)
+* Entire card clickable → selectCreator(c) then navigate to profile screen
+
+Format gaps — also in the Operational section, add a smaller callout box:
+const formatGaps = {
+  videoOnly: creators.filter(c => c.adFormat === 'Video Only').length,
+  staticOnly: creators.filter(c => c.adFormat === 'Static Only').length,
+  mixed: creators.filter(c => c.adFormat === 'Video + Static').length,
+};
+Render as a single insight box (use the existing insightBox style) that says:
+Format Gap Analysis — {videoOnly} creators running video-only with zero static variations. {staticOnly} running static-only with no video. Only {mixed} creators are running both formats. This represents the primary creative expansion opportunity across the portfolio.
+
+Layout and styling:
+* Dashboard sits between the hero text and the creator grid
+* Each section has a small all-caps label header matching the existing sectionLabel style
+* Stats bar: 4 equal-width tiles in a single row using CSS grid repeat(4, 1fr)
+* Opportunity and compliance cards: full-width stacked list, not a grid
+* Add cursor: pointer and a subtle hover state on all clickable cards (use the existing .creator-card:hover pattern)
+* On mobile (screen width < 600px), stats bar wraps to 2x2
+
+Clicking any dashboard card must:
+1. Call selectCreator(card.creator)
+2. Set setScreen('profile')
+3. Reset setVisibleAdsCount(6)
+This is the same flow as clicking a creator card on the home grid — reuse that exact function.
+
+After implementing, verify three things in the browser:
+1. Stats numbers match the actual creator count from the CSV
+2. At least one compliance flag appears 
+3. Clicking an opportunity card lands on the correct creator profile

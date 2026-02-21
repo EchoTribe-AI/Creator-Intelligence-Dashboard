@@ -1555,7 +1555,7 @@ export default function App() {
     }
   };
 
-  const selectCreator = (creator) => {
+  const selectCreator = (creator: any) => {
     setSelectedCreator(creator);
     setSelectedProduct(null);
     setScrapedProduct(null);
@@ -1868,6 +1868,58 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     dataCell: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "10px", padding: "12px 14px" },
   };
 
+  const stats = [
+    { label: 'Total Creators', value: creators.length },
+    { label: 'Total Ads', value: creators.reduce((sum: any, c: any) => sum + (c.totalAds || 0), 0) },
+    { label: 'Video Only', value: creators.filter((c: any) => c.adType === 'video').length },
+    { label: 'Static Only', value: creators.filter((c: any) => c.adType === 'static').length },
+  ];
+
+  const topOpportunities = creators
+    .filter((c: any) => c.adType === 'video')
+    .slice(0, 5)
+    .map((c: any) => ({
+      name: c.name,
+      niche: c.niche,
+      totalAds: c.totalAds,
+      gap: 'No static creative — expansion opportunity',
+      creator: c,
+    }));
+
+  const TRADEMARK_TERMS = [
+    'spanx', 'lululemon', 'free people', 'anthropologie', 'zara', 
+    'nike', 'adidas', 'nordstrom', 'target', 'walmart',
+    'shein', 'temu', 'amazon'
+  ];
+
+  const complianceFlags = creators
+    .map((c: any) => {
+      const flaggedAds = c.existingAds.filter((ad: any) =>
+        TRADEMARK_TERMS.some(term => ad.copy.toLowerCase().includes(term))
+      );
+      if (flaggedAds.length === 0) return null;
+      const foundTerms = [...new Set(
+        flaggedAds.flatMap((ad: any) =>
+          TRADEMARK_TERMS.filter(term => ad.copy.toLowerCase().includes(term))
+        )
+      )];
+      return {
+        name: c.name,
+        niche: c.niche,
+        flagCount: flaggedAds.length,
+        terms: foundTerms,
+        creator: c,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 5);
+
+  const formatGaps = {
+    videoOnly: creators.filter((c: any) => c.adType === 'video').length,
+    staticOnly: creators.filter((c: any) => c.adType === 'static').length,
+    mixed: creators.filter((c: any) => c.adType === 'mixed').length,
+  };
+
   const filteredCreators = filterType === "all" 
     ? creators 
     : creators.filter((c: any) => c.adType === filterType);
@@ -1898,14 +1950,59 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </div>
           ) : (
             <>
-              <div style={S.insightBox}>
-                <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "8px" }}>📊 Intelligence Layer — From Real Ad Library Scrape</div>
-                <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-                  <div><span style={S.highlight}>{creators.filter((c:any) => c.adType === 'video').length} creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>video-only</span></div>
-                  <div><span style={{ color: "#F472B6", fontWeight: "700" }}>{creators.filter((c:any) => c.adType === 'static').length} creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>static-only</span></div>
-                  <div><span style={{ color: "#FBBF24", fontWeight: "700" }}>{creators.filter((c:any) => c.adType === 'mixed').length} creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>mixed format</span></div>
+              {/* Intelligence Dashboard */}
+              <div style={{ marginBottom: "32px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "24px" }}>
+                  {stats.map((s, i) => (
+                    <div key={i} style={{ ...S.card, padding: "12px", borderLeft: "none", textAlign: "center", background: "#f8f9fa" }}>
+                      <div style={{ fontSize: "20px", fontWeight: "800", color: "#0A0A0A" }}>{s.value}</div>
+                      <div style={{ fontSize: "11px", color: "#666", fontWeight: "600", textTransform: "uppercase", marginTop: "2px" }}>{s.label}</div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ fontSize: "13px", color: "#888888", marginTop: "8px" }}>Analyzing {creators.length} total creators across all ad formats to optimize campaign efficiency.</div>
+
+                <div style={S.sectionLabel}>💰 REVENUE INTELLIGENCE</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+                  {topOpportunities.map((op, i) => (
+                    <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #34D399", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => selectCreator(op.creator)}>
+                      <div>
+                        <div style={{ fontSize: "14px", fontWeight: "700" }}>{op.name}</div>
+                        <div style={{ fontSize: "11px", color: "#888" }}>{op.niche}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                        <span style={{ ...S.tag, background: "rgba(0,0,0,0.05)", color: "#666" }}>{op.totalAds} ads</span>
+                        <span style={{ ...S.tag, background: "rgba(52,211,153,0.15)", color: "#34D399", fontWeight: "700" }}>↑ Expand to Static</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={S.sectionLabel}>⚠️ OPERATIONAL FLAGS</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                  {complianceFlags.map((f: any, i) => (
+                    <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #FB923C", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => selectCreator(f.creator)}>
+                      <div>
+                        <div style={{ fontSize: "14px", fontWeight: "700" }}>{f.name}</div>
+                        <div style={{ fontSize: "11px", color: "#888" }}>{f.niche}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <span style={{ ...S.tag, background: "rgba(251,146,60,0.15)", color: "#FB923C", fontWeight: "700" }}>{f.flagCount} flags</span>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {f.terms.slice(0, 3).map((t: string, ti: number) => (
+                            <span key={ti} style={{ ...S.tag, background: "rgba(239,68,68,0.1)", color: "#EF4444", fontSize: "10px" }}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={S.insightBox}>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "8px" }}>Format Gap Analysis</div>
+                  <div style={{ fontSize: "13px", color: "#444", lineHeight: "1.5" }}>
+                    {formatGaps.videoOnly} creators running video-only with zero static variations. {formatGaps.staticOnly} running static-only with no video. Only {formatGaps.mixed} creators are running both formats. This represents the primary creative expansion opportunity across the portfolio.
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
