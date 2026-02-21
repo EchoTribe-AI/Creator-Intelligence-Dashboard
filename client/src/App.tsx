@@ -1666,7 +1666,28 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                   <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
                   <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
                 </div>
-                <span style={{ color: "#C9A96E", fontSize: "18px" }}>→</span>
+                <button 
+                  style={{ 
+                    ...S.btn, 
+                    padding: "6px 12px", 
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "#C9A96E",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: "600"
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    generateContent(p);
+                  }}
+                >
+                  Generate Ad <span>→</span>
+                </button>
               </div>
             </div>
           ))}
