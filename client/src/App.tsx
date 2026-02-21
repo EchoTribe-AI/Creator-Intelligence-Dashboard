@@ -1370,7 +1370,11 @@ function AdFlagButton({ flagKey, existingFlag, setAdFlags }: any) {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("home");
+  const [screen, setScreenState] = useState("home");
+  const setScreen = (s: string) => {
+    setScreenState(s);
+    window.scrollTo(0, 0);
+  };
   const [creators, setCreators] = useState<any[]>([]);
   const [csvLoading, setCsvLoading] = useState(true);
   const [adFlags, setAdFlags] = useState(() => {
