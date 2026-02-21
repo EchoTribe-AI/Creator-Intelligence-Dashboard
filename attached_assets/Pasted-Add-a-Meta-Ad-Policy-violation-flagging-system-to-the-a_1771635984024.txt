@@ -1,0 +1,73 @@
+Add a Meta Ad Policy violation flagging system to the ad generation output.
+In the generateContent function, update the Claude prompt JSON response structure to include a compliance_flags array. Update the prompt to request this:
+javascript// Update the expected JSON structure to include:
+{
+  "hook_angles": [...],
+  "ad_variations": [
+    {
+      "type": "Video Ad",
+      "hook": "...",
+      "caption": "...",
+      "cta": "...",
+      "disclosure": "#ad #amazonfinds",
+      "compliance_flags": []  // empty array if clean
+    }
+  ],
+  "boost_recommendation": "...",
+  "policy_review": {
+    "overall_status": "approved" | "review_needed",
+    "flags": []
+  }
+}
+```
+
+Add this to the Claude prompt instructions:
+```
+COMPLIANCE FLAGGING:
+For each ad variation, check against Meta Ad Policy and populate "compliance_flags" with any issues found. Use this format per flag:
+{ "rule": "rule name", "severity": "warning" | "block", "note": "brief explanation" }
+
+Common rules to check:
+- "trademark_reference": brand name used in copy
+- "unverified_superlative": best/most/number one without source
+- "body_image": before/after or transformation language
+- "deceptive_urgency": false scarcity claims
+- "earnings_claim": income or profit implied
+- "missing_disclosure": no #ad tag present
+
+Also populate "policy_review" at the response level:
+- overall_status = "approved" if no flags exist
+- overall_status = "review_needed" if any flags exist
+- flags = array of all unique rule violations across all variations
+Then update the UI in the generator screen to display compliance status per ad variation:
+javascript// Below each ad variation card, render:
+{v.compliance_flags?.length > 0 ? (
+  <div style={{
+    background: 'rgba(251,146,60,0.08)',
+    border: '1px solid rgba(251,146,60,0.25)',
+    borderRadius: '8px',
+    padding: '10px 14px',
+    marginTop: '10px'
+  }}>
+    <div style={{ fontSize: '11px', fontWeight: '700', color: '#F97316', marginBottom: '6px' }}>
+      ⚠️ Policy Review Needed
+    </div>
+    {v.compliance_flags.map((flag, fi) => (
+      <div key={fi} style={{ fontSize: '12px', color: '#D1D5DB', marginBottom: '3px' }}>
+        <span style={{ color: flag.severity === 'block' ? '#EF4444' : '#F97316' }}>
+          {flag.severity === 'block' ? '🚫' : '⚠️'}
+        </span>{' '}
+        <strong>{flag.rule}</strong>: {flag.note}
+      </div>
+    ))}
+  </div>
+) : (
+  <div style={{ fontSize: '11px', color: '#22C55E', marginTop: '8px' }}>
+    ✓ Meta Policy Check Passed
+  </div>
+)}
+Color logic:
+
+🚫 Red (#EF4444) = block severity — must fix before running
+⚠️ Orange (#F97316) = warning severity — review recommended
+✓ Green (#22C55E) = clean, no flags

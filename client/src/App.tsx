@@ -1974,7 +1974,34 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </div>
             <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "8px", color: "#1A1A1A" }}>"{v.hook}"</div>
             <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.6, marginBottom: "10px" }}>{v.caption}</div>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            
+            {v.compliance_flags?.length > 0 ? (
+              <div style={{
+                background: 'rgba(251,146,60,0.08)',
+                border: '1px solid rgba(251,146,60,0.25)',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                marginTop: '10px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#F97316', marginBottom: '6px' }}>
+                  ⚠️ Policy Review Needed
+                </div>
+                {v.compliance_flags.map((flag, fi) => (
+                  <div key={fi} style={{ fontSize: '12px', color: '#444444', marginBottom: '3px' }}>
+                    <span style={{ color: flag.severity === 'block' ? '#EF4444' : '#F97316' }}>
+                      {flag.severity === 'block' ? '🚫' : '⚠️'}
+                    </span>{' '}
+                    <strong>{flag.rule}</strong>: {flag.note}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: '11px', color: '#22C55E', marginTop: '8px' }}>
+                ✓ Meta Policy Check Passed
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
               <span style={{ ...S.tag, background: "#F0EDE8", color: "#888888" }}>CTA: {v.cta}</span>
               <span style={{ ...S.tag, background: "#F0EDE8", color: "#888888" }}>{v.disclosure}</span>
             </div>
