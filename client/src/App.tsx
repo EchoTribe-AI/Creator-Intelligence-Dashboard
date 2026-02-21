@@ -1451,6 +1451,11 @@ If this creator is static-only, use Static for most days and avoid Video days.`;
 
     const prompt = `You are a paid media strategist for creator commerce.
 
+COMPLIANCE RULES — follow these in every recommendation:
+1. TRADEMARK NAMES: Never reference competitor brand names or trademarked terms (e.g., SPANX, Free People, Lululemon, Nike, Amazon, Walmart, Target).
+2. META AD POLICY: No prohibited claims or misleading framing.
+3. SAFE LANGUAGE: Use descriptive terms, not brand comparisons.
+
 Real-world retail affiliate signal benchmarks to use for thresholds:
 - Strong CPC target: $0.06–$0.10 (Q4 can hit $0.063; off-peak expect $0.08–$0.15)
 - Stop-loss CPC: $0.18–$0.25 depending on commission rate
