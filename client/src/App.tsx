@@ -2329,17 +2329,17 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             const flagKey = `${selectedCreator.id}_${ad.libraryId}`;
             const existingFlag = adFlags[flagKey];
             return (
-            <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start" }}>
+            <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
-                {ad.hasVideo && ad.videoUrl ? (
+                {ad.videoUrl ? (
                   <video src={ad.videoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} preload="metadata" />
-                ) : ad.hasStatic && ad.imageUrl ? (
+                ) : ad.imageUrl ? (
                   <img src={ad.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
                 ) : (
                   <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
                 )}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ flex: "1 1 250px", minWidth: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                   <div style={{ display: "flex", gap: "6px" }}>
                     {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
