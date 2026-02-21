@@ -16,12 +16,17 @@ const checkCompliance = (copy: string) => {
     });
 
   // Superlatives
-  const superlatives = ["best", "most popular", "#1", "number one"];
+  const superlatives = ["most popular", "#1", "number one"];
   superlatives.forEach(s => {
     if (new RegExp(`\\b${s}\\b`, 'i').test(copy)) {
       flags.push({ rule: "unverified_superlative", severity: "warning", note: `Contains unverified superlative: "${s}"` });
     }
   });
+
+  // Special check for "best" to avoid "best selling"
+  if (/\bbest\b/i.test(copy) && !/\bbest\s+selling\b/i.test(copy)) {
+    flags.push({ rule: "unverified_superlative", severity: "warning", note: `Contains unverified superlative: "best"` });
+  }
 
   // Urgency
   if (/\bonly \d+ left\b/i.test(copy)) {
