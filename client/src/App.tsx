@@ -2102,7 +2102,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <>
               {/* Quick Stats Bar */}
               <div style={{ marginBottom: "24px" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "16px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px", marginBottom: "16px" }}>
                   {stats.map((s, i) => (
                     <div key={i} style={{ ...S.card, padding: "12px", borderLeft: "none", textAlign: "center", background: "#f8f9fa" }}>
                       <div style={{ fontSize: "20px", fontWeight: "800", color: "#0A0A0A" }}>{s.value}</div>
@@ -2138,7 +2138,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 ))}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "14px" }}>
                 {visibleCreators.map((c: any) => {
                   const adMeta = AD_TYPE_LABELS[c.adType as keyof typeof AD_TYPE_LABELS];
                   return (
@@ -2174,12 +2174,12 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 <div id="revenue-intelligence" style={S.sectionLabel}>💰 REVENUE INTELLIGENCE</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
                   {topOpportunities.map((op, i) => (
-                    <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #34D399", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => selectCreator(op.creator)}>
+                    <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #34D399", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", flexWrap: "wrap", gap: "8px" }} onClick={() => selectCreator(op.creator)}>
                       <div>
                         <div style={{ fontSize: "14px", fontWeight: "700" }}>{op.name}</div>
                         <div style={{ fontSize: "11px", color: "#888" }}>{op.niche}</div>
                       </div>
-                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
                         <span style={{ ...S.tag, background: "rgba(0,0,0,0.05)", color: "#666" }}>{op.totalAds} ads</span>
                         <span style={{ ...S.tag, background: "rgba(52,211,153,0.15)", color: "#34D399", fontWeight: "700" }}>↑ Expand to Static</span>
                       </div>
@@ -2200,7 +2200,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                           style={{ ...S.card, padding: '16px', borderLeft: '3px solid #EF4444', cursor: 'pointer' }}
                           onClick={() => selectCreator(entry.creator)}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                             <div>
                               <div style={{ fontSize: '14px', fontWeight: '700' }}>{entry.creatorName}</div>
                               <div style={{ fontSize: '12px', color: '#888' }}>{entry.niche}</div>
@@ -2230,14 +2230,14 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                   {complianceFlags.map((f: any, i) => (
-                    <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #FB923C", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => selectCreator(f.creator)}>
+                    <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #FB923C", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", flexWrap: "wrap", gap: "8px" }} onClick={() => selectCreator(f.creator)}>
                       <div>
                         <div style={{ fontSize: "14px", fontWeight: "700" }}>{f.name}</div>
                         <div style={{ fontSize: "11px", color: "#888" }}>{f.niche}</div>
                       </div>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                         <span style={{ ...S.tag, background: "rgba(251,146,60,0.15)", color: "#FB923C", fontWeight: "700" }}>{f.flagCount} flags</span>
-                        <div style={{ display: "flex", gap: "4px" }}>
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                           {f.terms.slice(0, 3).map((t: string, ti: number) => (
                             <span key={ti} style={{ ...S.tag, background: "rgba(239,68,68,0.1)", color: "#EF4444", fontSize: "10px" }}>{t}</span>
                           ))}
@@ -2293,7 +2293,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               <div style={{ fontSize: "23px", fontWeight: "800", marginBottom: "4px" }}>{selectedCreator.emoji} {selectedCreator.name}</div>
               <div style={{ fontSize: "13px", color: "#888888" }}>{selectedCreator.niche} · {selectedCreator.audience}</div>
             </div>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
               <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color, fontSize: "12px", padding: "5px 12px" }}>{adMeta.label}</span>
               <span style={{ ...S.tag, background: `${selectedCreator.color}20`, color: selectedCreator.color, fontSize: "12px", padding: "5px 12px" }}>{selectedCreator.totalAds} active ads</span>
             </div>
@@ -2341,7 +2341,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
                     {ad.hasStatic && <span style={{ ...S.tag, background: "rgba(244,114,182,0.15)", color: "#F472B6" }}>🖼️ Static</span>}
                   </div>
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
                     <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
                     <AdFlagButton flagKey={flagKey} existingFlag={existingFlag} setAdFlags={setAdFlags} />
                     <button
@@ -2384,7 +2384,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     </span>
                   </div>
                 )}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px", paddingTop: "8px", borderTop: "1px solid #F0F0F0" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px", paddingTop: "8px", borderTop: "1px solid #F0F0F0", flexWrap: "wrap", gap: "10px" }}>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                     {adProduct.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E", margin: 0 }}>{adProduct.badge}</span>}
                     <div style={{ textAlign: "left" }}>
