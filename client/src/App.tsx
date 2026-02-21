@@ -1525,7 +1525,7 @@ export default function App() {
 
       map[id].existingAds.push({
         started: (row['Started Date'] || '').replace('Started running on ', '').trim(),
-        copy: row['Ad Details'].trim(),
+        copy: row['Ad Details']?.trim() || '',
         hasVideo,
         hasStatic,
         videoUrl: row['Video URL']?.trim() || null,
@@ -2331,9 +2331,9 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
-                {ad.videoUrl ? (
+                {ad.videoUrl && ad.videoUrl !== 'null' ? (
                   <video src={ad.videoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} preload="metadata" />
-                ) : ad.imageUrl ? (
+                ) : ad.imageUrl && ad.imageUrl !== 'null' ? (
                   <img src={ad.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
                 ) : (
                   <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
