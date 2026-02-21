@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getProductData, getStorefrontProducts } from "./scraper.js";
-import { saveProduct, getProductsByCreator, getAllProducts, deleteProduct } from './db.js';
+import { saveProduct, getProductsByCreator, getAllProducts, deleteProduct, saveGeneration, getGenerationsByCreator, getGenerationById, deleteGeneration } from './db.js';
 
 export async function registerRoutes(
   httpServer: Server,
@@ -146,6 +146,48 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ── GENERATIONS ────────────────────────────────────────────────────────────
+  app.post('/api/generations', (req, res) => {
+    const { creatorId, productName, productData, generatedContent } = req.body;
+    if (!creatorId || !generatedContent) {
+      return res.status(400).json({ error: 'creatorId and generatedContent required' });
+    }
+    try {
+      const saved = saveGeneration(creatorId, productName, productData, generatedContent);
+      res.json({ success: true, generation: saved });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.get('/api/generations/:creatorId', (req, res) => {
+    try {
+      const generations = getGenerationsByCreator(req.params.creatorId);
+      res.json({ success: true, generations });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.get('/api/generation/:id', (req, res) => {
+    try {
+      const generation = getGenerationById(req.params.id);
+      if (!generation) return res.status(404).json({ success: false, error: 'Not found' });
+      res.json({ success: true, generation });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.delete('/api/generation/:id', (req, res) => {
+    try {
+      deleteGeneration(req.params.id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 

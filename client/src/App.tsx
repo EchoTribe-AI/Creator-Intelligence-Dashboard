@@ -1316,6 +1316,7 @@ export default function App() {
   const [filterType, setFilterType] = useState("all");
   const [scrapedProducts, setScrapedProducts] = useState([]);
   const [savedProducts, setSavedProducts] = useState([]);
+  const [savedGenerations, setSavedGenerations] = useState<any[]>([]);
 
   const persistProduct = async (creatorId, product) => {
     try {
@@ -1339,13 +1340,30 @@ export default function App() {
     }
   };
 
+  const loadSavedGenerations = async (creatorId) => {
+    try {
+      const res = await fetch(`/api/generations/${creatorId}`);
+      const data = await res.json();
+      if (data.success) {
+        setSavedGenerations(data.generations || []);
+      } else {
+        setSavedGenerations([]);
+      }
+    } catch (e) {
+      console.warn('Could not load saved generations:', e);
+      setSavedGenerations([]);
+    }
+  };
+
   const selectCreator = (creator) => {
     setSelectedCreator(creator);
     setSelectedProduct(null);
     setScrapedProduct(null);
     setGeneratedContent(null);
+    setSavedGenerations([]);
     setScreen("profile");
     loadSavedProducts(creator.id);
+    loadSavedGenerations(creator.id);
   };
 
   const generateContent = async (product) => {
@@ -1446,13 +1464,15 @@ Also populate "policy_review" at the response level:
 - overall_status = "review_needed" if any flags exist
 - flags = array of all unique rule violations across all variations`;
 
+    let contentToSave = null;
     try {
       const raw = await callClaude(prompt, 1000);
       const cleaned = raw.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(cleaned);
       setGeneratedContent(parsed);
+      contentToSave = parsed;
     } catch (e) {
-      setGeneratedContent({
+      const fallback = {
         hook_angles: ["Deal alert hook", "Personal story hook", "Before/after hook"],
         format_insight: selectedCreator.adType === "static"
           ? "This creator runs static-only ads — static image variations will align with their proven format."
@@ -1464,7 +1484,26 @@ Also populate "policy_review" at the response level:
         ],
         boost_recommendation: "Start with the format matching this creator's existing ads. Scale to alternative format after seeing 24hr EPC signal.",
         policy_review: { overall_status: "approved", flags: [] },
-      });
+      };
+      setGeneratedContent(fallback);
+      contentToSave = fallback;
+    }
+    if (contentToSave && selectedCreator) {
+      try {
+        await fetch('/api/generations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            creatorId: selectedCreator.id,
+            productName: product.name || product.title || 'Unknown Product',
+            productData: { name: product.name || product.title || 'Unknown Product', category: product.category, commission: product.commission, heroImage: product.heroImage, price: product.price, brand: product.brand },
+            generatedContent: contentToSave,
+          })
+        });
+        loadSavedGenerations(selectedCreator.id);
+      } catch (e) {
+        console.warn('Could not save generation:', e);
+      }
     }
     setLoading(false);
   };
@@ -1849,6 +1888,81 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               loadSavedProducts(selectedCreator.id);
             }} 
           />
+
+          {/* ── SAVED GENERATIONS ── */}
+          {savedGenerations.length > 0 && (
+            <div>
+              <div style={S.sectionLabel}>
+                📝 Saved Ad Generations — {savedGenerations.length} total
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '24px' }}>
+                {savedGenerations.map(gen => (
+                  <div
+                    key={gen._id}
+                    data-testid={`generation-card-${gen._id}`}
+                    className="pr"
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid #E8E5E0',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'all 0.2s',
+                    }}
+                    onClick={() => {
+                      setSelectedProduct(gen.productData);
+                      setScrapedProduct(gen.productData?.heroImage ? gen.productData : null);
+                      setGeneratedContent(gen.generatedContent);
+                      setScreen("generator");
+                    }}
+                  >
+                    <button
+                      data-testid={`delete-generation-${gen._id}`}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await fetch(`/api/generation/${gen._id}`, { method: 'DELETE' });
+                        loadSavedGenerations(selectedCreator.id);
+                      }}
+                      style={{
+                        position: 'absolute', top: '8px', right: '8px',
+                        background: 'rgba(251,146,60,0.2)',
+                        border: 'none', borderRadius: '50%',
+                        width: '20px', height: '20px',
+                        fontSize: '12px', cursor: 'pointer',
+                        color: '#FB923C', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        lineHeight: 1
+                      }}
+                    >
+                      ×
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      {gen.productData?.heroImage && (
+                        <img
+                          src={gen.productData.heroImage}
+                          alt={gen.productName}
+                          style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: '6px', background: '#fff', border: '1px solid #E8E5E0' }}
+                        />
+                      )}
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#1A1A1A' }}>{gen.productName}</div>
+                        <div style={{ fontSize: '11px', color: '#999999' }}>{new Date(gen.createdAt).toLocaleDateString()} · {new Date(gen.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {gen.generatedContent?.ad_variations?.map((v, i) => (
+                        <span key={i} style={{ ...S.tag, background: i === 0 ? 'rgba(59,130,246,0.12)' : i === 1 ? 'rgba(244,114,182,0.15)' : 'rgba(52,211,153,0.15)', color: i === 0 ? '#3B82F6' : i === 1 ? '#F472B6' : '#34D399', fontSize: '10px' }}>
+                          {v.type}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#C9A96E', marginTop: '8px', fontWeight: '600' }}>View saved ads →</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── SAVED PRODUCT HISTORY ── */}
           {savedProducts.length > 0 && (

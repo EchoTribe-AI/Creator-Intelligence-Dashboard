@@ -87,3 +87,67 @@ export function deleteProduct(id) {
   db.products = db.products.filter(p => p._id !== id);
   writeDb(db);
 }
+
+// ── GENERATIONS ─────────────────────────────────────────────────────────────
+
+const GEN_PATH = path.resolve(process.cwd(), 'server', 'data', 'generations.json');
+
+function ensureGenDir() {
+  const dir = path.dirname(GEN_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  if (!fs.existsSync(GEN_PATH)) {
+    fs.writeFileSync(GEN_PATH, JSON.stringify({ generations: [] }, null, 2));
+  }
+}
+
+function readGenDb() {
+  ensureGenDir();
+  try {
+    const raw = fs.readFileSync(GEN_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return { generations: [] };
+  }
+}
+
+function writeGenDb(data) {
+  ensureGenDir();
+  fs.writeFileSync(GEN_PATH, JSON.stringify(data, null, 2));
+}
+
+export function saveGeneration(creatorId, productName, productData, generatedContent) {
+  const db = readGenDb();
+  const id = Date.now().toString();
+  const record = {
+    _id: id,
+    creatorId,
+    productName,
+    productData,
+    generatedContent,
+    createdAt: new Date().toISOString(),
+  };
+  db.generations.unshift(record);
+  if (db.generations.length > 100) {
+    db.generations = db.generations.slice(0, 100);
+  }
+  writeGenDb(db);
+  return record;
+}
+
+export function getGenerationsByCreator(creatorId) {
+  const db = readGenDb();
+  return db.generations.filter(g => g.creatorId === creatorId);
+}
+
+export function getGenerationById(id) {
+  const db = readGenDb();
+  return db.generations.find(g => g._id === id) || null;
+}
+
+export function deleteGeneration(id) {
+  const db = readGenDb();
+  db.generations = db.generations.filter(g => g._id !== id);
+  writeGenDb(db);
+}

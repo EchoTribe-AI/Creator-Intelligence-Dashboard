@@ -1,0 +1,82 @@
+{
+  "generations": [
+    {
+      "_id": "1771639044306",
+      "creatorId": "caseyLeigh",
+      "productName": "Test Saved Product",
+      "productData": {
+        "name": "Test Saved Product",
+        "category": "Fashion",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "Deal hook",
+          "Story hook"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "You need this!",
+            "caption": "Test caption",
+            "cta": "Shop Now",
+            "disclosure": "#ad"
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Don't miss this",
+            "caption": "Test static caption",
+            "cta": "Link in bio",
+            "disclosure": "#ad"
+          }
+        ],
+        "format_insight": "Test insight",
+        "boost_recommendation": "Test recommendation",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-02-21T01:57:24.306Z"
+    },
+    {
+      "_id": "1771639025747",
+      "creatorId": "casey",
+      "productName": "Test Saved Product",
+      "productData": {
+        "name": "Test Saved Product",
+        "category": "Fashion",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "Deal hook",
+          "Story hook"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "You need this!",
+            "caption": "Test caption",
+            "cta": "Shop Now",
+            "disclosure": "#ad"
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Don't miss this",
+            "caption": "Test static caption",
+            "cta": "Link in bio",
+            "disclosure": "#ad"
+          }
+        ],
+        "format_insight": "Test insight",
+        "boost_recommendation": "Test recommendation",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-02-21T01:57:05.747Z"
+    }
+  ]
+}
