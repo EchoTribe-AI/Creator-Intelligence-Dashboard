@@ -1354,7 +1354,7 @@ export default function App() {
 
       const fbUrl = row['Influencer Facebook Page']?.trim();
       const id = fbUrl ? fbUrl.replace(/\/$/, '').split('/').pop().toLowerCase() : null;
-      if (!id) return;
+      if (!id || id === 'remarkableas') return;
 
       if (!map[id]) {
         map[id] = {
