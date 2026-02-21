@@ -1259,10 +1259,130 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
 }
 
 // ── Main App ───────────────────────────────────────────────────────────────
+// ── MANUAL FLAG SYSTEM ────────────────────────────────────────────────────────
+const FLAG_REASONS = [
+  { id: 'collection_page', label: 'Links to collection page', color: '#F97316', icon: '⚠️' },
+  { id: 'broken_link', label: 'Broken or dead link', color: '#EF4444', icon: '🚫' },
+  { id: 'wrong_product', label: 'Wrong product in link', color: '#F97316', icon: '🎯' },
+  { id: 'trademark_violation', label: 'Trademark/brand name used', color: '#EF4444', icon: '®️' },
+  { id: 'missing_disclosure', label: 'Missing #ad disclosure', color: '#F97316', icon: '📋' },
+  { id: 'misleading_copy', label: 'Misleading or inaccurate copy', color: '#EF4444', icon: '⚡' },
+  { id: 'other', label: 'Other issue', color: '#9CA3AF', icon: '🏷️' },
+];
+
+function AdFlagButton({ flagKey, existingFlag, setAdFlags }: any) {
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
+        style={{
+          background: existingFlag ? 'rgba(239,68,68,0.15)' : 'rgba(0,0,0,0.06)',
+          border: `1px solid ${existingFlag ? '#EF4444' : 'rgba(0,0,0,0.1)'}`,
+          borderRadius: '6px',
+          padding: '4px 10px',
+          fontSize: '11px',
+          color: existingFlag ? '#EF4444' : '#6B7280',
+          cursor: 'pointer',
+          fontWeight: '600',
+        }}
+      >
+        {existingFlag ? `🚩 ${existingFlag.label}` : '🏳 Flag'}
+      </button>
+
+      {showDropdown && (
+        <div style={{
+          position: 'absolute',
+          top: '28px',
+          right: 0,
+          background: '#FFFFFF',
+          border: '1px solid rgba(0,0,0,0.12)',
+          borderRadius: '10px',
+          padding: '8px',
+          zIndex: 200,
+          minWidth: '220px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+        }}>
+          <div style={{ fontSize: '10px', color: '#6B7280', fontWeight: '700', 
+                        letterSpacing: '0.5px', padding: '4px 8px 8px' }}>
+            SELECT FLAG REASON
+          </div>
+          {FLAG_REASONS.map(reason => (
+            <div
+              key={reason.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                setAdFlags((prev: any) => ({
+                  ...prev,
+                  [flagKey]: { ...reason, flaggedAt: new Date().toISOString() }
+                }));
+                setShowDropdown(false);
+              }}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                color: '#1A1A1A',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <span>{reason.icon}</span>
+              <span>{reason.label}</span>
+            </div>
+          ))}
+          {existingFlag && (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setAdFlags((prev: any) => {
+                  const next = { ...prev };
+                  delete next[flagKey];
+                  return next;
+                });
+                setShowDropdown(false);
+              }}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                color: '#6B7280',
+                borderTop: '1px solid rgba(0,0,0,0.06)',
+                marginTop: '4px',
+                paddingTop: '8px',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+              onMouseLeave={e => e.currentTarget.style.color = '#6B7280'}
+            >
+              ✕ Remove flag
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [creators, setCreators] = useState<any[]>([]);
   const [csvLoading, setCsvLoading] = useState(true);
+  const [adFlags, setAdFlags] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('markable_ad_flags') || '{}');
+    } catch { return {}; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('markable_ad_flags', JSON.stringify(adFlags));
+  }, [adFlags]);
+
   const [visibleCreatorCount, setVisibleCreatorCount] = useState(10);
   const [visibleAdsCount, setVisibleAdsCount] = useState(6);
   const [selectedCreator, setSelectedCreator] = useState<any>(null);
@@ -1939,6 +2059,17 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     mixed: creators.filter((c: any) => c.adType === 'mixed').length,
   };
 
+  const manualFlags = Object.entries(adFlags).reduce((acc: any, [key, flag]: [string, any]) => {
+    const creatorId = key.split('_')[0];
+    const creator = creators.find((c: any) => c.id === creatorId);
+    if (!creator) return acc;
+    if (!acc[creatorId]) {
+      acc[creatorId] = { creator, creatorName: creator.name, niche: creator.niche, flags: [] };
+    }
+    acc[creatorId].flags.push(flag);
+    return acc;
+  }, {});
+
   const filteredCreators = filterType === "all" 
     ? creators 
     : creators.filter((c: any) => c.adType === filterType);
@@ -2057,6 +2188,46 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 </div>
 
                 <div id="operational-flags" style={S.sectionLabel}>⚠️ OPERATIONAL FLAGS</div>
+                
+                {Object.values(manualFlags).length > 0 && (
+                  <>
+                    <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: '#EF4444', textTransform: 'uppercase', marginBottom: '14px', marginTop: '14px' }}>🚩 MANUALLY FLAGGED ADS</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                      {Object.values(manualFlags).map((entry: any, i) => (
+                        <div
+                          key={i}
+                          className="cc"
+                          style={{ ...S.card, padding: '16px', borderLeft: '3px solid #EF4444', cursor: 'pointer' }}
+                          onClick={() => selectCreator(entry.creator)}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: '700' }}>{entry.creatorName}</div>
+                              <div style={{ fontSize: '12px', color: '#888' }}>{entry.niche}</div>
+                            </div>
+                            <span style={{
+                              fontSize: '11px', fontWeight: '700', padding: '4px 10px',
+                              borderRadius: '20px', background: 'rgba(239,68,68,0.15)', color: '#EF4444'
+                            }}>
+                              {entry.flags.length} flagged {entry.flags.length === 1 ? 'ad' : 'ads'}
+                            </span>
+                          </div>
+                          <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                            {entry.flags.map((f: any, fi: number) => (
+                              <span key={fi} style={{
+                                fontSize: '10px', padding: '2px 8px', borderRadius: '4px',
+                                background: `${f.color}15`, color: f.color,
+                              }}>
+                                {f.icon} {f.label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                   {complianceFlags.map((f: any, i) => (
                     <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #FB923C", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => selectCreator(f.creator)}>
@@ -2151,6 +2322,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               copy: ad.copy,
             };
             const cleanShopUrl = ad.shopUrl ? ad.shopUrl.split('?')[0] : null;
+            const flagKey = `${selectedCreator.id}_${ad.libraryId}`;
+            const existingFlag = adFlags[flagKey];
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
@@ -2170,6 +2343,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                   </div>
                   <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                     <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
+                    <AdFlagButton flagKey={flagKey} existingFlag={existingFlag} setAdFlags={setAdFlags} />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -2190,6 +2364,26 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 </div>
                 <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{ad.copy}</div>
                 <ComplianceDisplay flags={checkCompliance(ad.copy)} />
+                {existingFlag && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    marginTop: '8px',
+                    padding: '6px 10px',
+                    background: `${existingFlag.color}15`,
+                    border: `1px solid ${existingFlag.color}30`,
+                    borderRadius: '6px',
+                  }}>
+                    <span style={{ fontSize: '12px' }}>{existingFlag.icon}</span>
+                    <span style={{ fontSize: '11px', color: existingFlag.color, fontWeight: '600' }}>
+                      Flagged: {existingFlag.label}
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#6B7280', marginLeft: 'auto' }}>
+                      {new Date(existingFlag.flaggedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px", paddingTop: "8px", borderTop: "1px solid #F0F0F0" }}>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                     {adProduct.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E", margin: 0 }}>{adProduct.badge}</span>}
