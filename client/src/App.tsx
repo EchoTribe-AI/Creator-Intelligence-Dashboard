@@ -2332,7 +2332,13 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
                 {ad.videoUrl && ad.videoUrl !== 'null' ? (
-                  <video src={ad.videoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} preload="metadata" />
+                  <video 
+                    src={`${ad.videoUrl}#t=0.001`} 
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                    preload="metadata" 
+                    playsInline 
+                    muted
+                  />
                 ) : ad.imageUrl && ad.imageUrl !== 'null' ? (
                   <img src={ad.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
                 ) : (
