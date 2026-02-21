@@ -1742,7 +1742,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 </div>
                 <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
               </div>
-              <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5 }}>{ad.copy.substring(0, 200)}...</div>
+              <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5 }}>{ad.copy}</div>
+              <ComplianceDisplay flags={checkCompliance(ad.copy)} />
             </div>
           ))}
 
