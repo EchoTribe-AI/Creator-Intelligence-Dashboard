@@ -1,6 +1,61 @@
 {
   "generations": [
     {
+      "_id": "1771684587671",
+      "creatorId": "caseyLeigh",
+      "productName": "Aesthetic Kitchen Glasses",
+      "productData": {
+        "name": "Aesthetic Kitchen Glasses",
+        "category": "Home",
+        "commission": "6%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "Aesthetic kitchen essentials that make every sip feel special",
+          "Elevating your everyday moments with beautiful glassware",
+          "Creating those dreamy kitchen moments we all love"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "When your kitchen feels like a dreamy aesthetic haven ✨",
+            "caption": "These gorgeous glasses instantly elevate every moment - from morning coffee to evening wind-down. The delicate details and perfect proportions make even the simplest drinks feel special. Creating those soft, beautiful moments at home that just feel so good.",
+            "cta": "Shop these beautiful glasses",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Soft, aesthetic, and perfectly feminine for your kitchen",
+            "caption": "When your glassware matches your aesthetic energy 💕 These delicate beauties make every sip feel intentional and lovely. The kind of pieces that make your kitchen feel like a dreamy sanctuary.",
+            "cta": "Add to cart now",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "Creating those dreamy kitchen moments ✨",
+            "caption": "The most beautiful glasses for your aesthetic kitchen dreams. Each piece feels so intentional and feminine - perfect for those quiet morning moments and cozy evening rituals.",
+            "slides": [
+              "Delicate details that feel so feminine and soft",
+              "Perfect proportions for your favorite drinks",
+              "Elevating every kitchen moment with gentle beauty"
+            ],
+            "cta": "Shop the collection",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "For aesthetic kitchen products, static images work beautifully to showcase the product's visual appeal, while video can demonstrate the glasses in use within a dreamy kitchen setting. Carousel format allows showing multiple angles and styling options.",
+        "boost_recommendation": "Static image ad recommended for initial boost due to strong visual appeal of glassware products and alignment with creator's aesthetic-focused audience who responds well to beautiful imagery.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-02-21T14:36:27.671Z"
+    },
+    {
       "_id": "1771639044306",
       "creatorId": "caseyLeigh",
       "productName": "Test Saved Product",

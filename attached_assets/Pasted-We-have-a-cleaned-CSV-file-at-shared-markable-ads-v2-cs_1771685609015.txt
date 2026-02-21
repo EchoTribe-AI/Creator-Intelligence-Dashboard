@@ -1,0 +1,258 @@
+We have a cleaned CSV file at shared/markable-ads-v2.csv with 525 valid ad rows across 81 creators. Replace all hardcoded creator data with CSV-parsed data. No database needed — parse once on load and hold in memory.
+The CSV has these exact column names:
+
+Meta Library ID — ad library ID (strip "Library ID: " prefix)
+Started Date — start date (strip "Started running on " prefix)
+Profile Image — creator profile photo URL
+Influencer Facebook Page — creator Facebook page URL (use the slug after the last / as the creator ID)
+Ad Details — ad copy text
+Video URL — video asset URL (empty for static ads)
+Content Image URL — static image URL (empty for video ads)
+CTA Shop Now URL — affiliate link
+Ad Company — ignore this column
+
+Only include rows where Ad Details is non-empty AND at least one of Video URL or Content Image URL is non-empty. Skip all other rows.
+Install papaparse if not already installed: npm install papaparse
+
+Step 1 — Parse CSV and build creator objects
+Add this to App.jsx:
+javascriptimport Papa from 'papaparse';
+
+const [creators, setCreators] = useState([]);
+const [csvLoading, setCsvLoading] = useState(true);
+const [visibleCreatorCount, setVisibleCreatorCount] = useState(10);
+
+useEffect(() => {
+  fetch('/shared/markable-ads-v2.csv')
+    .then(res => res.text())
+    .then(csv => {
+      const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
+      const parsed = buildCreatorsFromCSV(data);
+      setCreators(parsed);
+      setCsvLoading(false);
+    })
+    .catch(() => setCsvLoading(false));
+}, []);
+
+function buildCreatorsFromCSV(rows) {
+  const map = {};
+
+  rows.forEach(row => {
+    const hasCopy = row['Ad Details']?.trim();
+    const hasAsset = row['Video URL']?.trim() || row['Content Image URL']?.trim();
+    if (!hasCopy || !hasAsset) return;
+
+    const fbUrl = row['Influencer Facebook Page']?.trim();
+    const id = fbUrl ? fbUrl.replace(/\/$/, '').split('/').pop().toLowerCase() : null;
+    if (!id) return;
+
+    if (!map[id]) {
+      map[id] = {
+        id,
+        name: formatCreatorName(id),
+        handle: `@${id}`,
+        niche: inferNiche(id, row['Ad Details']),
+        tone: 'Authentic, relatable',
+        audience: 'Women 25–45',
+        color: assignColor(id),
+        emoji: assignEmoji(id, row['Ad Details']),
+        profileImage: row['Profile Image']?.trim() || null,
+        facebookPage: fbUrl,
+        existingAds: [],
+        products: [],
+      };
+    }
+
+    const hasVideo = !!row['Video URL']?.trim();
+    const hasStatic = !!row['Content Image URL']?.trim();
+
+    map[id].existingAds.push({
+      started: (row['Started Date'] || '').replace('Started running on ', '').trim(),
+      copy: row['Ad Details'].trim(),
+      hasVideo,
+      hasStatic,
+      videoUrl: row['Video URL']?.trim() || null,
+      imageUrl: row['Content Image URL']?.trim() || null,
+      shopUrl: row['CTA Shop Now URL']?.trim() || null,
+      libraryId: (row['Meta Library ID'] || '').replace('Library ID: ', '').trim(),
+    });
+  });
+
+  return Object.values(map)
+    .map(c => {
+      c.totalAds = c.existingAds.length;
+      const hasV = c.existingAds.some(a => a.hasVideo);
+      const hasS = c.existingAds.some(a => a.hasStatic);
+      c.adFormat = hasV && hasS ? 'Video + Static' : hasV ? 'Video Only' : 'Static Only';
+      c.products = inferProducts(c.niche);
+      return c;
+    })
+    .sort((a, b) => b.totalAds - a.totalAds);
+}
+
+function formatCreatorName(slug) {
+  // Known name overrides for top creators
+  const overrides = {
+    'caseyleighwiegand': 'Casey Leigh Wiegand',
+    'brokeesbuys': "Brooke's Buys",
+    'brooksbuys': "Brooke's Buys",
+    'yellowpolkadotsblog1': 'Yellow Polka Dots',
+    'remarkableas': 'reMarkable',
+    'teachinginheels': 'Teaching in Heels',
+    'misslacyjean': 'MissLacyJean Amazon Finds',
+    'simplykatielynnofficial': 'Simply Katielyn',
+    'haverstrawhill': 'Haverstraw Hill',
+    'sierrahoneycuttt': 'Sierra Honeycutt',
+    'darinnicole01': 'Darin Nicole',
+    'hamaiHomehacks': 'Elnaz Hamai Home Hacks',
+    'hamaihomehacks': 'Elnaz Hamai Home Hacks',
+    'mrskatiecarlson': 'Katie Carlson',
+    'themominstyle1': 'The Mom In Style',
+    'curvestocontour': 'Curves to Contour',
+    'decor.snippets': 'Decor Snippets',
+    'itsallchictome': "It's All Chic To Me",
+    'mimipluswill': 'Mimi + Will',
+    'somethingwhitty1': 'Something Whitty',
+    'lizthul': 'Liz Thul',
+    'lexietucker': 'Lexietucker',
+    'andrean jeanaco': 'Andrea Jean Co',
+    'andreajeanaco': 'Andrea Jean Co',
+  };
+  if (overrides[slug.toLowerCase()]) return overrides[slug.toLowerCase()];
+  // Auto-format slug into readable name
+  return slug
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_\-.]/g, ' ')
+    .replace(/\d+$/, '')
+    .split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+    .trim();
+}
+Step 2 — Add helper functions
+javascriptconst COLORS = ['#C084FC','#FB923C','#34D399','#60A5FA','#F472B6','#A78BFA','#FCD34D','#F87171'];
+
+function assignColor(id) {
+  let hash = 0;
+  for (let c of id) hash = (hash * 31 + c.charCodeAt(0)) % COLORS.length;
+  return COLORS[hash];
+}
+
+function assignEmoji(id, copy = '') {
+  const text = (id + ' ' + copy).toLowerCase();
+  if (text.includes('fashion') || text.includes('style') || text.includes('outfit') || text.includes('chic')) return '✨';
+  if (text.includes('home') || text.includes('decor') || text.includes('interior') || text.includes('farmhouse')) return '🏡';
+  if (text.includes('mom') || text.includes('kids') || text.includes('children') || text.includes('school')) return '👶';
+  if (text.includes('food') || text.includes('snack') || text.includes('recipe') || text.includes('kitchen')) return '🍽️';
+  if (text.includes('travel') || text.includes('vacation') || text.includes('planes')) return '✈️';
+  if (text.includes('fitness') || text.includes('workout') || text.includes('curves')) return '💪';
+  if (text.includes('planner') || text.includes('productivity') || text.includes('remarkable')) return '📋';
+  if (text.includes('beauty') || text.includes('makeup') || text.includes('lipstick')) return '💄';
+  return '🌿';
+}
+
+function inferNiche(id, copy = '') {
+  const text = (id + ' ' + copy).toLowerCase();
+  if (text.includes('fashion') || text.includes('style') || text.includes('outfit') || text.includes('chic') || text.includes('closet')) return 'Fashion & Lifestyle';
+  if (text.includes('home') || text.includes('decor') || text.includes('interior') || text.includes('farmhouse') || text.includes('renovation')) return 'Home & Decor';
+  if (text.includes('mom') || text.includes('kids') || text.includes('children') || text.includes('school') || text.includes('baby')) return 'Mom & Kids';
+  if (text.includes('food') || text.includes('snack') || text.includes('recipe') || text.includes('kitchen') || text.includes('foodie')) return 'Food & Kitchen';
+  if (text.includes('travel') || text.includes('vacation') || text.includes('planes')) return 'Travel & Lifestyle';
+  if (text.includes('fitness') || text.includes('workout') || text.includes('curves') || text.includes('activewear')) return 'Fitness & Wellness';
+  if (text.includes('planner') || text.includes('productivity') || text.includes('remarkable')) return 'Productivity';
+  if (text.includes('beauty') || text.includes('makeup') || text.includes('lipstick') || text.includes('glam')) return 'Beauty & Fashion';
+  return 'Lifestyle & Finds';
+}
+
+function inferProducts(niche) {
+  const map = {
+    'Fashion & Lifestyle': [
+      { name: 'Wide-Leg Pants', category: 'Fashion', commission: '9%', trend: '↑ High', badge: 'Top Pick' },
+      { name: 'Oversized Blazer', category: 'Fashion', commission: '8%', trend: '↑ Hot', badge: 'Trending' },
+      { name: 'Lounge Set', category: 'Fashion', commission: '9%', trend: '↑ High', badge: '' },
+    ],
+    'Home & Decor': [
+      { name: 'Storage Solution', category: 'Home', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+      { name: 'Decorative Accents', category: 'Home', commission: '7%', trend: '→ Stable', badge: '' },
+      { name: 'Organizer Set', category: 'Home', commission: '8%', trend: '↑ Hot', badge: 'Trending' },
+    ],
+    'Mom & Kids': [
+      { name: 'Kids Organizer', category: 'Kids', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+      { name: 'Snack Containers', category: 'Kitchen', commission: '7%', trend: '↑ Hot', badge: 'Trending' },
+      { name: 'Learning Toys', category: 'Kids', commission: '5%', trend: '→ Stable', badge: '' },
+    ],
+    'Food & Kitchen': [
+      { name: 'Kitchen Organizer', category: 'Kitchen', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+      { name: 'Meal Prep Set', category: 'Kitchen', commission: '7%', trend: '→ Stable', badge: '' },
+    ],
+    'Fitness & Wellness': [
+      { name: 'Activewear Set', category: 'Fitness', commission: '10%', trend: '↑ Hot', badge: 'Top Pick' },
+      { name: 'Resistance Bands', category: 'Fitness', commission: '8%', trend: '↑ High', badge: 'Trending' },
+    ],
+    'Beauty & Fashion': [
+      { name: 'Makeup Organizer', category: 'Beauty', commission: '9%', trend: '↑ High', badge: 'Top Pick' },
+      { name: 'Skincare Set', category: 'Beauty', commission: '8%', trend: '↑ Hot', badge: 'Trending' },
+    ],
+    'Productivity': [
+      { name: 'Digital Planner', category: 'Productivity', commission: '10%', trend: '↑ Hot', badge: 'Top Pick' },
+      { name: 'Planner Templates', category: 'Productivity', commission: '8%', trend: '↑ High', badge: 'New' },
+    ],
+  };
+  return map[niche] || [
+    { name: 'Amazon Find', category: 'General', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+  ];
+}
+Step 3 — Home screen: show top 10, load more for the rest
+javascript// In the home screen creator grid, replace the map over CREATORS with:
+const visibleCreators = creators.slice(0, visibleCreatorCount);
+
+// Render the grid using visibleCreators instead of CREATORS
+{visibleCreators.map(c => (
+  // existing creator card — unchanged
+))}
+
+// Below the grid, add Load More button:
+{creators.length > visibleCreatorCount && (
+  <div style={{ textAlign: 'center', marginTop: '24px' }}>
+    <button
+      style={{ ...styles.btnOutline, padding: '12px 32px', fontSize: '14px' }}
+      onClick={() => setVisibleCreatorCount(prev => prev + 10)}
+    >
+      Load More Creators ({creators.length - visibleCreatorCount} remaining)
+    </button>
+  </div>
+)}
+Step 4 — Creator profile: paginate ads 6 at a time
+javascriptconst [visibleAdsCount, setVisibleAdsCount] = useState(6);
+
+// Reset on creator select:
+const selectCreator = (creator) => {
+  setSelectedCreator(creator);
+  setVisibleAdsCount(6);
+  setSelectedProduct(null);
+  setGeneratedContent(null);
+  setScreen('profile');
+};
+
+// In profile screen ads section:
+{selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => (
+  // existing ad card render
+))}
+{selectedCreator.existingAds.length > visibleAdsCount && (
+  <button
+    style={{ ...styles.btnOutline, marginTop: '12px', width: '100%' }}
+    onClick={() => setVisibleAdsCount(prev => prev + 6)}
+  >
+    Load More Ads ({selectedCreator.existingAds.length - visibleAdsCount} remaining)
+  </button>
+)}
+Step 5 — Loading state on home screen
+javascript{csvLoading ? (
+  <div style={styles.loadingBox}>
+    <div style={styles.spinner}></div>
+    <div style={{ color: '#9CA3AF', fontSize: '14px' }}>Loading creator intelligence...</div>
+  </div>
+) : (
+  // grid + load more button
+)}
+After implementing: open the browser console and log creators[0] to verify the first creator parsed correctly before doing a full test. The fetch path is /shared/markable-ads-v2.csv — if that returns 404, try moving the file to the public/ folder and fetching /markable-ads-v2.csv instead

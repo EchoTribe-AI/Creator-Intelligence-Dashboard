@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Papa from 'papaparse';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPLIANCE UTILS
@@ -674,7 +675,7 @@ const CREATORS = [
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const AD_TYPE_LABELS = {
+const AD_TYPE_LABELS: any = {
   video: { label: "Video Only", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" },
   static: { label: "Static Only", color: "#F472B6", bg: "rgba(244,114,182,0.15)" },
   mixed: { label: "Video + Static", color: "#FBBF24", bg: "rgba(251,191,36,0.15)" },
@@ -1255,7 +1256,11 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
 // ── Main App ───────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("home");
-  const [selectedCreator, setSelectedCreator] = useState(null);
+  const [creators, setCreators] = useState<any[]>([]);
+  const [csvLoading, setCsvLoading] = useState(true);
+  const [visibleCreatorCount, setVisibleCreatorCount] = useState(10);
+  const [visibleAdsCount, setVisibleAdsCount] = useState(6);
+  const [selectedCreator, setSelectedCreator] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [scrapedProduct, setScrapedProduct] = useState(null);
   const [generatedContent, setGeneratedContent] = useState(null);
@@ -1314,6 +1319,195 @@ export default function App() {
     loadFavorites(selectedCreator.id);
   };
   const [loadingMsg, setLoadingMsg] = useState("");
+
+  useEffect(() => {
+    fetch('/shared/markable-ads-v2.csv')
+      .then(res => {
+        if (!res.ok) throw new Error('CSV not found');
+        return res.text();
+      })
+      .then(csv => {
+        const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
+        const parsed = buildCreatorsFromCSV(data);
+        setCreators(parsed);
+        console.log("First creator parsed:", parsed[0]);
+        setCsvLoading(false);
+      })
+      .catch(err => {
+        console.error("CSV Loading Error:", err);
+        setCsvLoading(false);
+      });
+  }, []);
+
+  function buildCreatorsFromCSV(rows: any[]) {
+    const map: any = {};
+
+    rows.forEach(row => {
+      const hasCopy = row['Ad Details']?.trim();
+      const hasAsset = row['Video URL']?.trim() || row['Content Image URL']?.trim();
+      if (!hasCopy || !hasAsset) return;
+
+      const fbUrl = row['Influencer Facebook Page']?.trim();
+      const id = fbUrl ? fbUrl.replace(/\/$/, '').split('/').pop().toLowerCase() : null;
+      if (!id) return;
+
+      if (!map[id]) {
+        map[id] = {
+          id,
+          name: formatCreatorName(id),
+          handle: `@${id}`,
+          niche: inferNiche(id, row['Ad Details']),
+          tone: 'Authentic, relatable',
+          audience: 'Women 25–45',
+          color: assignColor(id),
+          emoji: assignEmoji(id, row['Ad Details']),
+          profileImage: row['Profile Image']?.trim() || null,
+          facebookPage: fbUrl,
+          existingAds: [],
+          products: [],
+          // Keep structure for compatibility
+          metaData: { top_creative_type: 'video', active_ad_count: 0 },
+          walmartData: { top_category: 'General', avg_commission_rate: '8%' },
+          amazonData: { top_category: 'General', avg_commission_rate: '8%' }
+        };
+      }
+
+      const hasVideo = !!row['Video URL']?.trim();
+      const hasStatic = !!row['Content Image URL']?.trim();
+
+      map[id].existingAds.push({
+        started: (row['Started Date'] || '').replace('Started running on ', '').trim(),
+        copy: row['Ad Details'].trim(),
+        hasVideo,
+        hasStatic,
+        videoUrl: row['Video URL']?.trim() || null,
+        imageUrl: row['Content Image URL']?.trim() || null,
+        shopUrl: row['CTA Shop Now URL']?.trim() || null,
+        libraryId: (row['Meta Library ID'] || '').replace('Library ID: ', '').trim(),
+      });
+    });
+
+    return Object.values(map)
+      .map((c: any) => {
+        c.totalAds = c.existingAds.length;
+        c.metaData.active_ad_count = c.totalAds;
+        const hasV = c.existingAds.some((a: any) => a.hasVideo);
+        const hasS = c.existingAds.some((a: any) => a.hasStatic);
+        c.adType = hasV && hasS ? 'mixed' : hasV ? 'video' : 'static';
+        c.niche = inferNiche(c.id, c.existingAds[0]?.copy || '');
+        c.products = inferProducts(c.niche);
+        return c;
+      })
+      .sort((a: any, b: any) => b.totalAds - a.totalAds);
+  }
+
+  function formatCreatorName(slug: string) {
+    const overrides: any = {
+      'caseyleighwiegand': 'Casey Leigh Wiegand',
+      'brokeesbuys': "Brooke's Buys",
+      'brooksbuys': "Brooke's Buys",
+      'yellowpolkadotsblog1': 'Yellow Polka Dots',
+      'teachinginheels': 'Teaching in Heels',
+      'Hauteandhumid': 'Haute and Humid',
+      'misslacyjean': 'MissLacyJean Amazon Finds',
+      'simplykatielynnofficial': 'Simply Katielyn',
+      'haverstrawhill': 'Haverstraw Hill',
+      'sierrahoneycuttt': 'Sierra Honeycutt',
+      'darinnicole01': 'Darin Nicole',
+      'hamaihomehacks': 'Elnaz Hamai Home Hacks',
+      'mrskatiecarlson': 'Katie Carlson',
+      'themominstyle1': 'The Mom In Style',
+      'curvestocontour': 'Curves to Contour',
+      'decor.snippets': 'Decor Snippets',
+      'itsallchictome': "It's All Chic To Me",
+      'mimipluswill': 'Mimi + Will',
+      'somethingwhitty1': 'Something Whitty',
+      'lizthul': 'Liz Thul',
+      'lexietucker': 'Lexietucker',
+      'andreajeanaco': 'Andrea Jean Co',
+    };
+    if (overrides[slug.toLowerCase()]) return overrides[slug.toLowerCase()];
+    return slug
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_\-.]/g, ' ')
+      .replace(/\d+$/, '')
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+      .trim();
+  }
+
+  const COLORS = ['#C084FC','#FB923C','#34D399','#60A5FA','#F472B6','#A78BFA','#FCD34D','#F87171'];
+  function assignColor(id: string) {
+    let hash = 0;
+    for (let c of id) hash = (hash * 31 + c.charCodeAt(0)) % COLORS.length;
+    return COLORS[Math.abs(hash)];
+  }
+
+  function assignEmoji(id: string, copy = '') {
+    const text = (id + ' ' + copy).toLowerCase();
+    if (text.includes('fashion') || text.includes('style') || text.includes('outfit')) return '✨';
+    if (text.includes('home') || text.includes('decor')) return '🏡';
+    if (text.includes('mom') || text.includes('kids')) return '👶';
+    if (text.includes('food') || text.includes('kitchen')) return '🍽️';
+    if (text.includes('travel')) return '✈️';
+    if (text.includes('fitness')) return '💪';
+    if (text.includes('planner')) return '📋';
+    if (text.includes('beauty')) return '💄';
+    return '🌿';
+  }
+
+  function inferNiche(id: string, copy = '') {
+    const text = (id + ' ' + copy).toLowerCase();
+    if (text.includes('fashion') || text.includes('style') || text.includes('outfit')) return 'Fashion & Lifestyle';
+    if (text.includes('home') || text.includes('decor')) return 'Home & Decor';
+    if (text.includes('mom') || text.includes('kids')) return 'Mom & Kids';
+    if (text.includes('food') || text.includes('kitchen')) return 'Food & Kitchen';
+    if (text.includes('travel')) return 'Travel & Lifestyle';
+    if (text.includes('fitness')) return 'Fitness & Wellness';
+    if (text.includes('planner')) return 'Productivity';
+    if (text.includes('beauty')) return 'Beauty & Fashion';
+    return 'Lifestyle & Finds';
+  }
+
+  function inferProducts(niche: string) {
+    const map: any = {
+      'Fashion & Lifestyle': [
+        { name: 'Wide-Leg Pants', category: 'Fashion', commission: '9%', trend: '↑ High', badge: 'Top Pick' },
+        { name: 'Oversized Blazer', category: 'Fashion', commission: '8%', trend: '↑ Hot', badge: 'Trending' },
+        { name: 'Lounge Set', category: 'Fashion', commission: '9%', trend: '↑ High', badge: '' },
+      ],
+      'Home & Decor': [
+        { name: 'Storage Solution', category: 'Home', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+        { name: 'Decorative Accents', category: 'Home', commission: '7%', trend: '→ Stable', badge: '' },
+        { name: 'Organizer Set', category: 'Home', commission: '8%', trend: '↑ Hot', badge: 'Trending' },
+      ],
+      'Mom & Kids': [
+        { name: 'Kids Organizer', category: 'Kids', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+        { name: 'Snack Containers', category: 'Kitchen', commission: '7%', trend: '↑ Hot', badge: 'Trending' },
+        { name: 'Learning Toys', category: 'Kids', commission: '5%', trend: '→ Stable', badge: '' },
+      ],
+      'Food & Kitchen': [
+        { name: 'Kitchen Organizer', category: 'Kitchen', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+        { name: 'Meal Prep Set', category: 'Kitchen', commission: '7%', trend: '→ Stable', badge: '' },
+      ],
+      'Fitness & Wellness': [
+        { name: 'Activewear Set', category: 'Fitness', commission: '10%', trend: '↑ Hot', badge: 'Top Pick' },
+        { name: 'Resistance Bands', category: 'Fitness', commission: '8%', trend: '↑ High', badge: 'Trending' },
+      ],
+      'Beauty & Fashion': [
+        { name: 'Makeup Organizer', category: 'Beauty', commission: '9%', trend: '↑ High', badge: 'Top Pick' },
+        { name: 'Skincare Set', category: 'Beauty', commission: '8%', trend: '↑ Hot', badge: 'Trending' },
+      ],
+      'Productivity': [
+        { name: 'Digital Planner', category: 'Productivity', commission: '10%', trend: '↑ Hot', badge: 'Top Pick' },
+        { name: 'Planner Templates', category: 'Productivity', commission: '8%', trend: '↑ High', badge: 'New' },
+      ],
+    };
+    return map[niche] || [
+      { name: 'Amazon Find', category: 'General', commission: '8%', trend: '↑ High', badge: 'Top Pick' },
+    ];
+  }
   const [filterType, setFilterType] = useState("all");
   const [scrapedProducts, setScrapedProducts] = useState([]);
   const [savedProducts, setSavedProducts] = useState([]);
@@ -1362,9 +1556,11 @@ export default function App() {
     setScrapedProduct(null);
     setGeneratedContent(null);
     setSavedGenerations([]);
+    setVisibleAdsCount(6);
     setScreen("profile");
     loadSavedProducts(creator.id);
     loadSavedGenerations(creator.id);
+    loadFavorites(creator.id);
   };
 
   const generateContent = async (product) => {
@@ -1667,7 +1863,11 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     dataCell: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "10px", padding: "12px 14px" },
   };
 
-  const filteredCreators = filterType === "all" ? CREATORS : CREATORS.filter(c => c.adType === filterType);
+  const filteredCreators = filterType === "all" 
+    ? creators 
+    : creators.filter((c: any) => c.adType === filterType);
+
+  const visibleCreators = filteredCreators.slice(0, visibleCreatorCount);
 
   // ── HOME ──────────────────────────────────────────────────────────────────
   if (screen === "home") return (
@@ -1686,41 +1886,61 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           <h1 style={{ ...S.heading, fontSize: "32px" }}>Creator Ad Intelligence</h1>
           <p style={{ ...S.sub, fontSize: "15px" }}>Select a creator to generate AI ad variations, build content calendars, and get signal-based boost recommendations.</p>
 
-          <div style={S.insightBox}>
-            <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "8px" }}>📊 Intelligence Layer — From Real Ad Library Scrape</div>
-            <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-              <div><span style={S.highlight}>7 creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>video-only</span></div>
-              <div><span style={{ color: "#F472B6", fontWeight: "700" }}>1 creator</span> <span style={{ fontSize: "13px", color: "#444444" }}>static-only (Casey — 72 ads)</span></div>
-              <div><span style={{ color: "#FBBF24", fontWeight: "700" }}>2 creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>mixed format</span></div>
+          {csvLoading ? (
+            <div style={S.loadingBox}>
+              <div style={S.spinner}></div>
+              <div style={{ color: '#9CA3AF', fontSize: '14px' }}>Loading creator intelligence...</div>
             </div>
-            <div style={{ fontSize: "13px", color: "#888888", marginTop: "8px" }}>Casey's static-only format is the critical data point: does lower CPC on static offset lower intent vs. video? This demo generates both to test.</div>
-          </div>
-
-          <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
-            {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"]].map(([val, label]) => (
-              <button key={val} style={S.btnFilter(filterType === val)} onClick={() => setFilterType(val)}>{label}</button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }}>
-          {filteredCreators.map(c => {
-            const adMeta = AD_TYPE_LABELS[c.adType];
-            return (
-              <div key={c.id} className="cc" style={{ ...S.card, borderLeft: `3px solid ${c.color}` }} onClick={() => selectCreator(c)}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                  <div style={{ fontSize: "22px" }}>{c.emoji}</div>
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                    <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color }}>{adMeta.label}</span>
-                    <span style={{ ...S.tag, background: `${c.color}20`, color: c.color }}>{c.totalAds} ads</span>
-                  </div>
+          ) : (
+            <>
+              <div style={S.insightBox}>
+                <div style={{ fontSize: "12px", fontWeight: "700", color: "#C9A96E", marginBottom: "8px" }}>📊 Intelligence Layer — From Real Ad Library Scrape</div>
+                <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
+                  <div><span style={S.highlight}>{creators.filter((c:any) => c.adType === 'video').length} creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>video-only</span></div>
+                  <div><span style={{ color: "#F472B6", fontWeight: "700" }}>{creators.filter((c:any) => c.adType === 'static').length} creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>static-only</span></div>
+                  <div><span style={{ color: "#FBBF24", fontWeight: "700" }}>{creators.filter((c:any) => c.adType === 'mixed').length} creators</span> <span style={{ fontSize: "13px", color: "#444444" }}>mixed format</span></div>
                 </div>
-                <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "3px" }}>{c.name}</div>
-                <div style={{ fontSize: "12px", color: "#888888", marginBottom: "10px" }}>{c.niche} · {c.audience}</div>
-                <div style={{ fontSize: "12px", color: "#999999" }}>Click to explore → generate variations, calendar, boost plan</div>
+                <div style={{ fontSize: "13px", color: "#888888", marginTop: "8px" }}>Analyzing {creators.length} total creators across all ad formats to optimize campaign efficiency.</div>
               </div>
-            );
-          })}
+
+              <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+                {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"]].map(([val, label]) => (
+                  <button key={val} style={S.btnFilter(filterType === val)} onClick={() => setFilterType(val)}>{label}</button>
+                ))}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }}>
+                {visibleCreators.map((c: any) => {
+                  const adMeta = AD_TYPE_LABELS[c.adType as keyof typeof AD_TYPE_LABELS];
+                  return (
+                    <div key={c.id} className="cc" style={{ ...S.card, borderLeft: `3px solid ${c.color}` }} onClick={() => selectCreator(c)}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                        <div style={{ fontSize: "22px" }}>{c.emoji}</div>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                          <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color }}>{adMeta.label}</span>
+                          <span style={{ ...S.tag, background: `${c.color}20`, color: c.color }}>{c.totalAds} ads</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "3px" }}>{c.name}</div>
+                      <div style={{ fontSize: "12px", color: "#888888", marginBottom: "10px" }}>{c.niche} · {c.audience}</div>
+                      <div style={{ fontSize: "12px", color: "#999999" }}>Click to explore → generate variations, calendar, boost plan</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {creators.length > visibleCreatorCount && (
+                <div style={{ textAlign: 'center', marginTop: '32px' }}>
+                  <button
+                    style={{ ...S.btnOutline, padding: '12px 32px', fontSize: '14px' }}
+                    onClick={() => setVisibleCreatorCount(prev => prev + 10)}
+                  >
+                    Load More Creators ({creators.length - visibleCreatorCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1776,7 +1996,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
 
           {/* ── EXISTING ADS ── */}
           <div style={S.sectionLabel}>Existing Ads — Real Ad Library Data</div>
-          {selectedCreator.existingAds.map((ad, i) => (
+          {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => (
             <div key={i} style={S.adRow}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                 <div style={{ display: "flex", gap: "6px" }}>
@@ -1790,6 +2010,14 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               <ComplianceDisplay flags={checkCompliance(ad.copy)} />
             </div>
           ))}
+          {selectedCreator.existingAds.length > visibleAdsCount && (
+            <button
+              style={{ ...S.btnOutline, marginTop: '12px', width: '100%', padding: '12px' }}
+              onClick={() => setVisibleAdsCount(prev => prev + 6)}
+            >
+              Load More Ads ({selectedCreator.existingAds.length - visibleAdsCount} remaining)
+            </button>
+          )}
 
           {/* ── PRODUCTS ── */}
           <div style={S.sectionLabel}>Products — Click to Generate AI Ad Variations</div>
