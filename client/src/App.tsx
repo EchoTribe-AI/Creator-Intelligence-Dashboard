@@ -1889,7 +1889,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
   const TRADEMARK_TERMS = [
     'spanx', 'lululemon', 'free people', 'anthropologie', 'zara', 
     'nike', 'adidas', 'nordstrom', 'target', 'walmart',
-    'shein', 'temu', 'amazon'
+    'shein', 'temu'
   ];
 
   const complianceFlags = creators
@@ -1950,9 +1950,9 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </div>
           ) : (
             <>
-              {/* Intelligence Dashboard */}
-              <div style={{ marginBottom: "32px" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "24px" }}>
+              {/* Quick Stats Bar */}
+              <div style={{ marginBottom: "24px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "16px" }}>
                   {stats.map((s, i) => (
                     <div key={i} style={{ ...S.card, padding: "12px", borderLeft: "none", textAlign: "center", background: "#f8f9fa" }}>
                       <div style={{ fontSize: "20px", fontWeight: "800", color: "#0A0A0A" }}>{s.value}</div>
@@ -1960,9 +1960,69 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     </div>
                   ))}
                 </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button 
+                    style={{ ...S.btnOutline, flex: 1, fontSize: "12px", padding: "10px" }}
+                    onClick={() => {
+                      const el = document.getElementById('revenue-intelligence');
+                      el?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    💰 Revenue Opportunities
+                  </button>
+                  <button 
+                    style={{ ...S.btnOutline, flex: 1, fontSize: "12px", padding: "10px" }}
+                    onClick={() => {
+                      const el = document.getElementById('operational-flags');
+                      el?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    ⚠️ Operational Flags
+                  </button>
+                </div>
+              </div>
 
-                <div style={S.sectionLabel}>💰 REVENUE INTELLIGENCE</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+              <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+                {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"]].map(([val, label]) => (
+                  <button key={val} style={S.btnFilter(filterType === val)} onClick={() => setFilterType(val)}>{label}</button>
+                ))}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }}>
+                {visibleCreators.map((c: any) => {
+                  const adMeta = AD_TYPE_LABELS[c.adType as keyof typeof AD_TYPE_LABELS];
+                  return (
+                    <div key={c.id} className="cc" style={{ ...S.card, borderLeft: `3px solid ${c.color}` }} onClick={() => selectCreator(c)}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                        <div style={{ fontSize: "22px" }}>{c.emoji}</div>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                          <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color }}>{adMeta.label}</span>
+                          <span style={{ ...S.tag, background: `${c.color}20`, color: c.color }}>{c.totalAds} ads</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "3px" }}>{c.name}</div>
+                      <div style={{ fontSize: "12px", color: "#888", marginBottom: "10px" }}>{c.niche} · {c.audience}</div>
+                      <div style={{ fontSize: "12px", color: "#999999" }}>Click to explore → generate variations, calendar, boost plan</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {creators.length > visibleCreatorCount && (
+                <div style={{ textAlign: 'center', marginTop: '32px', marginBottom: '48px' }}>
+                  <button
+                    style={{ ...S.btnOutline, padding: '12px 32px', fontSize: '14px' }}
+                    onClick={() => setVisibleCreatorCount(prev => prev + 10)}
+                  >
+                    Load More Creators ({creators.length - visibleCreatorCount} remaining)
+                  </button>
+                </div>
+              )}
+
+              {/* Intelligence Sections (Moved to Bottom) */}
+              <div style={{ marginTop: "64px", borderTop: "1px solid #eee", paddingTop: "32px" }}>
+                <div id="revenue-intelligence" style={S.sectionLabel}>💰 REVENUE INTELLIGENCE</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
                   {topOpportunities.map((op, i) => (
                     <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #34D399", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => selectCreator(op.creator)}>
                       <div>
@@ -1977,8 +2037,8 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                   ))}
                 </div>
 
-                <div style={S.sectionLabel}>⚠️ OPERATIONAL FLAGS</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                <div id="operational-flags" style={S.sectionLabel}>⚠️ OPERATIONAL FLAGS</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                   {complianceFlags.map((f: any, i) => (
                     <div key={i} className="cc" style={{ ...S.card, padding: "12px 16px", borderLeft: "3px solid #FB923C", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => selectCreator(f.creator)}>
                       <div>
@@ -2004,45 +2064,9 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                   </div>
                 </div>
               </div>
-
-              <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
-                {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"]].map(([val, label]) => (
-                  <button key={val} style={S.btnFilter(filterType === val)} onClick={() => setFilterType(val)}>{label}</button>
-                ))}
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }}>
-                {visibleCreators.map((c: any) => {
-                  const adMeta = AD_TYPE_LABELS[c.adType as keyof typeof AD_TYPE_LABELS];
-                  return (
-                    <div key={c.id} className="cc" style={{ ...S.card, borderLeft: `3px solid ${c.color}` }} onClick={() => selectCreator(c)}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                        <div style={{ fontSize: "22px" }}>{c.emoji}</div>
-                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                          <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color }}>{adMeta.label}</span>
-                          <span style={{ ...S.tag, background: `${c.color}20`, color: c.color }}>{c.totalAds} ads</span>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "3px" }}>{c.name}</div>
-                      <div style={{ fontSize: "12px", color: "#888888", marginBottom: "10px" }}>{c.niche} · {c.audience}</div>
-                      <div style={{ fontSize: "12px", color: "#999999" }}>Click to explore → generate variations, calendar, boost plan</div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {creators.length > visibleCreatorCount && (
-                <div style={{ textAlign: 'center', marginTop: '32px' }}>
-                  <button
-                    style={{ ...S.btnOutline, padding: '12px 32px', fontSize: '14px' }}
-                    onClick={() => setVisibleCreatorCount(prev => prev + 10)}
-                  >
-                    Load More Creators ({creators.length - visibleCreatorCount} remaining)
-                  </button>
-                </div>
-              )}
             </>
           )}
+        </div>
         </div>
       </div>
     </div>
