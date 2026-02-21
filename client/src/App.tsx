@@ -1654,7 +1654,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     dataBox: { background: "#F7F5F2", border: "1px solid #E8E5E0", borderRadius: "12px", padding: "16px 20px", marginBottom: "14px" },
     sectionLabel: { fontSize: "11px", fontWeight: "700", letterSpacing: "1.5px", color: "#999999", textTransform: "uppercase" as const, marginBottom: "14px", marginTop: "28px" },
     adRow: { padding: "14px 18px", background: "#F7F5F2", border: "1px solid #E8E5E0", borderRadius: "12px", marginBottom: "10px" },
-    productRow: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "12px", marginBottom: "10px" },
+    productRow: { display: "flex", flexDirection: "column" as const, padding: "16px 18px", background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "12px", marginBottom: "10px", gap: "12px" },
     varCard: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "14px", padding: "20px", marginBottom: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" },
     calCell: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "12px", padding: "14px", minHeight: "88px" },
     boostCard: { background: "#FFFFFF", border: "1px solid #E8E5E0", borderRadius: "14px", padding: "22px", marginBottom: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" },
@@ -1742,12 +1742,14 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     return (
       <div style={S.app}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); .pr:hover { border-color: rgba(201,169,110,0.4) !important; background: #F9F7F4 !important; cursor: pointer; }`}</style>
-        <nav style={S.nav}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={S.navBrand}>Markable</span>
-            <span style={S.navBadge}>Creator Intelligence</span>
+        <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <span style={S.navBrand}>Markable</span>
+              <span style={S.navBadge}>Creator Intelligence</span>
+            </div>
+            <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("home")}>← All</button>
           </div>
-          <button style={S.btnOutline} onClick={() => setScreen("home")}>← All Creators</button>
         </nav>
         <div style={S.container}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
@@ -1792,37 +1794,42 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           <div style={S.sectionLabel}>Products — Click to Generate AI Ad Variations</div>
           {selectedCreator.products.map((p, i) => (
             <div key={i} className="pr" style={S.productRow} onClick={() => generateContent(p)}>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: "600" }}>{p.name}</div>
-                <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{p.category}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: "600" }}>{p.name}</div>
+                  <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{p.category}</div>
+                </div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite('product', p);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    color: isFavorite('product', p.name) ? '#FF3B3B' : '#CCCCCC',
+                    padding: '4px'
+                  }}
+                >
+                  {isFavorite('product', p.name) ? '❤️' : '🤍'}
+                </button>
               </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite('product', p);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  color: isFavorite('product', p.name) ? '#FF3B3B' : '#CCCCCC',
-                  padding: '4px'
-                }}
-              >
-                {isFavorite('product', p.name) ? '❤️' : '🤍'}
-              </button>
-              {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E" }}>{p.badge}</span>}
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
-                  <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingTop: "8px", borderTop: "1px solid #F0F0F0" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E", margin: 0 }}>{p.badge}</span>}
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
+                    <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
+                  </div>
                 </div>
                 <button 
                   style={{ 
                     ...S.btn, 
-                    padding: "6px 12px", 
-                    fontSize: "12px",
+                    padding: "8px 16px", 
+                    fontSize: "13px",
                     display: "flex",
                     alignItems: "center",
                     gap: "6px",
@@ -1831,7 +1838,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     border: "none",
                     borderRadius: "6px",
                     cursor: "pointer",
-                    fontWeight: "600"
+                    fontWeight: "700"
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
