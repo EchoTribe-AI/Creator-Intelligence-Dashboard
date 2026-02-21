@@ -791,18 +791,18 @@ function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
       <div style={{ fontSize: '11px', fontWeight: '700', color: '#C9A96E', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
         🔗 Add Product from Amazon Link
       </div>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
         <input
           value={url}
           onChange={e => setUrl(e.target.value)}
           placeholder="Paste Amazon or affiliate URL (amzn.to/... or full URL)"
-          style={{ flex: 1, background: '#E8E5E0', border: '1px solid #D0CBC3', borderRadius: '8px', padding: '10px 14px', color: '#1A1A1A', fontSize: '13px', outline: 'none' }}
+          style={{ background: '#E8E5E0', border: '1px solid #D0CBC3', borderRadius: '8px', padding: '12px 14px', color: '#1A1A1A', fontSize: '14px', outline: 'none', width: '100%' }}
           onKeyDown={e => e.key === 'Enter' && lookup()}
         />
         <button
           onClick={lookup}
           disabled={loading}
-          style={{ background: 'linear-gradient(135deg, #C9A96E, #C9A96E)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+          style={{ background: 'linear-gradient(135deg, #C9A96E, #C9A96E)', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 20px', fontSize: '14px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, width: '100%' }}
         >
           {loading ? 'Loading...' : 'Pull Product'}
         </button>
@@ -1092,20 +1092,20 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
         🛍️ Pull Products from Storefront Collage
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
         <input
           value={url}
           onChange={e => setUrl(e.target.value)}
           placeholder="Paste Amazon storefront photo URL (amazon.com/shop/influencer-.../photo/...)"
           style={{
-            flex: 1,
             background: '#E8E5E0',
             border: '1px solid #D0CBC3',
             borderRadius: '8px',
-            padding: '10px 14px',
+            padding: '12px 14px',
             color: '#1A1A1A',
-            fontSize: '13px',
-            outline: 'none'
+            fontSize: '14px',
+            outline: 'none',
+            width: '100%'
           }}
           onKeyDown={e => e.key === 'Enter' && scrape()}
         />
@@ -1117,12 +1117,13 @@ function StorefrontLookup({ creator, onProductsLoaded }) {
             color: '#000',
             border: 'none',
             borderRadius: '8px',
-            padding: '10px 20px',
-            fontSize: '13px',
+            padding: '12px 20px',
+            fontSize: '14px',
             fontWeight: '700',
             cursor: loading ? 'not-allowed' : 'pointer',
             opacity: loading ? 0.7 : 1,
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            width: '100%'
           }}
         >
           {loading ? 'Scraping...' : 'Pull Products'}
@@ -2153,11 +2154,14 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
   if (screen === "generator" && generatedContent) return (
     <div style={S.app}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');`}</style>
-      <nav style={S.nav}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={S.navBrand}>Markable</span><span style={S.navBadge}>Creator Intelligence</span>
+      <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBadge}>Creator Intelligence</span>
+          </div>
+          <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>
         </div>
-        <button style={S.btnOutline} onClick={() => setScreen("profile")}>← Back</button>
       </nav>
       <div style={S.container}>
         <div style={{ fontSize: "11px", color: "#C9A96E", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>AI Generated · {selectedCreator?.name}</div>
@@ -2235,11 +2239,14 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
   if (screen === "calendar") return (
     <div style={S.app}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');`}</style>
-      <nav style={S.nav}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={S.navBrand}>Markable</span><span style={S.navBadge}>Creator Intelligence</span>
+      <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBadge}>Creator Intelligence</span>
+          </div>
+          <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>
         </div>
-        <button style={S.btnOutline} onClick={() => setScreen("profile")}>← Back</button>
       </nav>
       <div style={S.container}>
         <div style={{ fontSize: "11px", color: "#C9A96E", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>Content Calendar · {selectedCreator?.name}</div>
@@ -2282,11 +2289,14 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
   if (screen === "boost") return (
     <div style={S.app}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');`}</style>
-      <nav style={S.nav}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={S.navBrand}>Markable</span><span style={S.navBadge}>Creator Intelligence</span>
+      <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBadge}>Creator Intelligence</span>
+          </div>
+          <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>
         </div>
-        <button style={S.btnOutline} onClick={() => setScreen("profile")}>← Back</button>
       </nav>
       <div style={S.container}>
         <div style={{ fontSize: "11px", color: "#C9A96E", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>Boost Intelligence · {selectedCreator?.name}</div>
