@@ -2131,6 +2131,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               badge: ad.hasVideo && ad.hasStatic ? 'Mixed' : ad.hasVideo ? 'Video' : 'Static',
               copy: ad.copy,
             };
+            const cleanShopUrl = ad.shopUrl ? ad.shopUrl.split('?')[0] : null;
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
@@ -2177,9 +2178,9 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                       <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{adProduct.commission}</div>
                       <div style={{ fontSize: "11px", color: "#999999" }}>{adProduct.trend}</div>
                     </div>
-                    {ad.shopUrl && (
+                    {cleanShopUrl && (
                       <a 
-                        href={ad.shopUrl} 
+                        href={cleanShopUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         style={{ 
