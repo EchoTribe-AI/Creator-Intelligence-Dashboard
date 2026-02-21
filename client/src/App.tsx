@@ -2120,8 +2120,18 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           </div>
 
           {/* ── EXISTING ADS ── */}
-          <div style={S.sectionLabel}>Existing Ads — Real Ad Library Data</div>
-          {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => (
+          <div style={S.sectionLabel}>Existing Ads — Click to Generate AI Ad Variations</div>
+          {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => {
+            const adProductName = ad.copy.substring(0, 50).replace(/[^\w\s]/g, '').trim() || 'Ad Creative';
+            const adProduct = {
+              name: adProductName,
+              category: selectedCreator.niche || 'General',
+              commission: selectedCreator.amazonData?.avg_commission_rate || '8%',
+              trend: '↑ Active',
+              badge: ad.hasVideo && ad.hasStatic ? 'Mixed' : ad.hasVideo ? 'Video' : 'Static',
+              copy: ad.copy,
+            };
+            return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
                 {ad.hasVideo && ad.videoUrl ? (
@@ -2138,13 +2148,64 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
                     {ad.hasStatic && <span style={{ ...S.tag, background: "rgba(244,114,182,0.15)", color: "#F472B6" }}>🖼️ Static</span>}
                   </div>
-                  <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite('product', adProduct);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        color: isFavorite('product', adProductName) ? '#FF3B3B' : '#CCCCCC',
+                        padding: '2px'
+                      }}
+                    >
+                      {isFavorite('product', adProductName) ? '❤️' : '🤍'}
+                    </button>
+                  </div>
                 </div>
                 <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{ad.copy}</div>
                 <ComplianceDisplay flags={checkCompliance(ad.copy)} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px", paddingTop: "8px", borderTop: "1px solid #F0F0F0" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {adProduct.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E", margin: 0 }}>{adProduct.badge}</span>}
+                    <div style={{ textAlign: "left" }}>
+                      <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{adProduct.commission}</div>
+                      <div style={{ fontSize: "11px", color: "#999999" }}>{adProduct.trend}</div>
+                    </div>
+                  </div>
+                  <button
+                    data-testid={`generate-ad-${i}`}
+                    style={{
+                      ...S.btn,
+                      padding: "8px 16px",
+                      fontSize: "13px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: "#C9A96E",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontWeight: "700"
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      generateContent(adProduct);
+                    }}
+                  >
+                    Generate Ad <span>→</span>
+                  </button>
+                </div>
               </div>
             </div>
-          ))}
+            );
+          })}
           {selectedCreator.existingAds.length > visibleAdsCount && (
             <button
               style={{ ...S.btnOutline, marginTop: '12px', width: '100%', padding: '12px' }}
@@ -2154,66 +2215,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </button>
           )}
 
-          {/* ── PRODUCTS ── */}
-          <div style={S.sectionLabel}>Products — Click to Generate AI Ad Variations</div>
-          {selectedCreator.products.map((p, i) => (
-            <div key={i} className="pr" style={S.productRow} onClick={() => generateContent(p)}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: "600" }}>{p.name}</div>
-                  <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{p.category}</div>
-                </div>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite('product', p);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    color: isFavorite('product', p.name) ? '#FF3B3B' : '#CCCCCC',
-                    padding: '4px'
-                  }}
-                >
-                  {isFavorite('product', p.name) ? '❤️' : '🤍'}
-                </button>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingTop: "8px", borderTop: "1px solid #F0F0F0" }}>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                  {p.badge && <span style={{ ...S.tag, background: "rgba(201,169,110,0.15)", color: "#C9A96E", margin: 0 }}>{p.badge}</span>}
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{p.commission}</div>
-                    <div style={{ fontSize: "11px", color: "#999999" }}>{p.trend}</div>
-                  </div>
-                </div>
-                <button 
-                  style={{ 
-                    ...S.btn, 
-                    padding: "8px 16px", 
-                    fontSize: "13px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    background: "#C9A96E",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontWeight: "700"
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    generateContent(p);
-                  }}
-                >
-                  Generate Ad <span>→</span>
-                </button>
-              </div>
-            </div>
-          ))}
+          {/* ── PRODUCTS (hidden - functionality moved to Existing Ads) ── */}
 
           {/* 
           <StorefrontLookup 
