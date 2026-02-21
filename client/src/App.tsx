@@ -1344,6 +1344,25 @@ export default function App() {
       });
   }, []);
 
+  function cleanShopUrl(url: string | null) {
+    if (!url) return null;
+    try {
+      // If it's a Facebook redirect, extract the real URL from the u= parameter
+      if (url.includes('l.facebook.com') || url.includes('facebook.com/l.php')) {
+        const match = url.match(/[?&]u=([^&]+)/);
+        if (match) {
+          const decoded = decodeURIComponent(match[1]);
+          // Also strip any fbclid tracking parameter from the destination
+          return decoded.split('?')[0];
+        }
+      }
+      // If it's already a clean URL, just strip fbclid
+      return url.split('?')[0];
+    } catch {
+      return url;
+    }
+  }
+
   function buildCreatorsFromCSV(rows: any[]) {
     const map: any = {};
 
@@ -1387,7 +1406,7 @@ export default function App() {
         hasStatic,
         videoUrl: row['Video URL']?.trim() || null,
         imageUrl: row['Content Image URL']?.trim() || null,
-        shopUrl: row['CTA Shop Now URL']?.trim() || null,
+        shopUrl: cleanShopUrl(row['CTA Shop Now URL']?.trim()),
         libraryId: (row['Meta Library ID'] || '').replace('Library ID: ', '').trim(),
       });
     });
