@@ -2002,17 +2002,27 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           {/* ── EXISTING ADS ── */}
           <div style={S.sectionLabel}>Existing Ads — Real Ad Library Data</div>
           {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => (
-            <div key={i} style={S.adRow}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <div style={{ display: "flex", gap: "6px" }}>
-                  {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
-                  {ad.hasStatic && <span style={{ ...S.tag, background: "rgba(244,114,182,0.15)", color: "#F472B6" }}>🖼️ Static</span>}
-                  {!ad.hasVideo && !ad.hasStatic && <span style={{ ...S.tag, background: "rgba(107,114,128,0.15)", color: "#888888" }}>📄 Text</span>}
-                </div>
-                <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
+            <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start" }}>
+              <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
+                {ad.hasVideo && ad.videoUrl ? (
+                  <video src={ad.videoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} preload="metadata" />
+                ) : ad.hasStatic && ad.imageUrl ? (
+                  <img src={ad.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
+                ) : (
+                  <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
+                )}
               </div>
-              <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5 }}>{ad.copy}</div>
-              <ComplianceDisplay flags={checkCompliance(ad.copy)} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    {ad.hasVideo && <span style={{ ...S.tag, background: "rgba(59,130,246,0.12)", color: "#3B82F6" }}>📹 Video</span>}
+                    {ad.hasStatic && <span style={{ ...S.tag, background: "rgba(244,114,182,0.15)", color: "#F472B6" }}>🖼️ Static</span>}
+                  </div>
+                  <span style={{ fontSize: "11px", color: "#999999" }}>{ad.started}</span>
+                </div>
+                <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{ad.copy}</div>
+                <ComplianceDisplay flags={checkCompliance(ad.copy)} />
+              </div>
             </div>
           ))}
           {selectedCreator.existingAds.length > visibleAdsCount && (
