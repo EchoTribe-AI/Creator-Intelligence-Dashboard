@@ -2177,6 +2177,23 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                       <div style={{ fontSize: "13px", fontWeight: "700", color: "#34D399" }}>{adProduct.commission}</div>
                       <div style={{ fontSize: "11px", color: "#999999" }}>{adProduct.trend}</div>
                     </div>
+                    {ad.shopUrl && (
+                      <a 
+                        href={ad.shopUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ 
+                          fontSize: "11px", 
+                          color: "#999999", 
+                          textDecoration: "underline",
+                          marginLeft: "8px",
+                          cursor: "pointer"
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View Landing Page ↗
+                      </a>
+                    )}
                   </div>
                   <button
                     data-testid={`generate-ad-${i}`}
