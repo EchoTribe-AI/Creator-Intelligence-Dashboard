@@ -1,6 +1,61 @@
 {
   "generations": [
     {
+      "_id": "1771688054074",
+      "creatorId": "brookesbuys",
+      "productName": "Back in Stock Home security hack hidden book sa",
+      "productData": {
+        "name": "Back in Stock Home security hack hidden book sa",
+        "category": "Home & Decor",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "This home security hack hides your valuables in plain sight",
+          "Finally, a clever way to protect small valuables at home",
+          "Your secret documents and cash deserve better hiding spots"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "This home security hack hides your valuables in plain sight ☺️",
+            "caption": "🌟 Thousands of rave reviews and freshly restocked - grab it before it's gone! This clever book safe lets you hide small valuables, money and confidential information right on your bookshelf. Such a smart way to keep important things secure but easily accessible when you need them. One of those Amazon home finds that's both practical and peace of mind.",
+            "cta": "Click the 'Shop Now' button to buy!",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Finally, a clever way to protect small valuables at home",
+            "caption": "🔥 This hidden book safe is such a smart home security solution! Store cash, jewelry, or important documents right in plain sight on any bookshelf. Looks like a regular book but opens to reveal secure storage space. Perfect for keeping valuables safe without obvious safes or hiding spots.",
+            "cta": "Click 'Shop Now' to get yours!",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "Your secret documents and cash deserve better hiding spots ✨",
+            "caption": "🌟 Thousands of rave reviews and freshly restocked! This Amazon home security essential looks like an ordinary book but opens to reveal hidden storage for valuables, cash, and important documents. Such a clever way to keep things secure right in plain sight on your bookshelf.",
+            "slides": [
+              "Looks like a regular book on your shelf",
+              "Opens to reveal secure hidden storage inside",
+              "Perfect for cash, jewelry, documents & small valuables"
+            ],
+            "cta": "Click the 'Shop Now' button to buy before it's gone!",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Video format recommended for this product as it allows demonstration of the book opening to reveal hidden compartment, which is the key selling point. Static works well for security-focused messaging, while carousel can show the step-by-step concept.",
+        "boost_recommendation": "Focus video ads on the reveal/demonstration moment. Target homeowners 25-55 interested in home security, organization, and clever storage solutions. Test security-focused copy against organization-focused messaging.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-02-21T15:34:14.074Z"
+    },
+    {
       "_id": "1771684587671",
       "creatorId": "caseyLeigh",
       "productName": "Aesthetic Kitchen Glasses",

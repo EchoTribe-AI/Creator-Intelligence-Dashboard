@@ -795,7 +795,7 @@ function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E8E5E0', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: '#C9A96E', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
-        🔗 Add Product from Amazon Link
+        Create Ad from Product Link
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
         <input
@@ -810,7 +810,7 @@ function ProductLookup({ creatorTone, creatorId, onProductLoaded }) {
           disabled={loading}
           style={{ background: 'linear-gradient(135deg, #C9A96E, #C9A96E)', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 20px', fontSize: '14px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, width: '100%' }}
         >
-          {loading ? 'Loading...' : 'Pull Product'}
+          {loading ? 'Generating...' : 'Generate Ad'}
         </button>
       </div>
 
