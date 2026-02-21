@@ -1,7 +1,76 @@
 import { useState } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CREATOR DATA — Real scrape from Markable Meta Ad Library
+// COMPLIANCE UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+const checkCompliance = (copy: string) => {
+  const flags = [];
+  
+  // Trademark check
+  const trademarks = ["SPANX", "Free People", "Lululemon", "Nike", "Amazon", "Walmart", "Target"];
+  trademarks.forEach(tm => {
+    if (copy.toLowerCase().includes(tm.toLowerCase())) {
+      flags.push({ rule: "trademark_reference", severity: "block", note: `Contains restricted brand name: ${tm}` });
+    }
+  });
+
+  // Superlatives
+  const superlatives = ["best", "most popular", "#1", "number one"];
+  superlatives.forEach(s => {
+    if (new RegExp(`\\b${s}\\b`, 'i').test(copy)) {
+      flags.push({ rule: "unverified_superlative", severity: "warning", note: `Contains unverified superlative: "${s}"` });
+    }
+  });
+
+  // Urgency
+  if (/\bonly \d+ left\b/i.test(copy)) {
+    flags.push({ rule: "deceptive_urgency", severity: "warning", note: "Contains potential deceptive urgency claim" });
+  }
+
+  // Earnings
+  if (/\b(income|profit|earnings|make money)\b/i.test(copy)) {
+    flags.push({ rule: "earnings_claim", severity: "block", note: "Contains prohibited earnings or income claims" });
+  }
+
+  // Disclosure
+  if (!copy.includes("#ad") && !copy.includes("#sponsored")) {
+    flags.push({ rule: "missing_disclosure", severity: "warning", note: "Missing required #ad or #sponsored disclosure" });
+  }
+
+  return flags;
+};
+
+const ComplianceDisplay = ({ flags }: { flags: any[] }) => {
+  if (!flags || flags.length === 0) {
+    return (
+      <div style={{ fontSize: '11px', color: '#22C55E', marginTop: '8px' }}>
+        ✓ Meta Policy Check Passed
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background: 'rgba(251,146,60,0.08)',
+      border: '1px solid rgba(251,146,60,0.25)',
+      borderRadius: '8px',
+      padding: '10px 14px',
+      marginTop: '10px'
+    }}>
+      <div style={{ fontSize: '11px', fontWeight: '700', color: '#F97316', marginBottom: '6px' }}>
+        ⚠️ Policy Review Needed
+      </div>
+      {flags.map((flag, fi) => (
+        <div key={fi} style={{ fontSize: '12px', color: '#444444', marginBottom: '3px' }}>
+          <span style={{ color: flag.severity === 'block' ? '#EF4444' : '#F97316' }}>
+            {flag.severity === 'block' ? '🚫' : '⚠️'}
+          </span>{' '}
+          <strong>{flag.rule}</strong>: {flag.note}
+        </div>
+      ))}
+    </div>
+  );
+};
 // Ad Type Legend: "video" = video-only, "static" = image-only, "mixed" = both
 // ─────────────────────────────────────────────────────────────────────────────
 const CREATORS = [
@@ -2016,31 +2085,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "8px", color: "#1A1A1A" }}>"{v.hook}"</div>
             <div style={{ fontSize: "13px", color: "#444444", lineHeight: 1.6, marginBottom: "10px" }}>{v.caption}</div>
             
-            {v.compliance_flags?.length > 0 ? (
-              <div style={{
-                background: 'rgba(251,146,60,0.08)',
-                border: '1px solid rgba(251,146,60,0.25)',
-                borderRadius: '8px',
-                padding: '10px 14px',
-                marginTop: '10px'
-              }}>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: '#F97316', marginBottom: '6px' }}>
-                  ⚠️ Policy Review Needed
-                </div>
-                {v.compliance_flags.map((flag, fi) => (
-                  <div key={fi} style={{ fontSize: '12px', color: '#444444', marginBottom: '3px' }}>
-                    <span style={{ color: flag.severity === 'block' ? '#EF4444' : '#F97316' }}>
-                      {flag.severity === 'block' ? '🚫' : '⚠️'}
-                    </span>{' '}
-                    <strong>{flag.rule}</strong>: {flag.note}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ fontSize: '11px', color: '#22C55E', marginTop: '8px' }}>
-                ✓ Meta Policy Check Passed
-              </div>
-            )}
+            <ComplianceDisplay flags={v.compliance_flags} />
 
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
               <span style={{ ...S.tag, background: "#F0EDE8", color: "#888888" }}>CTA: {v.cta}</span>
