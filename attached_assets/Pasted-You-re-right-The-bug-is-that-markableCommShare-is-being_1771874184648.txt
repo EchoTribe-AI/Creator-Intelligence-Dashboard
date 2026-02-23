@@ -1,0 +1,70 @@
+You're right. The bug is that markableCommShare is being calculated as 50% of earnings first, then doing the net calc — but it should use the full earnings pool minus ad spend, then split. Here's the fix:
+
+Fix Markable profit calculation — full earnings pool minus ad spend, then split
+Replace the Markable calculation block:
+javascript// Markable internal economics — correct waterfall
+const markableAdSpend = monthlyBudget * (markableMatchPct / 100);
+
+// Net pool = full affiliate earnings minus Markable's ad spend
+const markableNet = earnings - markableAdSpend;
+
+// Split net 50/50 with creator
+const creatorSplit = markableNet * 0.50;
+const markableProfit = markableNet * 0.50;
+
+// ROAS = what Markable keeps vs what they spent
+const markableROAS = markableAdSpend > 0 ? markableProfit / markableAdSpend : 0;
+
+// 60-day totals
+const twoMonthMarkableAd = markableAdSpend * 2;
+const twoMonthMarkableNet = markableNet * 2;
+const twoMonthCreatorSplit = creatorSplit * 2;
+const twoMonthMarkableProfit = markableProfit * 2;
+Remove markableCommShare and markableCommPct entirely — the commission share slider is no longer needed since Markable always works from the full pool minus their ad spend.
+Update the Markable internal view rows:
+javascript{[
+  { 
+    label: 'Ad Co-Investment', 
+    value: twoMonthMarkableAd, 
+    color: '#FF6B6B',
+    note: `${markableMatchPct}% of brand spend · top performers only` 
+  },
+  { 
+    label: 'Affiliate Earnings Pool', 
+    value: earnings * 2, 
+    color: '#C084FC',
+    note: 'Total affiliate commissions generated' 
+  },
+  { 
+    label: 'Markable Net Profit', 
+    value: twoMonthMarkableProfit, 
+    color: '#34D399', 
+    bold: true,
+    note: '50% of (earnings − ad spend) · after creator split' 
+  },
+].map(/* same render as before */)}
+Remove the Commission Share slider — replace the two-slider grid with a single slider for Ad Match only:
+jsx<div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
+  <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '8px', fontWeight: '600' }}>
+    Ad Match — up to {markableMatchPct}% of brand spend
+  </div>
+  <input type="range" min="0" max="100" step="5" value={markableMatchPct}
+    onChange={e => setMarkableMatchPct(+e.target.value)}
+    style={{ width: '100%', accentColor: '#FF6B6B' }} />
+  <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '4px' }}>
+    Deployed to top-performing ads only · creator split is 50% of net after ad costs
+  </div>
+</div>
+```
+
+---
+
+**Verify with $25K monthly + 50% match:**
+```
+Markable Ad Spend:   $25,000
+Earnings Pool:       ~$91,000 (monthly)
+Markable Net:        $66,000  (91K − 25K)
+Creator Split:       $33,000  (50% of net)
+Markable Profit:     $33,000  (50% of net)
+Markable ROAS:       1.32x    (33K / 25K)
+60-day numbers will double those figures.

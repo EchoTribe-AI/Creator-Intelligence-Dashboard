@@ -45,7 +45,6 @@ const CATEGORY_MULTIPLIERS = {
 
 const DannyPage = () => {
     const [markableMatchPct, setMarkableMatchPct] = useState(50);
-    const [markableCommPct, setMarkableCommPct] = useState(50);
     const [retailer, setRetailer] = useState('walmart');
     const [category, setCategory] = useState('Kids & Toys');
     const [monthlyBudget, setMonthlyBudget] = useState(25000);
@@ -107,13 +106,16 @@ const DannyPage = () => {
     const brandROAS_total = (monthlyBudget + affiliateCommPool) > 0 ? gmv / (monthlyBudget + affiliateCommPool) : 0;
     const brandProfit = earnings - monthlyBudget;
 
-    // Markable internal economics - correctly waterfalling ad spend match and commission split
-    const markableCommShare = earnings * (markableCommPct / 100); // Markable's % of total pool
-    const markableNet = markableCommShare - markableAdSpend;      // net after ad spend deducted
-    const creatorSplit = markableNet * 0.50;                      // creator gets 50% of net
-    const markableProfit = markableNet * 0.50;                    // Markable keeps 50% of net
-    const markableROAS = markableAdSpend > 0
-      ? markableProfit / markableAdSpend : 0;                     // return on their ad investment
+    // Markable internal economics — correct waterfall
+    // Net pool = full affiliate earnings minus Markable's ad spend
+    const markableNet = earnings - markableAdSpend;
+
+    // Split net 50/50 with creator
+    const creatorSplit = markableNet * 0.50;
+    const markableProfit = markableNet * 0.50;
+
+    // ROAS = what Markable keeps vs what they spent
+    const markableROAS = markableAdSpend > 0 ? markableProfit / markableAdSpend : 0;
 
     // 60-day Brand totals
     const twoMonthBrandAd = monthlyBudget * 2;
@@ -124,7 +126,6 @@ const DannyPage = () => {
 
     // 60-day Markable totals
     const twoMonthMarkableAd = markableAdSpend * 2;
-    const twoMonthMarkableComm = markableCommShare * 2;
     const twoMonthMarkableNet = markableNet * 2;
     const twoMonthCreatorSplit = creatorSplit * 2;
     const twoMonthMarkableProfit = markableProfit * 2;
@@ -314,60 +315,66 @@ const DannyPage = () => {
                   </div>
 
                   <div style={{ height: '1px', background: 'rgba(0,0,0,0.08)', margin: '4px 0 20px' }} />
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#34D399', letterSpacing: '0.5px', marginBottom: '12px' }}>⚙️ MARKABLE INTERNAL VIEW</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                    {[
-                      { label: `Ad Match — up to ${markableMatchPct}% of brand spend`, value: markableMatchPct, setter: setMarkableMatchPct, hint: 'Deployed to top-performing ads only', color: '#FF6B6B' },
-                      { label: `Commission Share — ${markableCommPct}% of pool`, value: markableCommPct, setter: setMarkableCommPct, hint: 'Markable retains this % of affiliate pool', color: '#C084FC' },
-                    ].map((f, i) => (
-                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px' }}>
-                        <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '8px', fontWeight: '600' }}>{f.label}</div>
-                        <input type="range" min="0" max="100" step="5" value={f.value} onChange={e => f.setter(+e.target.value)} style={{ width: '100%', accentColor: f.color }} />
-                        <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '4px' }}>{f.hint}</div>
-                      </div>
-                    ))}
+                <div style={DS.sectionLabel}>⚙️ MARKABLE INTERNAL VIEW</div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '8px', fontWeight: '600' }}>
+                    Ad Match — up to {markableMatchPct}% of brand spend
                   </div>
+                  <input type="range" min="0" max="100" step="5" value={markableMatchPct}
+                    onChange={e => setMarkableMatchPct(+e.target.value)}
+                    style={{ width: '100%', accentColor: '#FF6B6B' }} />
+                  <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '4px' }}>
+                    Deployed to top-performing ads only · creator split is 50% of net after ad costs
+                  </div>
+                </div>
 
-                  {[
-                    { label: 'Markable Ad Co-Investment', value: twoMonthMarkableAd, color: '#FF6B6B',
-                      note: `${markableMatchPct}% of brand spend · top performers only` },
-                    { label: 'Markable Commission Share', value: twoMonthMarkableComm, color: '#C084FC',
-                      note: `${markableCommPct}% of total affiliate pool before split` },
-                    { label: 'Markable Net', value: twoMonthMarkableNet, color: '#F59E0B', italic: true,
-                      note: 'Commission share − ad spend' },
-                    { label: 'Creator Split (50% of net)', value: twoMonthCreatorSplit, color: '#9CA3AF',
-                      note: 'Paid to creator after ad costs deducted' },
-                    { label: 'Markable Profit', value: twoMonthMarkableProfit, color: '#34D399', bold: true,
-                      note: '50% of net · Markable keeps' },
-                  ].map((row, i) => (
-                    <div key={i} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      paddingBottom: '10px', marginBottom: '10px',
-                      borderBottom: i === 1 ? '1px solid rgba(255,255,255,0.12)' :
-                                    i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none'
-                    }}>
-                      <div>
-                        <div style={{
-                          fontSize: '13px',
-                          fontWeight: row.bold ? '700' : '500',
-                          fontStyle: row.italic ? 'italic' : 'normal',
-                          color: row.bold ? '#fff' : '#D1D5DB'
-                        }}>
-                          {row.label}
-                        </div>
-                        {row.note && (
-                          <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{row.note}</div>
-                        )}
-                      </div>
+                {[
+                  { 
+                    label: 'Ad Co-Investment', 
+                    value: twoMonthMarkableAd, 
+                    color: '#FF6B6B',
+                    note: `${markableMatchPct}% of brand spend · top performers only` 
+                  },
+                  { 
+                    label: 'Affiliate Earnings Pool', 
+                    value: earnings * 2, 
+                    color: '#C084FC',
+                    note: 'Total affiliate commissions generated' 
+                  },
+                  { 
+                    label: 'Markable Net Profit', 
+                    value: twoMonthMarkableProfit, 
+                    color: '#34D399', 
+                    bold: true,
+                    note: '50% of (earnings − ad spend) · after creator split' 
+                  },
+                ].map((row, i) => (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    paddingBottom: '10px', marginBottom: '10px',
+                    borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none'
+                  }}>
+                    <div>
                       <div style={{
-                        fontSize: row.bold ? '17px' : '15px',
-                        fontWeight: '800',
-                        color: row.color
+                        fontSize: '13px',
+                        fontWeight: row.bold ? '700' : '500',
+                        color: row.bold ? '#fff' : '#D1D5DB'
                       }}>
-                        ${Math.round(row.value).toLocaleString()}
+                        {row.label}
                       </div>
+                      {row.note && (
+                        <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{row.note}</div>
+                      )}
                     </div>
-                  ))}
+                    <div style={{
+                      fontSize: row.bold ? '17px' : '15px',
+                      fontWeight: '800',
+                      color: row.color
+                    }}>
+                      ${Math.round(row.value).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
 
                   {(() => {
                     const isGreen = markableROAS >= 1.5;
