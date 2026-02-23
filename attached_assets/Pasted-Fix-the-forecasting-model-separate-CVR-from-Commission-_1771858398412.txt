@@ -1,0 +1,114 @@
+Fix the forecasting model — separate CVR from Commission Rate
+Step 1 — Fix retailer benchmarks
+Replace the cvr field in every retailer with a realistic paid social click-to-purchase rate, and keep commissionRate as its own separate field:
+javascriptconst RETAILER_BENCHMARKS = {
+  walmart: {
+    name: 'Walmart',
+    logo: '🟡',
+    cpc: 0.034,
+    cvr: 1.8,           // % of clicks that result in a purchase (paid social benchmark)
+    aov: 65,            // average order value
+    commissionRate: 8.9, // % of sale paid as affiliate commission
+    epcBaseline: 0.161, // derived from live test: cvr% × aov × commissionRate%
+    note: 'Based on Nov–Dec 2025 live test data',
+    verified: true,
+  },
+  target: {
+    name: 'Target',
+    logo: '🎯',
+    cpc: 0.042,
+    cvr: 1.4,
+    aov: 58,
+    commissionRate: 7.0,
+    epcBaseline: 0.057,
+    note: 'Estimated benchmarks — not yet tested',
+    verified: false,
+  },
+  amazon: {
+    name: 'Amazon',
+    logo: '📦',
+    cpc: 0.038,
+    cvr: 2.1,
+    aov: 52,
+    commissionRate: 8.0,
+    epcBaseline: 0.087,
+    note: 'Estimated benchmarks — not yet tested',
+    verified: false,
+  },
+  wayfair: {
+    name: 'Wayfair',
+    logo: '🏠',
+    cpc: 0.055,
+    cvr: 0.9,
+    aov: 210,
+    commissionRate: 7.0,
+    epcBaseline: 0.132,
+    note: 'Estimated benchmarks — not yet tested',
+    verified: false,
+  },
+};
+Step 2 — Fix category multipliers
+Category multipliers should only modify CPC and AOV — CVR and commission rate are retailer-level benchmarks that categories don't meaningfully change:
+javascriptconst CATEGORY_MULTIPLIERS = {
+  'Kids & Toys':    { cpcMod: 0.88, aovMod: 0.85, label: '🧸' },
+  'Home & Kitchen': { cpcMod: 1.12, aovMod: 1.40, label: '🏡' },
+  'Fashion':        { cpcMod: 0.95, aovMod: 0.75, label: '👗' },
+  'Beauty':         { cpcMod: 1.05, aovMod: 0.65, label: '💄' },
+  'Food & Grocery': { cpcMod: 0.80, aovMod: 0.45, label: '🛒' },
+};
+Step 3 — Fix state initialization and useEffect
+javascriptconst [cpc, setCpc] = useState(0.034);
+const [cvr, setCvr] = useState(1.8);          // click-to-purchase %, NOT commission rate
+const [aov, setAov] = useState(65);
+const [commissionRate, setCommissionRate] = useState(8.9);
+
+useEffect(() => {
+  const b = RETAILER_BENCHMARKS[retailer];
+  const m = CATEGORY_MULTIPLIERS[category];
+  setCpc(+(b.cpc * m.cpcMod).toFixed(4));
+  setCvr(b.cvr);                              // CVR comes only from retailer, not category
+  setAov(+(b.aov * m.aovMod).toFixed(0));
+  setCommissionRate(b.commissionRate);
+}, [retailer, category]);
+Step 4 — Fix the projection math
+javascriptconst clicks = Math.round(monthlyBudget / cpc);
+const orders = Math.round(clicks * (cvr / 100));   // cvr is now a true purchase rate
+const gmv = orders * aov;
+const earnings = gmv * (commissionRate / 100);
+const epc = clicks > 0 ? earnings / clicks : 0;
+const roas = monthlyBudget > 0 ? earnings / monthlyBudget : 0;
+const profit = earnings - monthlyBudget;
+Step 5 — Fix benchmark input fields to show all four separately
+Replace the existing benchmark inputs grid with four clearly labeled fields:
+javascript{[
+  { label: 'Avg CPC ($)', value: cpc, setter: setCpc, step: 0.001, hint: 'Cost per click from Meta ads' },
+  { label: 'CVR (%)', value: cvr, setter: setCvr, step: 0.1, hint: 'Click-to-purchase rate (paid social: 0.5–3%)' },
+  { label: 'Avg Order Value ($)', value: aov, setter: setAov, step: 1, hint: 'Average basket size at checkout' },
+  { label: 'Commission Rate (%)', value: commissionRate, setter: setCommissionRate, step: 0.1, hint: 'Affiliate rate paid on each sale' },
+].map((f, i) => (
+  <div key={i}>
+    <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '2px', fontWeight: '600' }}>{f.label}</div>
+    <input type="number" value={f.value} step={f.step} onChange={e => f.setter(+e.target.value)} />
+    <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '3px' }}>{f.hint}</div>
+  </div>
+))}
+Step 6 — Update the EPC formula display
+javascript// Below the benchmark inputs:
+<div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+  EPC = CVR × AOV × Rate = {cvr}% × ${aov} × {commissionRate}% ={' '}
+  <span style={{ color: '#C084FC', fontWeight: '700' }}>${epc.toFixed(4)}</span>
+  {bench.verified && (
+    <span style={{ marginLeft: '8px', color: '#34D399', fontSize: '10px' }}>
+      (live test baseline: ${bench.epcBaseline})
+    </span>
+  )}
+</div>
+
+After fixing, Walmart at $10K budget should show approximately:
+
+Clicks: ~334K
+Orders: ~6,000 (1.8% of clicks)
+GMV: ~$390K
+Earnings: ~$34K
+ROAS: ~3.4x
+EPC: ~$0.10

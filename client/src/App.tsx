@@ -9,10 +9,10 @@ const RETAILER_BENCHMARKS = {
     name: 'Walmart',
     logo: '🟡',
     cpc: 0.034,
-    cvr: 0.089,        // blended commission rate used as cvr proxy from test
-    epcBaseline: 0.161,
-    aov: 65,
-    commissionRate: 8.9,
+    cvr: 1.8,           // % of clicks that result in a purchase (paid social benchmark)
+    aov: 65,            // average order value
+    commissionRate: 8.9, // % of sale paid as affiliate commission
+    epcBaseline: 0.161, // derived from live test: cvr% × aov × commissionRate%
     note: 'Based on Nov–Dec 2025 live test data',
     verified: true,
   },
@@ -20,10 +20,10 @@ const RETAILER_BENCHMARKS = {
     name: 'Target',
     logo: '🎯',
     cpc: 0.042,
-    cvr: 0.071,
-    epcBaseline: 0.12,
+    cvr: 1.4,
     aov: 58,
     commissionRate: 7.0,
+    epcBaseline: 0.057,
     note: 'Estimated benchmarks — not yet tested',
     verified: false,
   },
@@ -31,10 +31,10 @@ const RETAILER_BENCHMARKS = {
     name: 'Amazon',
     logo: '📦',
     cpc: 0.038,
-    cvr: 0.095,
-    epcBaseline: 0.14,
+    cvr: 2.1,
     aov: 52,
     commissionRate: 8.0,
+    epcBaseline: 0.087,
     note: 'Estimated benchmarks — not yet tested',
     verified: false,
   },
@@ -42,21 +42,21 @@ const RETAILER_BENCHMARKS = {
     name: 'Wayfair',
     logo: '🏠',
     cpc: 0.055,
-    cvr: 0.048,
-    epcBaseline: 0.19,
+    cvr: 0.9,
     aov: 210,
     commissionRate: 7.0,
+    epcBaseline: 0.132,
     note: 'Estimated benchmarks — not yet tested',
     verified: false,
   },
 };
 
 const CATEGORY_MULTIPLIERS = {
-  'Kids & Toys':  { cpcMod: 0.88, cvrMod: 1.15, aovMod: 0.85, label: '🧸' },
-  'Home & Kitchen': { cpcMod: 1.12, cvrMod: 0.95, aovMod: 1.40, label: '🏡' },
-  'Fashion':      { cpcMod: 0.95, cvrMod: 1.05, aovMod: 0.75, label: '👗' },
-  'Beauty':       { cpcMod: 1.05, cvrMod: 1.10, aovMod: 0.65, label: '💄' },
-  'Food & Grocery': { cpcMod: 0.80, cvrMod: 0.90, aovMod: 0.45, label: '🛒' },
+  'Kids & Toys':    { cpcMod: 0.88, aovMod: 0.85, label: '🧸' },
+  'Home & Kitchen': { cpcMod: 1.12, aovMod: 1.40, label: '🏡' },
+  'Fashion':        { cpcMod: 0.95, aovMod: 0.75, label: '👗' },
+  'Beauty':         { cpcMod: 1.05, aovMod: 0.65, label: '💄' },
+  'Food & Grocery': { cpcMod: 0.80, aovMod: 0.45, label: '🛒' },
 };
 
 const DannyPage = () => {
@@ -74,18 +74,17 @@ const DannyPage = () => {
   const [retailer, setRetailer] = useState('walmart');
   const [category, setCategory] = useState('Kids & Toys');
   const [monthlyBudget, setMonthlyBudget] = useState(25000);
-  const [commissionRate, setCommissionRate] = useState(8.9);
-  const [numCreators, setNumCreators] = useState(10);
   const [cpc, setCpc] = useState(0.034);
-  const [cvr, setCvr] = useState(8.9);
+  const [cvr, setCvr] = useState(1.8);          // click-to-purchase %, NOT commission rate
   const [aov, setAov] = useState(65);
+  const [commissionRate, setCommissionRate] = useState(8.9);
 
   // When retailer changes, reset benchmarks
   useEffect(() => {
     const b = RETAILER_BENCHMARKS[retailer as keyof typeof RETAILER_BENCHMARKS];
     const m = CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS];
     setCpc(+(b.cpc * m.cpcMod).toFixed(4));
-    setCvr(+(b.cvr * m.cvrMod * 100).toFixed(2));
+    setCvr(b.cvr);                              // CVR comes only from retailer, not category
     setAov(+(b.aov * m.aovMod).toFixed(0));
     setCommissionRate(b.commissionRate);
   }, [retailer, category]);
@@ -95,10 +94,11 @@ const DannyPage = () => {
 
   // Core math
   const clicks = Math.round(monthlyBudget / cpc);
-  const gmv = clicks * (cvr / 100) * aov;
+  const orders = Math.round(clicks * (cvr / 100));   // cvr is now a true purchase rate
+  const gmv = orders * aov;
   const earnings = gmv * (commissionRate / 100);
-  const epc = earnings / clicks;
-  const roas = earnings / monthlyBudget;
+  const epc = clicks > 0 ? earnings / clicks : 0;
+  const roas = monthlyBudget > 0 ? earnings / monthlyBudget : 0;
   const profit = earnings - monthlyBudget;
 
   // Creator & content
@@ -248,24 +248,26 @@ const DannyPage = () => {
               <div style={DS.inputLabel}>Benchmark Inputs <span style={{ color: '#4B5563', fontWeight: '400', textTransform: 'none', letterSpacing: 0 }}>(editable)</span></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {[
-                  { label: 'Avg CPC ($)', value: cpc, setter: setCpc, step: 0.001, decimals: 4 },
-                  { label: 'Conv. Rate (%)', value: cvr, setter: setCvr, step: 0.1, decimals: 2 },
-                  { label: 'Avg Order Value ($)', value: aov, setter: setAov, step: 1, decimals: 0 },
-                  { label: 'Commission Rate (%)', value: commissionRate, setter: setCommissionRate, step: 0.1, decimals: 1 },
+                  { label: 'Avg CPC ($)', value: cpc, setter: setCpc, step: 0.001, hint: 'Cost per click from Meta ads' },
+                  { label: 'CVR (%)', value: cvr, setter: setCvr, step: 0.1, hint: 'Click-to-purchase rate (paid social: 0.5–3%)' },
+                  { label: 'Avg Order Value ($)', value: aov, setter: setAov, step: 1, hint: 'Average basket size at checkout' },
+                  { label: 'Commission Rate (%)', value: commissionRate, setter: setCommissionRate, step: 0.1, hint: 'Affiliate rate paid on each sale' },
                 ].map((f, i) => (
                   <div key={i}>
-                    <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>{f.label}</div>
-                    <input
-                      type="number"
-                      value={f.value}
-                      step={f.step}
-                      onChange={e => f.setter(+e.target.value)}
-                    />
+                    <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '2px', fontWeight: '600' }}>{f.label}</div>
+                    <input type="number" value={f.value} step={f.step} onChange={e => f.setter(+e.target.value)} />
+                    <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '3px' }}>{f.hint}</div>
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px' }}>
-                EPC = CVR × AOV × Rate = <span style={{ color: '#C084FC', fontWeight: '700' }}>${epc.toFixed(4)}</span>
+              <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+                EPC = CVR × AOV × Rate = {cvr}% × ${aov} × {commissionRate}% ={' '}
+                <span style={{ color: '#C084FC', fontWeight: '700' }}>${epc.toFixed(4)}</span>
+                {bench.verified && (
+                  <span style={{ marginLeft: '8px', color: '#34D399', fontSize: '10px' }}>
+                    (live test baseline: ${bench.epcBaseline})
+                  </span>
+                )}
               </div>
             </div>
 
