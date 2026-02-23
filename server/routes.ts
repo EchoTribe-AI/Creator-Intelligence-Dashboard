@@ -1,3 +1,4 @@
+import path from "path";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -193,6 +194,11 @@ export async function registerRoutes(
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', scraper_active: !!process.env.CRAWLBASE_JS_TOKEN });
+  });
+
+  // Serve index.html for the /danny route to allow React to handle it
+  app.get('/danny', (_req, res) => {
+    res.sendFile(path.join(__dirname, "../dist/public/index.html"));
   });
 
   return httpServer;
