@@ -200,10 +200,11 @@ export async function registerRoutes(
     res.json({ status: 'ok', scraper_active: !!process.env.CRAWLBASE_JS_TOKEN });
   });
 
-  // Serve index.html for the /danny route to allow React to handle it
-  app.get(['/danny', '/danny/'], (_req, res) => {
-    res.sendFile(path.resolve(process.cwd(), "dist/public/index.html"));
-  });
+  if (process.env.NODE_ENV === 'production') {
+    app.get(['/danny', '/danny/'], (_req, res) => {
+      res.sendFile(path.resolve(process.cwd(), "dist/public/index.html"));
+    });
+  }
 
   return httpServer;
 }

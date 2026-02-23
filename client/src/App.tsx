@@ -115,8 +115,10 @@ const DannyPage = () => {
   const brandTotalInvestment = markableFee + creatorCommissionPool;
   const brandROAS = twoMonthEarnings / brandTotalInvestment;
 
+  console.log("DannyPage rendering, pathname:", window.location.pathname);
+
   return (
-    <div style={DS.page}>
+    <div style={DS.page} data-testid="danny-page">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
         input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); outline: none; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #FF6B6B; cursor: pointer; }
@@ -1772,12 +1774,21 @@ export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname);
 
   useEffect(() => {
-    const handlePopState = () => setPathname(window.location.pathname);
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    const handleNav = () => setPathname(window.location.pathname);
+    window.addEventListener('popstate', handleNav);
+    window.addEventListener('hashchange', handleNav);
+    return () => {
+      window.removeEventListener('popstate', handleNav);
+      window.removeEventListener('hashchange', handleNav);
+    };
   }, []);
 
-  if (pathname === '/danny' || window.location.pathname === '/danny') {
+  const isDannyRoute = pathname === '/danny' || 
+    window.location.pathname === '/danny' || 
+    window.location.hash === '#danny' ||
+    window.location.search.includes('page=danny');
+
+  if (isDannyRoute) {
     return <DannyPage />;
   }
 
