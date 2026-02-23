@@ -74,6 +74,7 @@ const DannyPage = () => {
   const [retailer, setRetailer] = useState('walmart');
   const [category, setCategory] = useState('Kids & Toys');
   const [monthlyBudget, setMonthlyBudget] = useState(25000);
+  const [numCreators, setNumCreators] = useState(10);
   const [cpc, setCpc] = useState(0.034);
   const [cvr, setCvr] = useState(1.8);          // click-to-purchase %, NOT commission rate
   const [aov, setAov] = useState(65);
