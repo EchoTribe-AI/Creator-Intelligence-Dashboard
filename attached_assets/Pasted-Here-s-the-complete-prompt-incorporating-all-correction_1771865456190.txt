@@ -1,0 +1,366 @@
+Here's the complete prompt incorporating all corrections:
+
+---
+
+**Fix /danny page — combined ad spend model, correct ROAS calculations, consistent naming, fix double dollar sign bug**
+
+**Step 1 — Fix the double dollar sign bug**
+
+Search the entire component for any string like `$${` and replace with `${`. Every instance of `$$` in the rendered output needs this fix.
+
+**Step 2 — Rename all "creator" references to "affiliate"**
+
+Find and replace throughout the component:
+```
+"Creator Commission Pool" → "Affiliate Commission Pool"
+"creator commission pool" → "affiliate commission pool"
+"Paid to creators" → "Paid as affiliate commissions"
+"50% of affiliate earnings to creators" → "Affiliate commissions on sales driven"
+"creator earnings" → "affiliate earnings"
+```
+
+**Step 3 — Fix default benchmark inputs**
+
+```javascript
+const RETAILER_BENCHMARKS = {
+  walmart: {
+    name: 'Walmart', logo: '🟡',
+    cpc: 0.08,
+    cvr: 3.5,
+    aov: 65,
+    commissionRate: 8.9,
+    epcBaseline: 0.161,
+    note: 'Based on Nov–Dec 2025 live test data',
+    verified: true,
+  },
+  target: {
+    name: 'Target', logo: '🎯',
+    cpc: 0.09, cvr: 3.0, aov: 58, commissionRate: 7.0,
+    epcBaseline: null,
+    note: 'Estimated benchmarks — not yet tested', verified: false,
+  },
+  amazon: {
+    name: 'Amazon', logo: '📦',
+    cpc: 0.085, cvr: 4.0, aov: 52, commissionRate: 8.0,
+    epcBaseline: null,
+    note: 'Estimated benchmarks — not yet tested', verified: false,
+  },
+  wayfair: {
+    name: 'Wayfair', logo: '🏠',
+    cpc: 0.10, cvr: 2.5, aov: 210, commissionRate: 7.0,
+    epcBaseline: null,
+    note: 'Estimated benchmarks — not yet tested', verified: false,
+  },
+};
+
+const CATEGORY_MULTIPLIERS = {
+  'Kids & Toys':    { cpcMod: 0.88, aovMod: 0.85, label: '🧸' },
+  'Home & Kitchen': { cpcMod: 1.12, aovMod: 1.40, label: '🏡' },
+  'Fashion':        { cpcMod: 0.95, aovMod: 0.75, label: '👗' },
+  'Beauty':         { cpcMod: 1.05, aovMod: 0.65, label: '💄' },
+  'Food & Grocery': { cpcMod: 0.80, aovMod: 0.45, label: '🛒' },
+};
+```
+
+**Step 4 — Fix all projection calculations**
+
+Replace the entire calculation block with this — the key principle is that clicks and GMV derive from combined spend, but brand ROAS always uses brand spend only:
+
+```javascript
+// ROAS MODEL:
+// Brand ROAS: brand spend only in denominator — Markable co-investment is a free amplifier for brand
+// Markable ROAS: Markable's actual costs only (their ad spend + their commission share)
+// GMV and clicks always derive from TOTAL combined spend
+
+const markableAdSpend = monthlyBudget * (markableMatchPct / 100);
+const totalAdSpend = monthlyBudget + markableAdSpend;
+
+// All projections use TOTAL spend
+const clicks = Math.round(totalAdSpend / cpc);
+const orders = Math.round(clicks * (cvr / 100));
+const gmv = orders * aov;
+const earnings = gmv * (commissionRate / 100);
+const epc = clicks > 0 ? earnings / clicks : 0;  // Earnings / Clicks
+
+// Brand ROAS — brand spend only, they get full GMV benefit, Markable co-spend is invisible to them
+const affiliateCommPool = earnings;
+const brandROAS_adOnly = monthlyBudget > 0 ? gmv / monthlyBudget : 0;
+const brandROAS_total = (monthlyBudget + affiliateCommPool) > 0
+  ? gmv / (monthlyBudget + affiliateCommPool) : 0;
+const brandProfit = earnings - monthlyBudget;
+
+// Markable ROAS — their co-spend + commission share vs total earnings
+const markableCommShare = earnings * (markableCommPct / 100);
+const markableROAS = (markableAdSpend + markableCommShare) > 0
+  ? earnings / (markableAdSpend + markableCommShare) : 0;
+
+// 60-day totals
+const twoMonthBrandAd = monthlyBudget * 2;
+const twoMonthMarkableAd = markableAdSpend * 2;
+const twoMonthTotalAd = totalAdSpend * 2;
+const twoMonthGMV = gmv * 2;
+const twoMonthEarnings = earnings * 2;
+const twoMonthCommPool = affiliateCommPool * 2;
+const twoMonthMarkableComm = markableCommShare * 2;
+
+// Creator & content
+const recommendedCreators = Math.max(1, Math.round(monthlyBudget / 2500));
+const adsPerCreator = 4;
+const totalAds = numCreators * adsPerCreator;
+```
+
+**Step 5 — Fix EPC formula display**
+
+```jsx
+<div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px',
+              padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+  EPC = Earnings / Clicks = ${epc.toFixed(4)}
+  {bench.verified && bench.epcBaseline && (
+    <span style={{ marginLeft: '8px', color: '#34D399', fontSize: '10px' }}>
+      (live test baseline: ${bench.epcBaseline})
+    </span>
+  )}
+</div>
+```
+
+**Step 6 — Fix stat tiles**
+
+```javascript
+const statTiles = [
+  { 
+    label: 'Clicks / Month', 
+    value: clicks.toLocaleString(),
+    sublabel: `$${Math.round(totalAdSpend).toLocaleString()} total media deployed`,
+    color: '#C084FC', icon: '👆' 
+  },
+  { label: 'GMV Driven', value: `$${Math.round(gmv).toLocaleString()}`, color: '#34D399', icon: '🛒' },
+  { label: 'Affiliate Earnings', value: `$${Math.round(earnings).toLocaleString()}`, color: '#FF6B6B', icon: '💰' },
+  { label: 'EPC', value: `$${epc.toFixed(4)}`, color: '#C084FC', icon: '⚡' },
+  { 
+    label: 'Brand ROAS (ad only)',
+    sublabel: 'GMV / Brand Ad Spend',
+    value: `${brandROAS_adOnly.toFixed(1)}x`,
+    color: brandROAS_adOnly >= 10 ? '#34D399' : brandROAS_adOnly >= 5 ? '#F59E0B' : '#EF4444',
+    icon: '🏪',
+    indicator: brandROAS_adOnly >= 10 ? 'strong' : brandROAS_adOnly >= 5 ? 'moderate' : 'low',
+  },
+  { 
+    label: 'Monthly Profit',
+    sublabel: 'Affiliate Earnings − Brand Ad Spend',
+    value: `$${Math.round(brandProfit).toLocaleString()}`,
+    color: brandProfit > 0 ? '#34D399' : '#EF4444', 
+    icon: '📊' 
+  },
+];
+```
+
+Render indicator dot inside tile map after the value:
+```jsx
+{s.indicator && (() => {
+  const colors = { strong: '#34D399', moderate: '#F59E0B', low: '#EF4444' };
+  const labels = { strong: '✓ Strong', moderate: '~ Moderate', low: '↓ Below target' };
+  const c = colors[s.indicator];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
+      <span style={{ width: '6px', height: '6px', borderRadius: '50%', 
+                     background: c, display: 'inline-block' }} />
+      <span style={{ fontSize: '10px', fontWeight: '700', color: c }}>{labels[s.indicator]}</span>
+    </div>
+  );
+})()}
+```
+
+**Step 7 — Replace entire 60-day cost breakdown card**
+
+```jsx
+<div style={S.card}>
+  <div style={S.sectionLabel}>60-Day Cost Breakdown</div>
+
+  {/* ── BRAND VIEW ── */}
+  <div style={{ fontSize: '11px', fontWeight: '700', color: '#FF6B6B',
+                letterSpacing: '0.5px', marginBottom: '12px' }}>
+    🏪 BRAND VIEW
+  </div>
+
+  {[
+    { label: 'Brand Ad Spend', value: twoMonthBrandAd, color: '#FF6B6B',
+      note: '2 months × monthly budget · paid to Markable' },
+    { label: 'Markable Ad Match', value: twoMonthMarkableAd, color: '#F97316',
+      note: `${markableMatchPct}% co-investment on top-performing ads · no charge to brand`, amplified: true },
+    { label: 'Total Media Deployed', value: twoMonthTotalAd, color: '#fff', bold: true,
+      note: 'Combined spend driving all clicks and GMV' },
+    { label: 'Affiliate Commission Pool', value: twoMonthCommPool, color: '#C084FC',
+      note: 'Affiliate commissions on sales driven' },
+    { label: 'Total Brand Cash Out', value: twoMonthBrandAd + twoMonthCommPool,
+      color: '#fff', bold: true, note: '' },
+  ].map((row, i) => (
+    <div key={i} style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      paddingBottom: '10px', marginBottom: '10px',
+      borderBottom: i === 2 || i === 3 ? '1px solid rgba(255,255,255,0.08)' :
+                    i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none'
+    }}>
+      <div>
+        <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500',
+                      color: row.bold ? '#fff' : '#D1D5DB' }}>{row.label}</div>
+        {row.note && <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{row.note}</div>}
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        {row.amplified && (
+          <div style={{ fontSize: '10px', color: '#34D399', fontWeight: '600', marginBottom: '2px' }}>
+            🔼 free amplification
+          </div>
+        )}
+        <div style={{ fontSize: row.bold ? '17px' : '15px', fontWeight: '800', color: row.color }}>
+          ${Math.round(row.value).toLocaleString()}
+        </div>
+      </div>
+    </div>
+  ))}
+
+  {/* Brand ROAS — two models in same card */}
+  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '24px' }}>
+    {[
+      { label: 'Brand ROAS', sub: 'GMV / Brand Ad Spend',
+        value: brandROAS_adOnly, good: 10, ok: 5 },
+      { label: 'Brand ROAS (all-in)', sub: 'GMV / Brand Spend + Commissions',
+        value: brandROAS_total, good: 5, ok: 3 },
+    ].map((r, i) => {
+      const isGood = r.value >= r.good;
+      const isOk = r.value >= r.ok;
+      const color = isGood ? '#34D399' : isOk ? '#F59E0B' : '#EF4444';
+      return (
+        <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px',
+                              padding: '12px 14px', border: `1px solid ${color}30` }}>
+          <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>
+            {r.label}
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: '800', color }}>{r.value.toFixed(1)}x</div>
+          <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{r.sub}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%',
+                           background: color, display: 'inline-block' }} />
+            <span style={{ fontSize: '10px', fontWeight: '700', color }}>
+              {isGood ? 'Strong' : isOk ? 'Moderate' : 'Below target'}
+            </span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  {/* Divider */}
+  <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '4px 0 20px' }} />
+
+  {/* ── MARKABLE INTERNAL VIEW ── */}
+  <div style={{ fontSize: '11px', fontWeight: '700', color: '#34D399',
+                letterSpacing: '0.5px', marginBottom: '12px' }}>
+    ⚙️ MARKABLE INTERNAL VIEW
+  </div>
+
+  {/* Adjustable sliders */}
+  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+    {[
+      { label: `Ad Match — up to ${markableMatchPct}% of brand spend`,
+        value: markableMatchPct, setter: setMarkableMatchPct,
+        hint: 'Deployed to top-performing ads only', color: '#FF6B6B' },
+      { label: `Commission Share — ${markableCommPct}% of pool`,
+        value: markableCommPct, setter: setMarkableCommPct,
+        hint: 'Markable retains this % of affiliate pool', color: '#C084FC' },
+    ].map((f, i) => (
+      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px' }}>
+        <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '8px', fontWeight: '600' }}>
+          {f.label}
+        </div>
+        <input type="range" min="0" max="100" step="5" value={f.value}
+          onChange={e => f.setter(+e.target.value)}
+          style={{ width: '100%', accentColor: f.color }} />
+        <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '4px' }}>{f.hint}</div>
+      </div>
+    ))}
+  </div>
+
+  {[
+    { label: 'Markable Ad Co-Investment', value: twoMonthMarkableAd, color: '#FF6B6B',
+      note: `${markableMatchPct}% of brand spend · top performers only` },
+    { label: 'Markable Commission Share', value: twoMonthMarkableComm, color: '#C084FC',
+      note: `${markableCommPct}% of affiliate commission pool` },
+    { label: 'Total Markable Investment', value: twoMonthMarkableAd + twoMonthMarkableComm,
+      color: '#fff', bold: true, note: '' },
+  ].map((row, i) => (
+    <div key={i} style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      paddingBottom: '10px', marginBottom: '10px',
+      borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none'
+    }}>
+      <div>
+        <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500',
+                      color: row.bold ? '#fff' : '#D1D5DB' }}>{row.label}</div>
+        {row.note && <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{row.note}</div>}
+      </div>
+      <div style={{ fontSize: row.bold ? '17px' : '15px', fontWeight: '800', color: row.color }}>
+        ${Math.round(row.value).toLocaleString()}
+      </div>
+    </div>
+  ))}
+
+  {/* Markable ROAS */}
+  {(() => {
+    const isGreen = markableROAS >= 1.5;
+    const isYellow = markableROAS >= 1.2;
+    const color = isGreen ? '#34D399' : isYellow ? '#F59E0B' : '#EF4444';
+    const label = isGreen ? '✓ Profitable' : isYellow ? '~ Breakeven zone' : '↓ Not viable';
+    return (
+      <div style={{ background: `${color}10`, border: `1px solid ${color}30`,
+                    borderRadius: '10px', padding: '14px 16px', marginTop: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', marginBottom: '2px' }}>
+              MARKABLE ROAS
+            </div>
+            <div style={{ fontSize: '10px', color: '#4B5563' }}>
+              Affiliate Earnings / (Ad Co-Investment + Commission Share)
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '26px', fontWeight: '800', color }}>{markableROAS.toFixed(2)}x</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%',
+                             background: color, display: 'inline-block' }} />
+              <span style={{ fontSize: '10px', fontWeight: '700', color }}>{label}</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '6px', marginTop: '10px', fontSize: '10px', color: '#6B7280', flexWrap: 'wrap' }}>
+          <span>🟢 ≥1.5x profitable</span>
+          <span style={{ margin: '0 4px' }}>·</span>
+          <span>🟡 1.2–1.5x breakeven zone</span>
+          <span style={{ margin: '0 4px' }}>·</span>
+          <span>🔴 &lt;1.2x not viable</span>
+        </div>
+      </div>
+    );
+  })()}
+
+  {/* 60-day GMV callout */}
+  <div style={{ marginTop: '14px', padding: '10px 14px', background: 'rgba(52,211,153,0.06)',
+                border: '1px solid rgba(52,211,153,0.15)', borderRadius: '8px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ fontSize: '12px', color: '#9CA3AF' }}>60-Day GMV for {bench.name}</div>
+    <div style={{ fontSize: '16px', fontWeight: '800', color: '#34D399' }}>
+      ${Math.round(twoMonthGMV).toLocaleString()}
+    </div>
+  </div>
+</div>
+```
+
+---
+
+**After implementing**, verify with Walmart + Kids & Toys + $25K + 50% match defaults:
+- Clicks derived from $37,500 total (brand $25K + Markable $12.5K match)
+- Brand ROAS (ad only) = GMV / $25K only — stays high, that's intentional and is the pitch
+- Brand ROAS (all-in) = GMV / ($25K + commission pool) — more conservative
+- Markable ROAS = Affiliate Earnings / (Markable ad spend + Markable commission share)
+- No `$$` anywhere in rendered output
+- "Affiliate" used consistently throughout, zero instances of "creator earnings"
+- Markable ROAS legend shows 🟢 ≥1.5x / 🟡 1.2–1.5x / 🔴 <1.2x
