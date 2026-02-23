@@ -59,7 +59,18 @@ const CATEGORY_MULTIPLIERS = {
   'Food & Grocery': { cpcMod: 0.80, cvrMod: 0.90, aovMod: 0.45, label: '🛒' },
 };
 
-const DannyPage = ({ S }: { S: any }) => {
+const DannyPage = () => {
+  const DS: any = {
+    page: { minHeight: '100vh', background: '#0A0A0A', color: '#F3F4F6', fontFamily: "'DM Sans', 'Inter', sans-serif" },
+    nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', background: 'rgba(10,10,10,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky' as const, top: 0, zIndex: 100, backdropFilter: 'blur(12px)' },
+    navBrand: { fontSize: '16px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.3px' },
+    navBadge: { fontSize: '10px', background: '#FF6B6B', color: '#fff', padding: '3px 8px', borderRadius: '4px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' as const, marginLeft: '8px' },
+    container: { maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' },
+    card: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '24px' },
+    sectionLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '14px', marginTop: '28px' },
+    inputCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '20px' },
+    inputLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '10px' },
+  };
   const [retailer, setRetailer] = useState('walmart');
   const [category, setCategory] = useState('Kids & Toys');
   const [monthlyBudget, setMonthlyBudget] = useState(25000);
@@ -105,7 +116,7 @@ const DannyPage = ({ S }: { S: any }) => {
   const brandROAS = twoMonthEarnings / brandTotalInvestment;
 
   return (
-    <div style={S.page}>
+    <div style={DS.page}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
         input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); outline: none; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #FF6B6B; cursor: pointer; }
@@ -116,15 +127,15 @@ const DannyPage = ({ S }: { S: any }) => {
       `}</style>
 
       {/* NAV */}
-      <nav style={S.nav}>
+      <nav style={DS.nav}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={S.navBrand}>Markable</span>
-          <span style={S.navBadge}>Brand Partnership Builder</span>
+          <span style={DS.navBrand}>Markable</span>
+          <span style={DS.navBadge}>Brand Partnership Builder</span>
         </div>
         <span style={{ fontSize: '12px', color: '#6B7280' }}>Confidential · Demo</span>
       </nav>
 
-      <div style={S.container}>
+      <div style={DS.container}>
 
         {/* HERO */}
         <div style={{ marginBottom: '40px' }}>
@@ -146,8 +157,8 @@ const DannyPage = ({ S }: { S: any }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
             {/* Retailer */}
-            <div style={S.inputCard}>
-              <div style={S.inputLabel}>Retailer</div>
+            <div style={DS.inputCard}>
+              <div style={DS.inputLabel}>Retailer</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {Object.entries(RETAILER_BENCHMARKS).map(([key, b]) => (
                   <button
@@ -185,8 +196,8 @@ const DannyPage = ({ S }: { S: any }) => {
             </div>
 
             {/* Category */}
-            <div style={S.inputCard}>
-              <div style={S.inputLabel}>Brand Category</div>
+            <div style={DS.inputCard}>
+              <div style={DS.inputLabel}>Brand Category</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {Object.entries(CATEGORY_MULTIPLIERS).map(([cat, m]) => (
                   <button
@@ -214,9 +225,9 @@ const DannyPage = ({ S }: { S: any }) => {
             </div>
 
             {/* Budget */}
-            <div style={S.inputCard}>
+            <div style={DS.inputCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={S.inputLabel} >Monthly Ad Budget</div>
+                <div style={DS.inputLabel} >Monthly Ad Budget</div>
                 <div style={{ fontSize: '18px', fontWeight: '800', color: '#FF6B6B' }}>${monthlyBudget.toLocaleString()}</div>
               </div>
               <input
@@ -231,8 +242,8 @@ const DannyPage = ({ S }: { S: any }) => {
             </div>
 
             {/* Benchmark inputs */}
-            <div style={S.inputCard}>
-              <div style={S.inputLabel}>Benchmark Inputs <span style={{ color: '#4B5563', fontWeight: '400', textTransform: 'none', letterSpacing: 0 }}>(editable)</span></div>
+            <div style={DS.inputCard}>
+              <div style={DS.inputLabel}>Benchmark Inputs <span style={{ color: '#4B5563', fontWeight: '400', textTransform: 'none', letterSpacing: 0 }}>(editable)</span></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {[
                   { label: 'Avg CPC ($)', value: cpc, setter: setCpc, step: 0.001, decimals: 4 },
@@ -257,9 +268,9 @@ const DannyPage = ({ S }: { S: any }) => {
             </div>
 
             {/* Creators */}
-            <div style={S.inputCard}>
+            <div style={DS.inputCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={S.inputLabel}>Creators in Campaign</div>
+                <div style={DS.inputLabel}>Creators in Campaign</div>
                 <div style={{ fontSize: '18px', fontWeight: '800', color: '#C084FC' }}>{numCreators}</div>
               </div>
               <input
@@ -298,7 +309,7 @@ const DannyPage = ({ S }: { S: any }) => {
                 { label: 'Monthly Profit', value: `$${Math.round(profit).toLocaleString()}`, color: profit > 0 ? '#34D399' : '#EF4444', highlight: true, icon: '📊' },
               ].map((s, i) => (
                 <div key={i} style={{
-                  ...S.card,
+                  ...DS.card,
                   borderLeft: `3px solid ${s.color}`,
                   display: 'flex',
                   alignItems: 'center',
@@ -315,8 +326,8 @@ const DannyPage = ({ S }: { S: any }) => {
             </div>
 
             {/* Cost breakdown */}
-            <div style={S.card}>
-              <div style={S.sectionLabel}>60-Day Cost Breakdown</div>
+            <div style={DS.card}>
+              <div style={DS.sectionLabel}>60-Day Cost Breakdown</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {[
                   { label: 'Ad Spend (Markable fee)', value: twoMonthAdSpend, color: '#FF6B6B', note: '2 months × monthly budget' },
@@ -341,8 +352,8 @@ const DannyPage = ({ S }: { S: any }) => {
             </div>
 
             {/* Creator & content recommendation */}
-            <div style={S.card}>
-              <div style={S.sectionLabel}>Campaign Recommendation</div>
+            <div style={DS.card}>
+              <div style={DS.sectionLabel}>Campaign Recommendation</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                 {[
                   { label: 'Creators', value: numCreators, sub: 'in campaign', color: '#C084FC' },
@@ -367,7 +378,7 @@ const DannyPage = ({ S }: { S: any }) => {
             </div>
 
             {/* CTA */}
-            <div style={{ ...S.card, background: 'rgba(255,107,107,0.06)', border: '1px solid rgba(255,107,107,0.15)', textAlign: 'center', padding: '28px' }}>
+            <div style={{ ...DS.card, background: 'rgba(255,107,107,0.06)', border: '1px solid rgba(255,107,107,0.15)', textAlign: 'center', padding: '28px' }}>
               <div style={{ fontSize: '16px', fontWeight: '800', marginBottom: '8px' }}>Ready to run this campaign?</div>
               <p style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '20px', lineHeight: 1.6 }}>
                 We'll define creator selection criteria, signal thresholds, and a 60-day reporting cadence.
@@ -1758,7 +1769,6 @@ function AdFlagButton({ flagKey, existingFlag, setAdFlags }: any) {
 }
 
 export default function App() {
-  const [screen, setScreenState] = useState("home");
   const [pathname, setPathname] = useState(window.location.pathname);
 
   useEffect(() => {
@@ -1767,16 +1777,20 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  if (pathname === '/danny' || window.location.pathname === '/danny') {
+    return <DannyPage />;
+  }
+
+  return <MainDashboard />;
+}
+
+function MainDashboard() {
+  const [screen, setScreenState] = useState("home");
+
   const setScreen = (s: string) => {
     setScreenState(s);
     window.scrollTo(0, 0);
   };
-
-  const isDanny = pathname === '/danny' || window.location.pathname === '/danny';
-
-  if (isDanny) {
-    return <DannyPage S={S} />;
-  }
 
   const [creators, setCreators] = useState<any[]>([]);
   const [csvLoading, setCsvLoading] = useState(true);
