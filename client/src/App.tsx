@@ -1772,9 +1772,12 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
-  if (pathname === '/danny') {
+  const isDanny = pathname === '/danny' || window.location.pathname === '/danny';
+
+  if (isDanny) {
     return <DannyPage S={S} />;
   }
+
   const [creators, setCreators] = useState<any[]>([]);
   const [csvLoading, setCsvLoading] = useState(true);
   const [adFlags, setAdFlags] = useState(() => {

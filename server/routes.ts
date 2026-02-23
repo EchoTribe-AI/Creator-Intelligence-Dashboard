@@ -201,7 +201,7 @@ export async function registerRoutes(
   });
 
   // Serve index.html for the /danny route to allow React to handle it
-  app.get('/danny', (_req, res) => {
+  app.get(['/danny', '/danny/'], (_req, res) => {
     res.sendFile(path.resolve(process.cwd(), "dist/public/index.html"));
   });
 
