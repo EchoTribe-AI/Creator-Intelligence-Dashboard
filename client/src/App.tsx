@@ -44,72 +44,98 @@ const CATEGORY_MULTIPLIERS = {
 };
 
 const DannyPage = () => {
-    const [markableMatchPct, setMarkableMatchPct] = useState(50);   // % of brand ad spend Markable matches
-    const [markableCommPct, setMarkableCommPct] = useState(50);     // % of commission pool Markable keeps
-  
-  const DS: any = {
-    page: { minHeight: '100vh', background: '#F9FAFB', color: '#111827', fontFamily: "'DM Sans', 'Inter', sans-serif" },
-    nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', background: 'rgba(255,255,255,0.8)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky' as const, top: 0, zIndex: 100, backdropFilter: 'blur(12px)' },
-    navBrand: { fontSize: '16px', fontWeight: '800', color: '#111827', letterSpacing: '-0.3px' },
-    navBadge: { fontSize: '10px', background: '#FF6B6B', color: '#fff', padding: '3px 8px', borderRadius: '4px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' as const, marginLeft: '8px' },
-    container: { maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' },
-    card: { background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' },
-    sectionLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '14px', marginTop: '28px' },
-    inputCard: { background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' },
-    inputLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '10px' },
-  };
-  const [retailer, setRetailer] = useState('walmart');
-  const [category, setCategory] = useState('Kids & Toys');
-  const [monthlyBudget, setMonthlyBudget] = useState(25000);
-  const [numCreators, setNumCreators] = useState(10);
-  const [cpc, setCpc] = useState(0.034);
-  const [cvr, setCvr] = useState(1.8);          // click-to-purchase %, NOT commission rate
-  const [aov, setAov] = useState(65);
-  const [commissionRate, setCommissionRate] = useState(8.9);
+    const [markableMatchPct, setMarkableMatchPct] = useState(50);
+    const [markableCommPct, setMarkableCommPct] = useState(50);
+    const [retailer, setRetailer] = useState('walmart');
+    const [category, setCategory] = useState('Kids & Toys');
+    const [monthlyBudget, setMonthlyBudget] = useState(25000);
+    const [numCreators, setNumCreators] = useState(10);
+    const [cpc, setCpc] = useState(0.08);
+    const [cvr, setCvr] = useState(3.5);
+    const [aov, setAov] = useState(65);
+    const [commissionRate, setCommissionRate] = useState(8.9);
 
-  // When retailer changes, reset benchmarks
-  useEffect(() => {
-    const b = RETAILER_BENCHMARKS[retailer as keyof typeof RETAILER_BENCHMARKS];
-    const m = CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS];
-    setCpc(+(b.cpc * m.cpcMod).toFixed(4));
-    setCvr(b.cvr);                              // CVR comes only from retailer, not category
-    setAov(+(b.aov * m.aovMod).toFixed(0));
-    setCommissionRate(b.commissionRate);
-  }, [retailer, category]);
+    useEffect(() => {
+      const b = RETAILER_BENCHMARKS[retailer as keyof typeof RETAILER_BENCHMARKS];
+      const m = CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS];
+      if (b && m) {
+        setCpc(+(b.cpc * m.cpcMod).toFixed(4));
+        setCvr(b.cvr);
+        setAov(+(b.aov * m.aovMod).toFixed(0));
+        setCommissionRate(b.commissionRate);
+      }
+    }, [retailer, category]);
 
-  const bench = RETAILER_BENCHMARKS[retailer as keyof typeof RETAILER_BENCHMARKS];
-  const catMod = CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS];
+    const DS: any = {
+      page: { minHeight: '100vh', background: '#F9FAFB', color: '#111827', fontFamily: "'DM Sans', sans-serif" },
+      nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', background: 'rgba(255,255,255,0.8)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky' as const, top: 0, zIndex: 100, backdropFilter: 'blur(12px)' },
+      navBrand: { fontSize: '16px', fontWeight: '800', color: '#111827', letterSpacing: '-0.3px' },
+      navBadge: { fontSize: '10px', background: '#FF6B6B', color: '#fff', padding: '3px 8px', borderRadius: '4px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' as const, marginLeft: '8px' },
+      container: { maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' },
+      card: { background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' },
+      sectionLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '14px', marginTop: '28px' },
+      retailerBtn: (active: boolean) => ({
+        display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
+        padding: '12px 8px', borderRadius: '12px', border: active ? '2px solid #FF6B6B' : '1px solid #E5E7EB',
+        background: active ? '#FFF5F5' : '#fff', cursor: 'pointer', transition: 'all 0.2s',
+        color: active ? '#FF6B6B' : '#4B5563', boxShadow: active ? '0 4px 12px rgba(255,107,107,0.1)' : 'none'
+      }),
+      categoryBtn: (active: boolean) => ({
+        padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600',
+        border: active ? 'none' : '1px solid #E5E7EB',
+        background: active ? '#FF6B6B' : '#F3F4F6',
+        color: active ? '#fff' : '#6B7280', cursor: 'pointer'
+      }),
+      inputCard: { background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' },
+      inputLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '10px' },
+    };
 
-  // Core math
-  const clicks = Math.round(monthlyBudget / cpc);
-  const orders = Math.round(clicks * (cvr / 100));   // cvr is now a true purchase rate
-  const gmv = orders * aov;
-  const earnings = gmv * (commissionRate / 100);
-  const epc = clicks > 0 ? earnings / clicks : 0;
-  const roas = monthlyBudget > 0 ? earnings / monthlyBudget : 0;
-  const profit = earnings - monthlyBudget;
+    const bench = RETAILER_BENCHMARKS[retailer as keyof typeof RETAILER_BENCHMARKS];
+    const clicks = Math.round(monthlyBudget / cpc);
+    const orders = Math.round(clicks * (cvr / 100));
+    const gmv = orders * aov;
+    const earnings = gmv * (commissionRate / 100);
+    const epc = clicks > 0 ? earnings / clicks : 0;
+    const brandROAS_adOnly = monthlyBudget > 0 ? gmv / monthlyBudget : 0;
+    const commissionPool = earnings;
+    const brandROAS_total = (monthlyBudget + commissionPool) > 0 ? gmv / (monthlyBudget + commissionPool) : 0;
+    const brandProfit = earnings - monthlyBudget;
+    const markableAdSpend = monthlyBudget * (markableMatchPct / 100);
+    const markableCommShare = earnings * (markableCommPct / 100);
+    const markableRevenue = earnings;
+    const markableROAS = (markableAdSpend + markableCommShare) > 0 ? markableRevenue / (markableAdSpend + markableCommShare) : 0;
+    const markableProfit = markableRevenue - markableAdSpend - markableCommShare;
+    const twoMonthGMV = gmv * 2;
+    const twoMonthEarnings = earnings * 2;
+    const twoMonthAdSpend = monthlyBudget * 2;
+    const twoMonthCommPool = commissionPool * 2;
+    const twoMonthMarkableAd = markableAdSpend * 2;
+    const twoMonthMarkableComm = markableCommShare * 2;
+    const recommendedCreators = Math.max(1, Math.round(monthlyBudget / 2500));
+    const adsPerCreator = 4;
+    const totalAds = numCreators * adsPerCreator;
 
-  // Creator & content
-  const recommendedCreators = Math.max(1, Math.round(monthlyBudget / 2500));
-  const adsPerCreator = 4;
-  const totalAds = recommendedCreators * adsPerCreator;
-
-  // Two separate ROAS metrics
-  const brandROAS = monthlyBudget > 0 ? gmv / monthlyBudget : 0;        // GMV / Ad Spend
-  const markableROAS = monthlyBudget > 0 ? earnings / monthlyBudget : 0; // Earnings / Ad Spend
-
-  // 60-day cost breakdown
-  const twoMonthAdSpend = monthlyBudget * 2;
-  const twoMonthGMV = gmv * 2;
-  const twoMonthEarnings = earnings * 2;
-  const creatorCommissionPool = twoMonthEarnings * 0.50;
-  const brandTotalInvestment = twoMonthAdSpend + creatorCommissionPool;
-  const brandTotalROAS = twoMonthGMV / twoMonthAdSpend;      // GMV / Ad Spend (brand view)
-  const markableTotalROAS = twoMonthEarnings / twoMonthAdSpend; // Earnings / Ad Spend (Markable view)
-
-  console.log("DannyPage rendering, pathname:", window.location.pathname);
-
-  return (
+    const statTiles = [
+      { label: 'Clicks / Month', value: clicks.toLocaleString(), color: '#C084FC', icon: '👆' },
+      { label: 'GMV Driven', value: '$' + Math.round(gmv).toLocaleString(), color: '#34D399', icon: '🛒' },
+      { label: 'Affiliate Earnings', value: '$' + Math.round(earnings).toLocaleString(), color: '#FF6B6B', icon: '💰' },
+      { label: 'EPC', value: '$' + epc.toFixed(4), color: '#C084FC', icon: '⚡' },
+      { 
+        label: 'Brand ROAS (ad only)', 
+        value: brandROAS_adOnly.toFixed(1) + 'x', 
+        sublabel: 'GMV / Ad Spend',
+        color: brandROAS_adOnly >= 10 ? '#34D399' : brandROAS_adOnly >= 5 ? '#F59E0B' : '#EF4444',
+        icon: '🏪',
+        indicator: brandROAS_adOnly >= 10 ? 'strong' : brandROAS_adOnly >= 5 ? 'moderate' : 'low',
+      },
+      { 
+        label: 'Monthly Profit', 
+        value: '$' + Math.round(brandProfit).toLocaleString(), 
+        color: brandProfit > 0 ? '#34D399' : '#EF4444', 
+        icon: '📊' 
+      },
+    ];
+    return (
     <div style={DS.page} data-testid="danny-page">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
           input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(0,0,0,0.05); outline: none; }
