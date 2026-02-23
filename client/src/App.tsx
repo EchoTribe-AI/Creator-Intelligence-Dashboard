@@ -90,30 +90,44 @@ const DannyPage = () => {
       inputLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#6B7280', textTransform: 'uppercase', marginBottom: '10px' },
     };
 
+    // Spend model
     const markableAdSpend = monthlyBudget * (markableMatchPct / 100);
     const totalAdSpend = monthlyBudget + markableAdSpend;
 
+    // Core performance metrics - based on totalAdSpend
     const clicks = Math.round(totalAdSpend / cpc);
     const orders = Math.round(clicks * (cvr / 100));
     const gmv = orders * aov;
     const earnings = gmv * (commissionRate / 100);
     const epc = clicks > 0 ? earnings / clicks : 0;
 
+    // Brand economics - based on their budget and earnings
     const affiliateCommPool = earnings;
     const brandROAS_adOnly = monthlyBudget > 0 ? gmv / monthlyBudget : 0;
     const brandROAS_total = (monthlyBudget + affiliateCommPool) > 0 ? gmv / (monthlyBudget + affiliateCommPool) : 0;
     const brandProfit = earnings - monthlyBudget;
 
-    const markableCommShare = earnings * (markableCommPct / 100);
-    const markableROAS = (markableAdSpend + markableCommShare) > 0 ? earnings / (markableAdSpend + markableCommShare) : 0;
+    // Markable internal economics - correctly waterfalling ad spend match and commission split
+    const markableCommShare = earnings * (markableCommPct / 100); // Markable's % of total pool
+    const markableNet = markableCommShare - markableAdSpend;      // net after ad spend deducted
+    const creatorSplit = markableNet * 0.50;                      // creator gets 50% of net
+    const markableProfit = markableNet * 0.50;                    // Markable keeps 50% of net
+    const markableROAS = markableAdSpend > 0
+      ? markableProfit / markableAdSpend : 0;                     // return on their ad investment
 
+    // 60-day Brand totals
     const twoMonthBrandAd = monthlyBudget * 2;
-    const twoMonthMarkableAd = markableAdSpend * 2;
-    const twoMonthTotalAd = totalAdSpend * 2;
+    const twoMonthCommPool = affiliateCommPool * 2;
     const twoMonthGMV = gmv * 2;
     const twoMonthEarnings = earnings * 2;
-    const twoMonthCommPool = affiliateCommPool * 2;
+    const twoMonthTotalAd = totalAdSpend * 2;
+
+    // 60-day Markable totals
+    const twoMonthMarkableAd = markableAdSpend * 2;
     const twoMonthMarkableComm = markableCommShare * 2;
+    const twoMonthMarkableNet = markableNet * 2;
+    const twoMonthCreatorSplit = creatorSplit * 2;
+    const twoMonthMarkableProfit = markableProfit * 2;
 
     const adsPerCreator = 4;
     const totalAds = numCreators * adsPerCreator;
@@ -306,7 +320,7 @@ const DannyPage = () => {
                       { label: `Ad Match — up to ${markableMatchPct}% of brand spend`, value: markableMatchPct, setter: setMarkableMatchPct, hint: 'Deployed to top-performing ads only', color: '#FF6B6B' },
                       { label: `Commission Share — ${markableCommPct}% of pool`, value: markableCommPct, setter: setMarkableCommPct, hint: 'Markable retains this % of affiliate pool', color: '#C084FC' },
                     ].map((f, i) => (
-                      <div key={i} style={{ background: 'rgba(0,0,0,0.03)', borderRadius: '10px', padding: '12px' }}>
+                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px' }}>
                         <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '8px', fontWeight: '600' }}>{f.label}</div>
                         <input type="range" min="0" max="100" step="5" value={f.value} onChange={e => f.setter(+e.target.value)} style={{ width: '100%', accentColor: f.color }} />
                         <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '4px' }}>{f.hint}</div>
@@ -315,31 +329,69 @@ const DannyPage = () => {
                   </div>
 
                   {[
-                    { label: 'Markable Ad Co-Investment', value: twoMonthMarkableAd, color: '#FF6B6B', note: `${markableMatchPct}% of brand spend · top performers only` },
-                    { label: 'Markable Commission Share', value: twoMonthMarkableComm, color: '#C084FC', note: `${markableCommPct}% of affiliate commission pool` },
-                    { label: 'Total Markable Investment', value: twoMonthMarkableAd + twoMonthMarkableComm, color: '#111827', bold: true, note: '' },
+                    { label: 'Markable Ad Co-Investment', value: twoMonthMarkableAd, color: '#FF6B6B',
+                      note: `${markableMatchPct}% of brand spend · top performers only` },
+                    { label: 'Markable Commission Share', value: twoMonthMarkableComm, color: '#C084FC',
+                      note: `${markableCommPct}% of total affiliate pool before split` },
+                    { label: 'Markable Net', value: twoMonthMarkableNet, color: '#F59E0B', italic: true,
+                      note: 'Commission share − ad spend' },
+                    { label: 'Creator Split (50% of net)', value: twoMonthCreatorSplit, color: '#9CA3AF',
+                      note: 'Paid to creator after ad costs deducted' },
+                    { label: 'Markable Profit', value: twoMonthMarkableProfit, color: '#34D399', bold: true,
+                      note: '50% of net · Markable keeps' },
                   ].map((row, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', marginBottom: '10px', borderBottom: i < 2 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}>
+                    <div key={i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      paddingBottom: '10px', marginBottom: '10px',
+                      borderBottom: i === 1 ? '1px solid rgba(255,255,255,0.12)' :
+                                    i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none'
+                    }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', color: row.bold ? '#111827' : '#4B5563' }}>{row.label}</div>
-                        {row.note && <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>{row.note}</div>}
+                        <div style={{
+                          fontSize: '13px',
+                          fontWeight: row.bold ? '700' : '500',
+                          fontStyle: row.italic ? 'italic' : 'normal',
+                          color: row.bold ? '#fff' : '#D1D5DB'
+                        }}>
+                          {row.label}
+                        </div>
+                        {row.note && (
+                          <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{row.note}</div>
+                        )}
                       </div>
-                      <div style={{ fontSize: row.bold ? '17px' : '15px', fontWeight: '800', color: row.color }}>${Math.round(row.value).toLocaleString()}</div>
+                      <div style={{
+                        fontSize: row.bold ? '17px' : '15px',
+                        fontWeight: '800',
+                        color: row.color
+                      }}>
+                        ${Math.round(row.value).toLocaleString()}
+                      </div>
                     </div>
                   ))}
 
                   {(() => {
                     const isGreen = markableROAS >= 1.5;
-                    const color = isGreen ? '#34D399' : '#EF4444';
+                    const isYellow = markableROAS >= 1.0;
+                    const color = isGreen ? '#34D399' : isYellow ? '#F59E0B' : '#EF4444';
+                    const labelText = isGreen ? '✓ Profitable' : isYellow ? '~ Breakeven zone' : '↓ Not viable';
                     return (
-                      <div style={{ background: `${color}10`, border: `1px solid ${color}30`, borderRadius: '12px', padding: '16px', marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', textTransform: 'uppercase' }}>Markable Internal ROAS</div>
-                          <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>Earnings / (Ad Match + Comm Share)</div>
+                      <div style={{ background: `${color}10`, border: `1px solid ${color}30`, borderRadius: '12px', padding: '16px', marginTop: '10px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', textTransform: 'uppercase' }}>Markable Internal ROAS</div>
+                            <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>Markable Profit / Markable Ad Spend</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '24px', fontWeight: '800', color }}>{markableROAS.toFixed(2)}x</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color }}>{labelText}</div>
+                          </div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '24px', fontWeight: '800', color }}>{markableROAS.toFixed(2)}x</div>
-                          <div style={{ fontSize: '10px', fontWeight: '700', color }}>{isGreen ? '✓ PROFITABLE' : '↓ AT LOSS'}</div>
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '10px', fontSize: '10px', color: '#6B7280', flexWrap: 'wrap' }}>
+                          <span>🟢 ≥1.5x profitable</span>
+                          <span style={{ margin: '0 4px' }}>·</span>
+                          <span>🟡 1.0–1.5x breakeven zone</span>
+                          <span style={{ margin: '0 4px' }}>·</span>
+                          <span>🔴 &lt;1.0x not viable</span>
                         </div>
                       </div>
                     );

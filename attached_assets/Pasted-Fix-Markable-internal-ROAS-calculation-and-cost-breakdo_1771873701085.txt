@@ -1,0 +1,94 @@
+Fix Markable internal ROAS calculation and cost breakdown
+Step 1 — Fix the Markable calculations
+Replace the Markable section of the calculation block:
+javascript// Markable internal economics
+const markableAdSpend = monthlyBudget * (markableMatchPct / 100);
+const markableCommShare = earnings * (markableCommPct / 100); // Markable's % of total pool
+const markableNet = markableCommShare - markableAdSpend;      // net after ad spend deducted
+const creatorSplit = markableNet * 0.50;                      // creator gets 50% of net
+const markableProfit = markableNet * 0.50;                    // Markable keeps 50% of net
+const markableROAS = markableAdSpend > 0
+  ? markableProfit / markableAdSpend : 0;                     // return on their ad investment
+
+// 60-day Markable totals
+const twoMonthMarkableAd = markableAdSpend * 2;
+const twoMonthMarkableComm = markableCommShare * 2;
+const twoMonthMarkableNet = markableNet * 2;
+const twoMonthCreatorSplit = creatorSplit * 2;
+const twoMonthMarkableProfit = markableProfit * 2;
+Step 2 — Update Markable internal view breakdown rows
+Replace the existing Markable rows with the full waterfall:
+javascript{[
+  { label: 'Markable Ad Co-Investment', value: twoMonthMarkableAd, color: '#FF6B6B',
+    note: `${markableMatchPct}% of brand spend · top performers only` },
+  { label: 'Markable Commission Share', value: twoMonthMarkableComm, color: '#C084FC',
+    note: `${markableCommPct}% of total affiliate pool before split` },
+  { label: 'Markable Net', value: twoMonthMarkableNet, color: '#F59E0B', italic: true,
+    note: 'Commission share − ad spend' },
+  { label: 'Creator Split (50% of net)', value: twoMonthCreatorSplit, color: '#9CA3AF',
+    note: 'Paid to creator after ad costs deducted' },
+  { label: 'Markable Profit', value: twoMonthMarkableProfit, color: '#34D399', bold: true,
+    note: '50% of net · Markable keeps' },
+].map((row, i) => (
+  <div key={i} style={{
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    paddingBottom: '10px', marginBottom: '10px',
+    borderBottom: i === 1 ? '1px solid rgba(255,255,255,0.12)' :
+                  i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none'
+  }}>
+    <div>
+      <div style={{
+        fontSize: '13px',
+        fontWeight: row.bold ? '700' : '500',
+        fontStyle: row.italic ? 'italic' : 'normal',
+        color: row.bold ? '#fff' : '#D1D5DB'
+      }}>
+        {row.label}
+      </div>
+      {row.note && (
+        <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{row.note}</div>
+      )}
+    </div>
+    <div style={{
+      fontSize: row.bold ? '17px' : '15px',
+      fontWeight: '800',
+      color: row.color
+    }}>
+      ${Math.round(row.value).toLocaleString()}
+    </div>
+  </div>
+))}
+Step 3 — Update Markable ROAS tile
+javascript// Markable ROAS thresholds based on profit / ad spend
+const isGreen = markableROAS >= 1.5;
+const isYellow = markableROAS >= 1.0;
+const color = isGreen ? '#34D399' : isYellow ? '#F59E0B' : '#EF4444';
+const label = isGreen ? '✓ Profitable' : isYellow ? '~ Breakeven zone' : '↓ Not viable';
+
+// In the ROAS display tile, update the formula label:
+<div style={{ fontSize: '10px', color: '#4B5563' }}>
+  Markable Profit / Markable Ad Spend
+</div>
+
+// Update the legend:
+<div style={{ display: 'flex', gap: '6px', marginTop: '10px', 
+              fontSize: '10px', color: '#6B7280', flexWrap: 'wrap' }}>
+  <span>🟢 ≥1.5x profitable</span>
+  <span style={{ margin: '0 4px' }}>·</span>
+  <span>🟡 1.0–1.5x breakeven zone</span>
+  <span style={{ margin: '0 4px' }}>·</span>
+  <span>🔴 &lt;1.0x not viable</span>
+</div>
+```
+
+---
+
+**After implementing**, verify with $25K monthly + 50% match + 50% commission share:
+```
+Markable Ad Spend:     $25,000
+Markable Comm Share:   ~$91,000  (50% of earnings)
+Markable Net:          ~$66,000  (comm − ad spend)
+Creator Split:         ~$33,000  (50% of net)
+Markable Profit:       ~$33,000  (50% of net)
+Markable ROAS:         ~1.32x    (profit / ad spend)
+That should show yellow — honest, not inflated, and adjusts meaningfully when you move the match % slider down to reduce Markable's ad exposure
