@@ -5,51 +5,35 @@ import Papa from 'papaparse';
 // DANNY PAGE COMPONENTS & DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const RETAILER_BENCHMARKS = {
-  walmart: {
-    name: 'Walmart',
-    logo: '🟡',
-    cpc: 0.034,
-    cvr: 1.8,           // % of clicks that result in a purchase (paid social benchmark)
-    aov: 65,            // average order value
-    commissionRate: 8.9, // % of sale paid as affiliate commission
-    epcBaseline: 0.161, // derived from live test: cvr% × aov × commissionRate%
-    note: 'Based on Nov–Dec 2025 live test data',
-    verified: true,
-  },
-  target: {
-    name: 'Target',
-    logo: '🎯',
-    cpc: 0.042,
-    cvr: 1.4,
-    aov: 58,
-    commissionRate: 7.0,
-    epcBaseline: 0.057,
-    note: 'Estimated benchmarks — not yet tested',
-    verified: false,
-  },
-  amazon: {
-    name: 'Amazon',
-    logo: '📦',
-    cpc: 0.038,
-    cvr: 2.1,
-    aov: 52,
-    commissionRate: 8.0,
-    epcBaseline: 0.087,
-    note: 'Estimated benchmarks — not yet tested',
-    verified: false,
-  },
-  wayfair: {
-    name: 'Wayfair',
-    logo: '🏠',
-    cpc: 0.055,
-    cvr: 0.9,
-    aov: 210,
-    commissionRate: 7.0,
-    epcBaseline: 0.132,
-    note: 'Estimated benchmarks — not yet tested',
-    verified: false,
-  },
-};
+    walmart: {
+      name: 'Walmart', logo: '🟡',
+      cpc: 0.08,           // realistic Meta paid social CPC
+      cvr: 3.5,            // realistic click-to-purchase % 
+      aov: 65,
+      commissionRate: 8.9,
+      epcBaseline: 0.161,  // from live test
+      note: 'Based on Nov–Dec 2025 live test data',
+      verified: true,
+    },
+    target: {
+      name: 'Target', logo: '🎯',
+      cpc: 0.09, cvr: 3.0, aov: 58, commissionRate: 7.0,
+      epcBaseline: null,
+      note: 'Estimated benchmarks — not yet tested', verified: false,
+    },
+    amazon: {
+      name: 'Amazon', logo: '📦',
+      cpc: 0.085, cvr: 4.0, aov: 52, commissionRate: 8.0,
+      epcBaseline: null,
+      note: 'Estimated benchmarks — not yet tested', verified: false,
+    },
+    wayfair: {
+      name: 'Wayfair', logo: '🏠',
+      cpc: 0.10, cvr: 2.5, aov: 210, commissionRate: 7.0,
+      epcBaseline: null,
+      note: 'Estimated benchmarks — not yet tested', verified: false,
+    },
+  };
 
 const CATEGORY_MULTIPLIERS = {
   'Kids & Toys':    { cpcMod: 0.88, aovMod: 0.85, label: '🧸' },
@@ -60,6 +44,9 @@ const CATEGORY_MULTIPLIERS = {
 };
 
 const DannyPage = () => {
+    const [markableMatchPct, setMarkableMatchPct] = useState(50);   // % of brand ad spend Markable matches
+    const [markableCommPct, setMarkableCommPct] = useState(50);     // % of commission pool Markable keeps
+  
   const DS: any = {
     page: { minHeight: '100vh', background: '#F9FAFB', color: '#111827', fontFamily: "'DM Sans', 'Inter', sans-serif" },
     nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', background: 'rgba(255,255,255,0.8)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky' as const, top: 0, zIndex: 100, backdropFilter: 'blur(12px)' },
@@ -124,418 +111,216 @@ const DannyPage = () => {
 
   return (
     <div style={DS.page} data-testid="danny-page">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-        input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(0,0,0,0.05); outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #FF6B6B; cursor: pointer; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        input[type=number] { background: #F3F4F6; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; color: #111827; padding: 8px 12px; font-size: 14px; width: 100%; box-sizing: border-box; font-family: 'DM Sans', sans-serif; }
-        input[type=number]:focus { outline: none; border-color: #FF6B6B; background: #fff; }
-        select { background: #F3F4F6; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; color: #111827; padding: 10px 12px; font-size: 14px; width: 100%; font-family: 'DM Sans', sans-serif; cursor: pointer; }
-        select:focus { outline: none; border-color: #FF6B6B; background: #fff; }
-      `}</style>
-
-      {/* NAV */}
-      <nav style={DS.nav}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={DS.navBrand}>Markable</span>
-          <span style={DS.navBadge}>Brand Partnership Builder</span>
-        </div>
-        <span style={{ fontSize: '12px', color: '#6B7280' }}>Confidential · Demo</span>
-      </nav>
-
-      <div style={DS.container}>
-
-        {/* HERO */}
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{ fontSize: '12px', color: '#FF6B6B', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
-            Paid Creator Amplification
-          </div>
-          <h1 style={{ fontSize: '34px', fontWeight: '800', lineHeight: 1.15, marginBottom: '14px' }}>
-            Brand Partnership<br />Proposal Builder
-          </h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', lineHeight: 1.7, maxWidth: '600px' }}>
-            Configure a campaign below. Projections update live based on retailer benchmarks, category performance data, and your budget inputs. Walmart figures are derived from a live Nov–Dec 2025 test.
-          </p>
-        </div>
-
-        {/* TWO-COLUMN LAYOUT */}
-        <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: '28px', alignItems: 'start' }}>
-
-          {/* LEFT — INPUTS */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Retailer */}
-            <div style={DS.inputCard}>
-              <div style={DS.inputLabel}>Retailer</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                {Object.entries(RETAILER_BENCHMARKS).map(([key, b]) => (
-                  <button
-                    key={key}
-                    onClick={() => setRetailer(key)}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: `1px solid ${retailer === key ? '#FF6B6B' : 'rgba(0,0,0,0.06)'}`,
-                      background: retailer === key ? 'rgba(255,107,107,0.08)' : '#F9FAFB',
-                      color: retailer === key ? '#FF6B6B' : '#4B5563',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <span>{b.logo}</span> {b.name}
-                    {b.verified && <span style={{ fontSize: '9px', background: 'rgba(52,211,153,0.2)', color: '#34D399', padding: '1px 5px', borderRadius: '4px', marginLeft: 'auto' }}>LIVE</span>}
-                  </button>
-                ))}
-              </div>
-              {!bench.verified && (
-                <div style={{ fontSize: '11px', color: '#F97316', marginTop: '8px' }}>
-                  ⚠️ {bench.note}
-                </div>
-              )}
-              {bench.verified && (
-                <div style={{ fontSize: '11px', color: '#34D399', marginTop: '8px' }}>
-                  ✓ {bench.note}
-                </div>
-              )}
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+          input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(0,0,0,0.05); outline: none; }
+          input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #FF6B6B; cursor: pointer; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }`}
+        </style>
+        
+        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <div>
+              <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px' }}>
+                Partnership Proposal Builder
+              </h1>
+              <p style={{ color: '#6B7280', fontSize: '15px', marginTop: '4px' }}>
+                Select retailer benchmarks and project campaign impact
+              </p>
             </div>
-
-            {/* Category */}
-            <div style={DS.inputCard}>
-              <div style={DS.inputLabel}>Brand Category</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {Object.entries(CATEGORY_MULTIPLIERS).map(([cat, m]) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategory(cat)}
-                    style={{
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: `1px solid ${category === cat ? '#C084FC' : 'rgba(0,0,0,0.06)'}`,
-                      background: category === cat ? 'rgba(192,132,252,0.08)' : 'transparent',
-                      color: category === cat ? '#C084FC' : '#4B5563',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    {m.label} {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Budget */}
-            <div style={DS.inputCard}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={DS.inputLabel} >Monthly Ad Budget</div>
-                <div style={{ fontSize: '18px', fontWeight: '800', color: '#FF6B6B' }}>${monthlyBudget.toLocaleString()}</div>
-              </div>
-              <input
-                type="range" min="5000" max="150000" step="5000"
-                value={monthlyBudget}
-                onChange={e => setMonthlyBudget(+e.target.value)}
-                style={{ width: '100%', accentColor: '#FF6B6B' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#4B5563', marginTop: '4px' }}>
-                <span>$5K</span><span>$150K</span>
-              </div>
-            </div>
-
-            {/* Benchmark inputs */}
-            <div style={DS.inputCard}>
-              <div style={DS.inputLabel}>Benchmark Inputs <span style={{ color: '#4B5563', fontWeight: '400', textTransform: 'none', letterSpacing: 0 }}>(editable)</span></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                {[
-                  { label: 'Avg CPC ($)', value: cpc, setter: setCpc, step: 0.001, hint: 'Cost per click from Meta ads' },
-                  { label: 'CVR (%)', value: cvr, setter: setCvr, step: 0.1, hint: 'Click-to-purchase rate (paid social: 0.5–3%)' },
-                  { label: 'Avg Order Value ($)', value: aov, setter: setAov, step: 1, hint: 'Average basket size at checkout' },
-                  { label: 'Commission Rate (%)', value: commissionRate, setter: setCommissionRate, step: 0.1, hint: 'Affiliate rate paid on each sale' },
-                ].map((f, i) => (
-                  <div key={i}>
-                    <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '2px', fontWeight: '600' }}>{f.label}</div>
-                    <input type="number" value={f.value} step={f.step} onChange={e => f.setter(+e.target.value)} />
-                    <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '3px' }}>{f.hint}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px', padding: '8px 10px', background: 'rgba(0,0,0,0.02)', borderRadius: '6px' }}>
-                EPC = CVR × AOV × Rate = {cvr}% × ${aov} × {commissionRate}% ={' '}
-                <span style={{ color: '#C084FC', fontWeight: '700' }}>${epc.toFixed(4)}</span>
-                {bench.verified && (
-                  <span style={{ marginLeft: '8px', color: '#34D399', fontSize: '10px' }}>
-                    (live test baseline: ${bench.epcBaseline})
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Creators */}
-            <div style={DS.inputCard}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={DS.inputLabel}>Creators in Campaign</div>
-                <div style={{ fontSize: '18px', fontWeight: '800', color: '#C084FC' }}>{numCreators}</div>
-              </div>
-              <input
-                type="range" min="1" max="50" step="1"
-                value={numCreators}
-                onChange={e => setNumCreators(+e.target.value)}
-                style={{ width: '100%', accentColor: '#C084FC' }}
-              />
-              <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '6px' }}>
-                Recommended for this budget: <span style={{ color: '#34D399', fontWeight: '700' }}>{recommendedCreators} creators</span> (~$2.5K/creator/mo)
-              </div>
-            </div>
-
+            <button onClick={() => window.location.href = '/'} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #E5E7EB', background: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
           </div>
 
-          {/* RIGHT — LIVE OUTPUT */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Retailer badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '22px' }}>{bench.logo}</span>
-              <div>
-                <div style={{ fontSize: '18px', fontWeight: '800' }}>{bench.name} × {catMod.label} {category}</div>
-                <div style={{ fontSize: '12px', color: '#6B7280' }}>Monthly projection · {numCreators} creators · {totalAds} ads/mo</div>
-              </div>
-            </div>
-
-            {/* Projection stat tiles */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-              {[
-                { label: 'Clicks / Month', value: clicks.toLocaleString(), color: '#C084FC', icon: '👆' },
-                { label: 'GMV Driven', value: `$${Math.round(gmv).toLocaleString()}`, color: '#34D399', icon: '🛒' },
-                { label: 'Affiliate Earnings', value: `$${Math.round(earnings).toLocaleString()}`, color: '#FF6B6B', highlight: true, icon: '💰' },
-                { 
-                  label: 'Brand ROAS', 
-                  value: `${brandROAS.toFixed(1)}x`, 
-                  sublabel: 'GMV / Ad Spend',
-                  color: brandROAS >= 10 ? '#34D399' : brandROAS >= 5 ? '#C084FC' : '#F97316', 
-                  icon: '🏪',
-                  roas: brandROAS,
-                  roasType: 'brand'
-                },
-                { 
-                  label: 'Markable ROAS', 
-                  value: `${markableROAS.toFixed(1)}x`, 
-                  sublabel: 'Earnings / Ad Spend',
-                  color: markableROAS >= 3 ? '#34D399' : markableROAS >= 2 ? '#C084FC' : '#F97316',
-                  icon: '📈',
-                  roas: markableROAS,
-                  roasType: 'markable'
-                },
-                { label: 'EPC', value: `$${epc.toFixed(4)}`, color: '#C084FC', icon: '⚡' },
-                { label: 'Monthly Profit', value: `$${Math.round(profit).toLocaleString()}`, color: profit > 0 ? '#34D399' : '#EF4444', highlight: true, icon: '📊' },
-              ].map((s, i) => (
-                <div key={i} style={{
-                  ...DS.card,
-                  borderLeft: `3px solid ${s.color}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '16px 20px',
-                }}>
-                  <span style={{ fontSize: '22px' }}>{s.icon}</span>
-                  <div>
-                    <div style={{ fontSize: '22px', fontWeight: '800', color: s.color, lineHeight: 1 }}>{s.value}</div>
-                    <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '3px' }}>{s.label}</div>
-                    {s.roas !== undefined && (() => {
-                      const isGood = s.roasType === 'brand' ? s.roas >= 10 : s.roas >= 3;
-                      const isOk   = s.roasType === 'brand' ? s.roas >= 5  : s.roas >= 2;
-                      const status = isGood ? 'strong' : isOk ? 'moderate' : 'low';
-                      const colors = { strong: '#34D399', moderate: '#F59E0B', low: '#EF4444' };
-                      const labels = { 
-                        strong: s.roasType === 'brand' ? '✓ Strong for brand' : '✓ Strong for system',
-                        moderate: s.roasType === 'brand' ? '~ Acceptable' : '~ Borderline',
-                        low: s.roasType === 'brand' ? '↓ Below target' : '↓ Not viable',
-                      };
-                      return (
-                        <div style={{ 
-                          fontSize: '10px', 
-                          fontWeight: '700', 
-                          color: colors[status],
-                          marginTop: '4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                        }}>
-                          <span style={{ 
-                            width: '6px', height: '6px', borderRadius: '50%', 
-                            background: colors[status], display: 'inline-block' 
-                          }} />
-                          {labels[status]}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Cost breakdown */}
-            <div style={DS.card}>
-              <div style={DS.sectionLabel}>60-Day Cost Breakdown</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '32px', alignItems: 'start' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
-              {/* Brand view */}
-              <div style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', 
-                            letterSpacing: '0.5px', marginBottom: '10px' }}>
-                BRAND INVESTMENT
+              {/* Retailer Selection */}
+              <div style={DS.card}>
+                <div style={DS.sectionLabel}>1. Select Retailer & Category</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                  {Object.entries(RETAILER_BENCHMARKS).map(([key, b]) => (
+                    <button key={key} onClick={() => setRetailer(key)} style={DS.retailerBtn(retailer === key)}>
+                      <span style={{ fontSize: '20px', marginBottom: '4px' }}>{b.logo}</span>
+                      <span style={{ fontSize: '12px', fontWeight: '700' }}>{b.name}</span>
+                    </button>
+                  ))}
+                </div>
+                
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {Object.keys(CATEGORY_MULTIPLIERS).map(cat => (
+                    <button key={cat} onClick={() => setCategory(cat)} style={DS.categoryBtn(category === cat)}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
-              {[
-                { 
-                  label: 'Ad Spend', 
-                  value: twoMonthAdSpend, 
-                  color: '#FF6B6B', 
-                  note: 'Paid to Markable · 2 months × monthly budget' 
-                },
-                { 
-                  label: 'Creator Commission Pool (50%)', 
-                  value: creatorCommissionPool, 
-                  color: '#C084FC', 
-                  note: '50% of affiliate earnings · shared with creators' 
-                },
-                { 
-                  label: 'Total Brand Cash Out', 
-                  value: brandTotalInvestment, 
-                  color: '#111827', 
-                  bold: true, 
-                  note: '' 
-                },
-              ].map((row, i) => (
-                <div key={i} style={{ 
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-                  paddingBottom: '10px', marginBottom: '10px',
-                  borderBottom: i < 2 ? '1px solid rgba(0,0,0,0.05)' : 'none'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', 
-                                  color: row.bold ? '#111827' : '#4B5563' }}>{row.label}</div>
-                    {row.note && <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>{row.note}</div>}
-                  </div>
-                  <div style={{ fontSize: row.bold ? '18px' : '15px', fontWeight: '800', color: row.color }}>
-                    ${Math.round(row.value).toLocaleString()}
+
+              {/* Benchmark Inputs */}
+              <div style={DS.card}>
+                <div style={DS.sectionLabel}>2. Adjust Benchmarks</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  {[
+                    { label: 'Avg CPC ($)', value: cpc, setter: setCpc, step: 0.001, hint: 'Cost per click from Meta ads' },
+                    { label: 'Conversion Rate (CVR %)', value: cvr, setter: setCvr, step: 0.1, hint: 'Click-to-purchase conversion' },
+                    { label: 'Avg Order Value ($)', value: aov, setter: setAov, step: 1, hint: 'Expected customer cart size' },
+                    { label: 'Commission Rate (%)', value: commissionRate, setter: setCommissionRate, step: 0.1, hint: 'Affiliate payout percentage' },
+                  ].map((f, i) => (
+                    <div key={i}>
+                      <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '2px', fontWeight: '600' }}>{f.label}</div>
+                      <input type="number" value={f.value} step={f.step} onChange={e => f.setter(+e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #E5E7EB', fontSize: '14px', fontWeight: '600' }} />
+                      <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '3px' }}>{f.hint}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px', padding: '8px 10px', background: 'rgba(0,0,0,0.02)', borderRadius: '6px' }}>
+                  EPC = Earnings / Clicks = ${epc.toFixed(4)}
+                  {bench.verified && (
+                    <span style={{ marginLeft: '8px', color: '#34D399', fontSize: '10px' }}>
+                      (live test baseline: ${bench.epcBaseline})
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Budget Input */}
+              <div style={DS.card}>
+                <div style={DS.sectionLabel}>3. Monthly Ad Budget</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '10px' }}>
+                  <input type="range" min="1000" max="100000" step="1000" value={monthlyBudget} onChange={e => setMonthlyBudget(+e.target.value)} style={{ flex: 1, accentColor: '#FF6B6B' }} />
+                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#FF6B6B', minWidth: '120px', textAlign: 'right' }}>
+                    $${monthlyBudget.toLocaleString()}
                   </div>
                 </div>
-              ))}
+                <div style={{ fontSize: '11px', color: '#6B7280' }}>Monthly paid media spend across Meta/TikTok/IG</div>
+              </div>
 
-              {/* Two ROAS rows */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '4px' }}>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              
+              {/* Projection stat tiles */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                {statTiles.map((s, i) => (
+                  <div key={i} style={{ ...DS.card, borderLeft: `3px solid ${s.color}`, display: 'flex', gap: '14px', padding: '16px 20px' }}>
+                    <span style={{ fontSize: '22px' }}>{s.icon}</span>
+                    <div>
+                      <div style={{ fontSize: '22px', fontWeight: '800', color: s.color, lineHeight: 1 }}>{s.value}</div>
+                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '3px' }}>{s.label}</div>
+                      {s.indicator && (() => {
+                        const colors = { strong: '#34D399', moderate: '#F59E0B', low: '#EF4444' };
+                        const labels = { strong: '✓ Strong', moderate: '~ Moderate', low: '↓ Below target' };
+                        const c = colors[s.indicator];
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: c, display: 'inline-block' }} />
+                            <span style={{ fontSize: '10px', fontWeight: '700', color: c }}>{labels[s.indicator]}</span>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Cost breakdown */}
+              <div style={DS.card}>
+                <div style={DS.sectionLabel}>60-Day Cost Breakdown</div>
+
+                {/* BRAND VIEW */}
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#FF6B6B', letterSpacing: '0.5px', marginBottom: '12px' }}>🏪 BRAND VIEW</div>
                 {[
-                  { 
-                    label: 'Brand ROAS', 
-                    sub: 'GMV / Ad Spend',
-                    value: brandTotalROAS, 
-                    display: `${brandTotalROAS.toFixed(1)}x`,
-                    good: 10, ok: 5 
-                  },
-                  { 
-                    label: 'Markable ROAS', 
-                    sub: 'Earnings / Ad Spend',
-                    value: markableTotalROAS, 
-                    display: `${markableTotalROAS.toFixed(1)}x`,
-                    good: 3, ok: 2 
-                  },
-                ].map((r, i) => {
-                  const isGood = r.value >= r.good;
-                  const isOk = r.value >= r.ok;
-                  const color = isGood ? '#34D399' : isOk ? '#F59E0B' : '#EF4444';
-                  return (
-                    <div key={i} style={{ 
-                      background: 'rgba(0,0,0,0.02)', borderRadius: '10px', 
-                      padding: '12px 14px', border: `1px solid ${color}30` 
-                    }}>
-                      <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>
-                        {r.label}
+                  { label: 'Ad Spend', value: twoMonthAdSpend, color: '#FF6B6B', note: '2 months × monthly budget · paid to Markable' },
+                  { label: 'Creator Commission Pool', value: twoMonthCommPool, color: '#C084FC', note: 'Paid to creators · based on affiliate earnings' },
+                  { label: 'Total Brand Investment', value: twoMonthAdSpend + twoMonthCommPool, color: '#111827', bold: true, note: '' },
+                ].map((row, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', marginBottom: '10px', borderBottom: i < 2 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', color: row.bold ? '#111827' : '#4B5563' }}>{row.label}</div>
+                      {row.note && <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>{row.note}</div>}
+                    </div>
+                    <div style={{ fontSize: row.bold ? '17px' : '15px', fontWeight: '800', color: row.color }}>$${Math.round(row.value).toLocaleString()}</div>
+                  </div>
+                ))}
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '24px' }}>
+                  {[
+                    { label: 'Brand ROAS', sub: 'GMV / Ad Spend only', value: brandROAS_adOnly, good: 10, ok: 5 },
+                    { label: 'Brand ROAS (all-in)', sub: 'GMV / Ad Spend + Commissions', value: brandROAS_total, good: 5, ok: 3 },
+                  ].map((r, i) => {
+                    const color = r.value >= r.good ? '#34D399' : r.value >= r.ok ? '#F59E0B' : '#EF4444';
+                    return (
+                      <div key={i} style={{ background: 'rgba(0,0,0,0.02)', borderRadius: '10px', padding: '12px 14px', border: `1px solid ${color}30` }}>
+                        <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>{r.label}</div>
+                        <div style={{ fontSize: '22px', fontWeight: '800', color }}>{r.value.toFixed(1)}x</div>
+                        <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{r.sub}</div>
                       </div>
-                      <div style={{ fontSize: '20px', fontWeight: '800', color }}>{r.display}</div>
-                      <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{r.sub}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block' }} />
-                        <span style={{ fontSize: '10px', fontWeight: '700', color }}>
-                          {isGood ? 'Strong' : isOk ? 'Moderate' : 'Below target'}
-                        </span>
+                    );
+                  })}
+                </div>
+
+                <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 0 20px' }} />
+
+                {/* MARKABLE INTERNAL VIEW */}
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#34D399', letterSpacing: '0.5px', marginBottom: '12px' }}>⚙️ MARKABLE INTERNAL VIEW</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                  {[
+                    { label: `Ad Match (${markableMatchPct}% of brand spend)`, value: markableMatchPct, setter: setMarkableMatchPct, color: '#FF6B6B' },
+                    { label: `Commission Share (${markableCommPct}% of pool)`, value: markableCommPct, setter: setMarkableCommPct, color: '#C084FC' },
+                  ].map((f, i) => (
+                    <div key={i} style={{ background: 'rgba(0,0,0,0.02)', borderRadius: '10px', padding: '12px' }}>
+                      <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '8px', fontWeight: '600' }}>{f.label}</div>
+                      <input type="range" min="0" max="100" step="5" value={f.value} onChange={e => f.setter(+e.target.value)} style={{ width: '100%', accentColor: f.color }} />
+                    </div>
+                  ))}
+                </div>
+
+                {[
+                  { label: 'Markable Ad Co-Investment', value: twoMonthMarkableAd, color: '#FF6B6B' },
+                  { label: 'Markable Commission Share', value: twoMonthMarkableComm, color: '#C084FC' },
+                  { label: 'Total Markable Investment', value: twoMonthMarkableAd + twoMonthMarkableComm, color: '#111827', bold: true },
+                ].map((row, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', marginBottom: '10px', borderBottom: i < 2 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}>
+                    <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', color: row.bold ? '#111827' : '#4B5563' }}>{row.label}</div>
+                    <div style={{ fontSize: row.bold ? '17px' : '15px', fontWeight: '800', color: row.color }}>$${Math.round(row.value).toLocaleString()}</div>
+                  </div>
+                ))}
+
+                {(() => {
+                  const color = markableROAS >= 1.5 ? '#34D399' : markableROAS >= 1.2 ? '#F59E0B' : '#EF4444';
+                  return (
+                    <div style={{ background: `${color}10`, border: `1px solid ${color}30`, borderRadius: '10px', padding: '14px 16px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600' }}>MARKABLE ROAS</div>
+                        <div style={{ fontSize: '26px', fontWeight: '800', color }}>{markableROAS.toFixed(2)}x</div>
                       </div>
                     </div>
                   );
-                })}
+                })()}
               </div>
 
-              {/* GMV callout */}
-              <div style={{ 
-                marginTop: '12px', padding: '10px 14px', 
-                background: 'rgba(52,211,153,0.06)', 
-                border: '1px solid rgba(52,211,153,0.15)', 
-                borderRadius: '8px' 
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '12px', color: '#4B5563' }}>60-Day GMV Driven for {bench.name}</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#059669' }}>
-                    ${Math.round(twoMonthGMV).toLocaleString()}
-                  </div>
-                </div>
+              {/* CTA */}
+              <div style={{ ...DS.card, background: 'rgba(255,107,107,0.03)', border: '1px solid rgba(255,107,107,0.1)', textAlign: 'center', padding: '28px' }}>
+                <div style={{ fontSize: '16px', fontWeight: '800', marginBottom: '8px', color: '#111827' }}>Ready to run this campaign?</div>
+                <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.6 }}>
+                  We'll define creator selection criteria, signal thresholds, and a 60-day reporting cadence.
+                </p>
+                <a
+                  href={`mailto:?subject=Markable Brand Partnership — ${bench.name} ${category} Proposal&body=Monthly Budget: $${monthlyBudget.toLocaleString()}%0AProjected ROAS: ${brandROAS_adOnly.toFixed(1)}x%0AProjected Earnings: $${Math.round(earnings).toLocaleString()}%0ACreators: ${numCreators}`}
+                  style={{ display: 'inline-block', background: 'linear-gradient(135deg, #FF6B6B, #C084FC)', color: '#fff', padding: '12px 28px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}
+                >
+                  Request This Proposal →
+                </a>
               </div>
-            </div>
 
-            {/* Creator & content recommendation */}
-            <div style={DS.card}>
-              <div style={DS.sectionLabel}>Campaign Recommendation</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                {[
-                  { label: 'Creators', value: numCreators, sub: 'in campaign', color: '#C084FC' },
-                  { label: 'Ads / Month', value: totalAds, sub: `${adsPerCreator} per creator`, color: '#FF6B6B' },
-                  { label: 'Budget / Creator', value: `$${Math.round(monthlyBudget / numCreators).toLocaleString()}`, sub: 'monthly', color: '#34D399' },
-                ].map((s, i) => (
-                  <div key={i} style={{ textAlign: 'center', padding: '14px', background: 'rgba(0,0,0,0.02)', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '24px', fontWeight: '800', color: s.color }}>{s.value}</div>
-                    <div style={{ fontSize: '12px', fontWeight: '600', marginTop: '2px', color: '#111827' }}>{s.label}</div>
-                    <div style={{ fontSize: '10px', color: '#6B7280' }}>{s.sub}</div>
-                  </div>
-                ))}
-              </div>
             </div>
-
-            {/* Signal logic callout */}
-            <div style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.1)', borderRadius: '12px', padding: '16px 20px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#059669', marginBottom: '6px' }}>⚡ How the Signal System Works</div>
-              <div style={{ fontSize: '13px', color: '#4B5563', lineHeight: 1.6 }}>
-                Each creator's ads are monitored every 24–48hrs. Ads hitting EPC &gt; <strong style={{ color: '#111827' }}>${(epc * 0.8).toFixed(4)}</strong> get scaled. Ads below <strong style={{ color: '#111827' }}>${(epc * 0.4).toFixed(4)}</strong> are killed. Budget automatically shifts to the highest-performing creators and formats in real time.
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div style={{ ...DS.card, background: 'rgba(255,107,107,0.03)', border: '1px solid rgba(255,107,107,0.1)', textAlign: 'center', padding: '28px' }}>
-              <div style={{ fontSize: '16px', fontWeight: '800', marginBottom: '8px', color: '#111827' }}>Ready to run this campaign?</div>
-              <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.6 }}>
-                We'll define creator selection criteria, signal thresholds, and a 60-day reporting cadence.
-              </p>
-              <a
-                href={`mailto:?subject=Markable Brand Partnership — ${bench.name} ${category} Proposal&body=Monthly Budget: $${monthlyBudget.toLocaleString()}%0AProjected ROAS: ${roas.toFixed(1)}x%0AProjected Earnings: $${Math.round(earnings).toLocaleString()}%0ACreators: ${numCreators}`}
-                style={{ display: 'inline-block', background: 'linear-gradient(135deg, #FF6B6B, #C084FC)', color: '#fff', padding: '12px 28px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}
-              >
-                Request This Proposal →
-              </a>
-            </div>
-
           </div>
+
+          <div style={{ height: '60px' }} />
         </div>
-
-        <div style={{ height: '60px' }} />
       </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPLIANCE UTILS
-// ─────────────────────────────────────────────────────────────────────────────
-const checkCompliance = (copy: string) => {
+    );
+  };
+  const checkCompliance = (copy: string) => {
   const flags = [];
   
     // Trademark check
