@@ -107,14 +107,18 @@ const DannyPage = () => {
   const adsPerCreator = 4;
   const totalAds = recommendedCreators * adsPerCreator;
 
-  // Cost breakdown (60-day / 2-month view)
+  // Two separate ROAS metrics
+  const brandROAS = monthlyBudget > 0 ? gmv / monthlyBudget : 0;        // GMV / Ad Spend
+  const markableROAS = monthlyBudget > 0 ? earnings / monthlyBudget : 0; // Earnings / Ad Spend
+
+  // 60-day cost breakdown
   const twoMonthAdSpend = monthlyBudget * 2;
   const twoMonthGMV = gmv * 2;
   const twoMonthEarnings = earnings * 2;
-  const creatorCommissionPool = twoMonthEarnings * 0.50; // 50% to creators
-  const markableFee = twoMonthAdSpend;                   // ad spend = Markable's fee
-  const brandTotalInvestment = markableFee + creatorCommissionPool;
-  const brandROAS = twoMonthEarnings / brandTotalInvestment;
+  const creatorCommissionPool = twoMonthEarnings * 0.50;
+  const brandTotalInvestment = twoMonthAdSpend + creatorCommissionPool;
+  const brandTotalROAS = twoMonthGMV / twoMonthAdSpend;      // GMV / Ad Spend (brand view)
+  const markableTotalROAS = twoMonthEarnings / twoMonthAdSpend; // Earnings / Ad Spend (Markable view)
 
   console.log("DannyPage rendering, pathname:", window.location.pathname);
 
@@ -261,7 +265,7 @@ const DannyPage = () => {
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+              <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '10px', padding: '8px 10px', background: 'rgba(0,0,0,0.02)', borderRadius: '6px' }}>
                 EPC = CVR × AOV × Rate = {cvr}% × ${aov} × {commissionRate}% ={' '}
                 <span style={{ color: '#C084FC', fontWeight: '700' }}>${epc.toFixed(4)}</span>
                 {bench.verified && (
@@ -309,7 +313,24 @@ const DannyPage = () => {
                 { label: 'Clicks / Month', value: clicks.toLocaleString(), color: '#C084FC', icon: '👆' },
                 { label: 'GMV Driven', value: `$${Math.round(gmv).toLocaleString()}`, color: '#34D399', icon: '🛒' },
                 { label: 'Affiliate Earnings', value: `$${Math.round(earnings).toLocaleString()}`, color: '#FF6B6B', highlight: true, icon: '💰' },
-                { label: 'ROAS', value: `${roas.toFixed(1)}x`, color: roas >= 3 ? '#34D399' : roas >= 2 ? '#C084FC' : '#F97316', icon: '📈' },
+                { 
+                  label: 'Brand ROAS', 
+                  value: `${brandROAS.toFixed(1)}x`, 
+                  sublabel: 'GMV / Ad Spend',
+                  color: brandROAS >= 10 ? '#34D399' : brandROAS >= 5 ? '#C084FC' : '#F97316', 
+                  icon: '🏪',
+                  roas: brandROAS,
+                  roasType: 'brand'
+                },
+                { 
+                  label: 'Markable ROAS', 
+                  value: `${markableROAS.toFixed(1)}x`, 
+                  sublabel: 'Earnings / Ad Spend',
+                  color: markableROAS >= 3 ? '#34D399' : markableROAS >= 2 ? '#C084FC' : '#F97316',
+                  icon: '📈',
+                  roas: markableROAS,
+                  roasType: 'markable'
+                },
                 { label: 'EPC', value: `$${epc.toFixed(4)}`, color: '#C084FC', icon: '⚡' },
                 { label: 'Monthly Profit', value: `$${Math.round(profit).toLocaleString()}`, color: profit > 0 ? '#34D399' : '#EF4444', highlight: true, icon: '📊' },
               ].map((s, i) => (
@@ -325,6 +346,34 @@ const DannyPage = () => {
                   <div>
                     <div style={{ fontSize: '22px', fontWeight: '800', color: s.color, lineHeight: 1 }}>{s.value}</div>
                     <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '3px' }}>{s.label}</div>
+                    {s.roas !== undefined && (() => {
+                      const isGood = s.roasType === 'brand' ? s.roas >= 10 : s.roas >= 3;
+                      const isOk   = s.roasType === 'brand' ? s.roas >= 5  : s.roas >= 2;
+                      const status = isGood ? 'strong' : isOk ? 'moderate' : 'low';
+                      const colors = { strong: '#34D399', moderate: '#F59E0B', low: '#EF4444' };
+                      const labels = { 
+                        strong: s.roasType === 'brand' ? '✓ Strong for brand' : '✓ Strong for system',
+                        moderate: s.roasType === 'brand' ? '~ Acceptable' : '~ Borderline',
+                        low: s.roasType === 'brand' ? '↓ Below target' : '↓ Not viable',
+                      };
+                      return (
+                        <div style={{ 
+                          fontSize: '10px', 
+                          fontWeight: '700', 
+                          color: colors[status],
+                          marginTop: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}>
+                          <span style={{ 
+                            width: '6px', height: '6px', borderRadius: '50%', 
+                            background: colors[status], display: 'inline-block' 
+                          }} />
+                          {labels[status]}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
@@ -333,25 +382,103 @@ const DannyPage = () => {
             {/* Cost breakdown */}
             <div style={DS.card}>
               <div style={DS.sectionLabel}>60-Day Cost Breakdown</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {[
-                  { label: 'Ad Spend (Markable fee)', value: twoMonthAdSpend, color: '#FF6B6B', note: '2 months × monthly budget' },
-                  { label: 'Creator Commission Pool (50%)', value: creatorCommissionPool, color: '#C084FC', note: '50% of affiliate earnings to creators' },
-                  { label: 'Total Brand Investment', value: brandTotalInvestment, color: '#111827', bold: true, note: '' },
-                ].map((row, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: i === 1 ? '10px' : 0, borderBottom: i === 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', color: row.bold ? '#111827' : '#4B5563' }}>{row.label}</div>
-                      {row.note && <div style={{ fontSize: '10px', color: '#6B7280' }}>{row.note}</div>}
-                    </div>
-                    <div style={{ fontSize: row.bold ? '18px' : '15px', fontWeight: '800', color: row.color }}>
-                      ${Math.round(row.value).toLocaleString()}
-                    </div>
+              
+              {/* Brand view */}
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', 
+                            letterSpacing: '0.5px', marginBottom: '10px' }}>
+                BRAND INVESTMENT
+              </div>
+              {[
+                { 
+                  label: 'Ad Spend', 
+                  value: twoMonthAdSpend, 
+                  color: '#FF6B6B', 
+                  note: 'Paid to Markable · 2 months × monthly budget' 
+                },
+                { 
+                  label: 'Creator Commission Pool (50%)', 
+                  value: creatorCommissionPool, 
+                  color: '#C084FC', 
+                  note: '50% of affiliate earnings · shared with creators' 
+                },
+                { 
+                  label: 'Total Brand Cash Out', 
+                  value: brandTotalInvestment, 
+                  color: '#111827', 
+                  bold: true, 
+                  note: '' 
+                },
+              ].map((row, i) => (
+                <div key={i} style={{ 
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                  paddingBottom: '10px', marginBottom: '10px',
+                  borderBottom: i < 2 ? '1px solid rgba(0,0,0,0.05)' : 'none'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', 
+                                  color: row.bold ? '#111827' : '#4B5563' }}>{row.label}</div>
+                    {row.note && <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>{row.note}</div>}
                   </div>
-                ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                  <div style={{ fontSize: '13px', color: '#9CA3AF' }}>Brand ROAS on total investment</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: brandROAS >= 2 ? '#34D399' : '#F97316' }}>{brandROAS.toFixed(1)}x</div>
+                  <div style={{ fontSize: row.bold ? '18px' : '15px', fontWeight: '800', color: row.color }}>
+                    ${Math.round(row.value).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+
+              {/* Two ROAS rows */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '4px' }}>
+                {[
+                  { 
+                    label: 'Brand ROAS', 
+                    sub: 'GMV / Ad Spend',
+                    value: brandTotalROAS, 
+                    display: `${brandTotalROAS.toFixed(1)}x`,
+                    good: 10, ok: 5 
+                  },
+                  { 
+                    label: 'Markable ROAS', 
+                    sub: 'Earnings / Ad Spend',
+                    value: markableTotalROAS, 
+                    display: `${markableTotalROAS.toFixed(1)}x`,
+                    good: 3, ok: 2 
+                  },
+                ].map((r, i) => {
+                  const isGood = r.value >= r.good;
+                  const isOk = r.value >= r.ok;
+                  const color = isGood ? '#34D399' : isOk ? '#F59E0B' : '#EF4444';
+                  return (
+                    <div key={i} style={{ 
+                      background: 'rgba(0,0,0,0.02)', borderRadius: '10px', 
+                      padding: '12px 14px', border: `1px solid ${color}30` 
+                    }}>
+                      <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>
+                        {r.label}
+                      </div>
+                      <div style={{ fontSize: '20px', fontWeight: '800', color }}>{r.display}</div>
+                      <div style={{ fontSize: '10px', color: '#4B5563', marginTop: '2px' }}>{r.sub}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block' }} />
+                        <span style={{ fontSize: '10px', fontWeight: '700', color }}>
+                          {isGood ? 'Strong' : isOk ? 'Moderate' : 'Below target'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* GMV callout */}
+              <div style={{ 
+                marginTop: '12px', padding: '10px 14px', 
+                background: 'rgba(52,211,153,0.06)', 
+                border: '1px solid rgba(52,211,153,0.15)', 
+                borderRadius: '8px' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '12px', color: '#4B5563' }}>60-Day GMV Driven for {bench.name}</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#059669' }}>
+                    ${Math.round(twoMonthGMV).toLocaleString()}
+                  </div>
                 </div>
               </div>
             </div>
