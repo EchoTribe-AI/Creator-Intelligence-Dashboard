@@ -2898,6 +2898,10 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     preload="metadata" 
                     playsInline 
                     muted
+                    onLoadedMetadata={(e) => {
+                      const video = e.target as HTMLVideoElement;
+                      video.currentTime = 0.001;
+                    }}
                   />
                 ) : ad.imageUrl && ad.imageUrl !== 'null' ? (
                   <img src={ad.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
