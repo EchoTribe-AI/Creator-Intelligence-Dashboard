@@ -1,5 +1,9 @@
 import path from "path";
+import { fileURLToPath } from "url";
 import type { Express } from "express";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getProductData, getStorefrontProducts } from "./scraper.js";
@@ -198,7 +202,7 @@ export async function registerRoutes(
 
   // Serve index.html for the /danny route to allow React to handle it
   app.get('/danny', (_req, res) => {
-    res.sendFile(path.join(__dirname, "../dist/public/index.html"));
+    res.sendFile(path.resolve(process.cwd(), "dist/public/index.html"));
   });
 
   return httpServer;
