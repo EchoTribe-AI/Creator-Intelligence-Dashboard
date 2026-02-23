@@ -61,14 +61,14 @@ const CATEGORY_MULTIPLIERS = {
 
 const DannyPage = () => {
   const DS: any = {
-    page: { minHeight: '100vh', background: '#0A0A0A', color: '#F3F4F6', fontFamily: "'DM Sans', 'Inter', sans-serif" },
-    nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', background: 'rgba(10,10,10,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky' as const, top: 0, zIndex: 100, backdropFilter: 'blur(12px)' },
-    navBrand: { fontSize: '16px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.3px' },
+    page: { minHeight: '100vh', background: '#F9FAFB', color: '#111827', fontFamily: "'DM Sans', 'Inter', sans-serif" },
+    nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', background: 'rgba(255,255,255,0.8)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky' as const, top: 0, zIndex: 100, backdropFilter: 'blur(12px)' },
+    navBrand: { fontSize: '16px', fontWeight: '800', color: '#111827', letterSpacing: '-0.3px' },
     navBadge: { fontSize: '10px', background: '#FF6B6B', color: '#fff', padding: '3px 8px', borderRadius: '4px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' as const, marginLeft: '8px' },
     container: { maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' },
-    card: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '24px' },
+    card: { background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' },
     sectionLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '14px', marginTop: '28px' },
-    inputCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '20px' },
+    inputCard: { background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' },
     inputLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#6B7280', textTransform: 'uppercase' as const, marginBottom: '10px' },
   };
   const [retailer, setRetailer] = useState('walmart');
@@ -120,12 +120,12 @@ const DannyPage = () => {
   return (
     <div style={DS.page} data-testid="danny-page">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-        input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #FF6B6B; cursor: pointer; }
-        input[type=number] { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #fff; padding: 8px 12px; font-size: 14px; width: 100%; box-sizing: border-box; font-family: 'DM Sans', sans-serif; }
-        input[type=number]:focus { outline: none; border-color: #FF6B6B; }
-        select { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #fff; padding: 10px 12px; font-size: 14px; width: 100%; font-family: 'DM Sans', sans-serif; cursor: pointer; }
-        select:focus { outline: none; border-color: #FF6B6B; }
+        input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(0,0,0,0.05); outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #FF6B6B; cursor: pointer; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        input[type=number] { background: #F3F4F6; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; color: #111827; padding: 8px 12px; font-size: 14px; width: 100%; box-sizing: border-box; font-family: 'DM Sans', sans-serif; }
+        input[type=number]:focus { outline: none; border-color: #FF6B6B; background: #fff; }
+        select { background: #F3F4F6; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; color: #111827; padding: 10px 12px; font-size: 14px; width: 100%; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+        select:focus { outline: none; border-color: #FF6B6B; background: #fff; }
       `}</style>
 
       {/* NAV */}
@@ -169,9 +169,9 @@ const DannyPage = () => {
                     style={{
                       padding: '10px',
                       borderRadius: '8px',
-                      border: `1px solid ${retailer === key ? '#FF6B6B' : 'rgba(255,255,255,0.08)'}`,
-                      background: retailer === key ? 'rgba(255,107,107,0.12)' : 'rgba(255,255,255,0.03)',
-                      color: retailer === key ? '#FF6B6B' : '#9CA3AF',
+                      border: `1px solid ${retailer === key ? '#FF6B6B' : 'rgba(0,0,0,0.06)'}`,
+                      background: retailer === key ? 'rgba(255,107,107,0.08)' : '#F9FAFB',
+                      color: retailer === key ? '#FF6B6B' : '#4B5563',
                       fontSize: '13px',
                       fontWeight: '600',
                       cursor: 'pointer',
@@ -208,9 +208,9 @@ const DannyPage = () => {
                     style={{
                       padding: '9px 12px',
                       borderRadius: '8px',
-                      border: `1px solid ${category === cat ? '#C084FC' : 'rgba(255,255,255,0.07)'}`,
-                      background: category === cat ? 'rgba(192,132,252,0.1)' : 'transparent',
-                      color: category === cat ? '#C084FC' : '#9CA3AF',
+                      border: `1px solid ${category === cat ? '#C084FC' : 'rgba(0,0,0,0.06)'}`,
+                      background: category === cat ? 'rgba(192,132,252,0.08)' : 'transparent',
+                      color: category === cat ? '#C084FC' : '#4B5563',
                       fontSize: '13px',
                       fontWeight: '600',
                       cursor: 'pointer',
@@ -334,12 +334,12 @@ const DannyPage = () => {
                 {[
                   { label: 'Ad Spend (Markable fee)', value: twoMonthAdSpend, color: '#FF6B6B', note: '2 months × monthly budget' },
                   { label: 'Creator Commission Pool (50%)', value: creatorCommissionPool, color: '#C084FC', note: '50% of affiliate earnings to creators' },
-                  { label: 'Total Brand Investment', value: brandTotalInvestment, color: '#fff', bold: true, note: '' },
+                  { label: 'Total Brand Investment', value: brandTotalInvestment, color: '#111827', bold: true, note: '' },
                 ].map((row, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: i === 1 ? '10px' : 0, borderBottom: i === 1 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: i === 1 ? '10px' : 0, borderBottom: i === 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', color: row.bold ? '#fff' : '#D1D5DB' }}>{row.label}</div>
-                      {row.note && <div style={{ fontSize: '10px', color: '#4B5563' }}>{row.note}</div>}
+                      <div style={{ fontSize: '13px', fontWeight: row.bold ? '700' : '500', color: row.bold ? '#111827' : '#4B5563' }}>{row.label}</div>
+                      {row.note && <div style={{ fontSize: '10px', color: '#6B7280' }}>{row.note}</div>}
                     </div>
                     <div style={{ fontSize: row.bold ? '18px' : '15px', fontWeight: '800', color: row.color }}>
                       ${Math.round(row.value).toLocaleString()}
@@ -362,9 +362,9 @@ const DannyPage = () => {
                   { label: 'Ads / Month', value: totalAds, sub: `${adsPerCreator} per creator`, color: '#FF6B6B' },
                   { label: 'Budget / Creator', value: `$${Math.round(monthlyBudget / numCreators).toLocaleString()}`, sub: 'monthly', color: '#34D399' },
                 ].map((s, i) => (
-                  <div key={i} style={{ textAlign: 'center', padding: '14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+                  <div key={i} style={{ textAlign: 'center', padding: '14px', background: 'rgba(0,0,0,0.02)', borderRadius: '10px' }}>
                     <div style={{ fontSize: '24px', fontWeight: '800', color: s.color }}>{s.value}</div>
-                    <div style={{ fontSize: '12px', fontWeight: '600', marginTop: '2px' }}>{s.label}</div>
+                    <div style={{ fontSize: '12px', fontWeight: '600', marginTop: '2px', color: '#111827' }}>{s.label}</div>
                     <div style={{ fontSize: '10px', color: '#6B7280' }}>{s.sub}</div>
                   </div>
                 ))}
@@ -372,17 +372,17 @@ const DannyPage = () => {
             </div>
 
             {/* Signal logic callout */}
-            <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '12px', padding: '16px 20px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#34D399', marginBottom: '6px' }}>⚡ How the Signal System Works</div>
-              <div style={{ fontSize: '13px', color: '#9CA3AF', lineHeight: 1.6 }}>
-                Each creator's ads are monitored every 24–48hrs. Ads hitting EPC &gt; <strong style={{ color: '#fff' }}>${(epc * 0.8).toFixed(4)}</strong> get scaled. Ads below <strong style={{ color: '#fff' }}>${(epc * 0.4).toFixed(4)}</strong> are killed. Budget automatically shifts to the highest-performing creators and formats in real time.
+            <div style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.1)', borderRadius: '12px', padding: '16px 20px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#059669', marginBottom: '6px' }}>⚡ How the Signal System Works</div>
+              <div style={{ fontSize: '13px', color: '#4B5563', lineHeight: 1.6 }}>
+                Each creator's ads are monitored every 24–48hrs. Ads hitting EPC &gt; <strong style={{ color: '#111827' }}>${(epc * 0.8).toFixed(4)}</strong> get scaled. Ads below <strong style={{ color: '#111827' }}>${(epc * 0.4).toFixed(4)}</strong> are killed. Budget automatically shifts to the highest-performing creators and formats in real time.
               </div>
             </div>
 
             {/* CTA */}
-            <div style={{ ...DS.card, background: 'rgba(255,107,107,0.06)', border: '1px solid rgba(255,107,107,0.15)', textAlign: 'center', padding: '28px' }}>
-              <div style={{ fontSize: '16px', fontWeight: '800', marginBottom: '8px' }}>Ready to run this campaign?</div>
-              <p style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '20px', lineHeight: 1.6 }}>
+            <div style={{ ...DS.card, background: 'rgba(255,107,107,0.03)', border: '1px solid rgba(255,107,107,0.1)', textAlign: 'center', padding: '28px' }}>
+              <div style={{ fontSize: '16px', fontWeight: '800', marginBottom: '8px', color: '#111827' }}>Ready to run this campaign?</div>
+              <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.6 }}>
                 We'll define creator selection criteria, signal thresholds, and a 60-day reporting cadence.
               </p>
               <a
