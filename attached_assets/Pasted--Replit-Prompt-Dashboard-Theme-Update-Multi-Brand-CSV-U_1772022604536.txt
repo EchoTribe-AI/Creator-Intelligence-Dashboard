@@ -1,0 +1,311 @@
+# Replit Prompt — Dashboard Theme Update + Multi-Brand CSV Upload
+
+Paste this entire prompt into the Replit AI agent.
+
+-----
+
+## The Task
+
+Update `client/src/App.tsx` with three changes:
+
+1. **Retheme the main dashboard to match the Danny page visual style**
+1. **Add a CSV upload modal with company tagging**
+1. **Add company filter chips to the creator grid**
+
+Do NOT touch `DannyPage`, `server/`, or any other files. All changes are inside the `MainDashboard` function (or equivalent) in `App.tsx`.
+
+-----
+
+## Change 1 — Retheme Main Dashboard to Match Danny Page
+
+The Danny page (`/danny` route) already has its own styles defined in the `DS` object inside `DannyPage`. Apply those same visual values everywhere in the main dashboard (the creator grid, profile, generator, calendar, boost screens). Do not change the Danny page itself.
+
+### Design tokens to apply:
+
+```
+Background:     #F9FAFB  (light gray — same as DS.page)
+Card bg:        #FFFFFF with border: 1px solid rgba(0,0,0,0.06) and boxShadow: 0 1px 3px rgba(0,0,0,0.02)
+Primary accent: #FF6B6B  (coral red — same as Danny page buttons and badges)
+Text primary:   #111827
+Text secondary: #6B7280
+Text subtle:    #9CA3AF
+Font:           'DM Sans' — already imported on Danny page, add same @import to main dashboard screens
+Nav bg:         rgba(255,255,255,0.8) with backdropFilter: blur(12px) and borderBottom: 1px solid rgba(0,0,0,0.06)
+Section labels: fontSize 11px, fontWeight 700, letterSpacing 1.5px, color #6B7280, textTransform uppercase
+Active filter:  background #FF6B6B, color #fff
+Inactive filter: background #F3F4F6, color #6B7280, border 1px solid #E5E7EB
+Insight boxes:  background #FFF5F5, border 1px solid rgba(255,107,107,0.2)
+Tags/badges:    background #FF6B6B for primary, rounded-full style (borderRadius 20px)
+Buttons:        background #FF6B6B, color #fff for primary; outlined version: border 1px solid #FF6B6B, color #FF6B6B, bg transparent
+Creator card left border accent: keep using each creator's existing color value (already set per creator)
+```
+
+Replace all existing dark theme values (`#0A0A0F`, `#0F1117`, `#6366F1`, `#818CF8`, `#E2E8F0`, `#94A3B8`, etc.) with the light theme equivalents above.
+
+-----
+
+## Change 2 — Add CSV Upload Modal
+
+Add a `CsvUploadModal` component before the main `App` or `MainDashboard` function. Here is the exact implementation:
+
+```tsx
+function CsvUploadModal({ onClose, onUpload }: { onClose: () => void; onUpload: (creators: any[], company: string) => void }) {
+  const [companyName, setCompanyName] = useState('');
+  const [error, setError] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleFile = (file: File) => {
+    if (!companyName.trim()) { setError('Please enter a company name first.'); return; }
+    setError('');
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true,
+      complete: (results) => {
+        const creators = buildCreatorsFromCSV(results.data as any[], companyName.trim());
+        onUpload(creators, companyName.trim());
+        onClose();
+      }
+    });
+  };
+
+  const DS = {
+    overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' },
+    modal:   { background: '#fff', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' },
+    input:   { width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', outline: 'none', boxSizing: 'border-box' as const },
+    dropzone:(over: boolean) => ({ border: `2px dashed ${over ? '#FF6B6B' : '#E5E7EB'}`, borderRadius: '12px', padding: '32px', textAlign: 'center' as const, background: over ? '#FFF5F5' : '#F9FAFB', cursor: 'pointer', transition: 'all 0.2s' }),
+    btn:     { background: '#FF6B6B', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 22px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' },
+  };
+
+  return (
+    <div style={DS.overlay} onClick={onClose}>
+      <div style={DS.modal} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+          <div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: '#111827' }}>Upload Creator CSV</div>
+            <div style={{ fontSize: '13px', color: '#6B7280', marginTop: '2px' }}>Ads will be tagged with the company name for filtering</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#9CA3AF' }}>×</button>
+        </div>
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Company Name *</label>
+          <input style={DS.input} value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Markable, BrandX, Agency ABC" />
+          {error && <div style={{ fontSize: '12px', color: '#EF4444', marginTop: '6px' }}>{error}</div>}
+        </div>
+        <div style={DS.dropzone(dragOver)}
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+          onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.csv'; i.onchange = (e: any) => { const f = e.target.files[0]; if (f) handleFile(f); }; i.click(); }}>
+          <div style={{ fontSize: '28px', marginBottom: '8px' }}>📂</div>
+          <div style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Drop CSV here or click to browse</div>
+          <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>Must have same column format as existing ad library exports</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+-----
+
+## Change 3 — Wire Up CSV Upload + Company Filter
+
+### 3a. Add a `buildCreatorsFromCSV` function
+
+Place this function at module level (outside any component). It parses the CSV rows into the same creator object shape used by the `CREATORS` array:
+
+```tsx
+function buildCreatorsFromCSV(rows: any[], company = 'Unknown') {
+  const creatorMap: Record<string, any> = {};
+  const NICHE_KEYWORDS: Record<string, string[]> = {
+    'Fashion & Lifestyle': ['fashion','style','outfit','clothes','look','wear','dress','pants','set','lounge'],
+    'Mom & Kids': ['mom','kid','baby','child','toy','lego','art','school','son','daughter'],
+    'Home & Kitchen': ['home','kitchen','organiz','storage','clean','decor','couch','sofa'],
+    'Beauty & Wellness': ['beauty','skin','makeup','serum','glow','hair','lash','brow'],
+    'Fitness': ['workout','gym','fitness','yoga','legging','activewear','protein'],
+  };
+
+  rows.forEach((row) => {
+    const pageUrl = row['Influencer Facebook Page'] || row['Facebook Page'] || '';
+    const rawId = pageUrl.split('/').filter(Boolean).pop() || '';
+    const id = rawId.toLowerCase().replace(/[^a-z0-9]/g, '') || `creator_${Math.random().toString(36).slice(2,7)}`;
+    if (id === 'remarkableas' || !id) return;
+
+    const copy = (row['Ad Details'] || row['Ad Copy'] || '').trim();
+    const videoUrl = row['Video URL'] || row['video_url'] || '';
+    const imageUrl = row['Content Image URL'] || row['image_url'] || '';
+    const hasVideo = !!(videoUrl && videoUrl !== 'null' && videoUrl !== '');
+    const hasStatic = !!(imageUrl && imageUrl !== 'null' && imageUrl !== '') && !hasVideo;
+    const started = row['Started'] || row['Started Date'] || row['start_date'] || '';
+
+    const copyLower = copy.toLowerCase();
+    let niche = 'General';
+    for (const [n, keywords] of Object.entries(NICHE_KEYWORDS)) {
+      if (keywords.some(k => copyLower.includes(k))) { niche = n; break; }
+    }
+
+    const COLORS = ['#FF6B6B','#C084FC','#34D399','#60A5FA','#FB923C','#F472B6','#A78BFA'];
+    const EMOJIS = ['✨','🔥','🌿','👶','💄','🏠','⚡'];
+
+    if (!creatorMap[id]) {
+      const idx = Object.keys(creatorMap).length % COLORS.length;
+      creatorMap[id] = {
+        id, company, name: rawId || id, handle: `@${id}`,
+        niche, tone: 'Authentic, relatable', audience: 'General audience',
+        totalAds: 0, color: COLORS[idx], emoji: EMOJIS[idx],
+        adType: hasVideo ? 'video' : hasStatic ? 'static' : 'video',
+        existingAds: [],
+      };
+    }
+
+    creatorMap[id].totalAds++;
+    if (hasVideo && creatorMap[id].adType === 'static') creatorMap[id].adType = 'mixed';
+    if (hasStatic && creatorMap[id].adType === 'video') creatorMap[id].adType = 'mixed';
+
+    creatorMap[id].existingAds.push({
+      copy, videoUrl, imageUrl, hasVideo, hasStatic,
+      started, libraryId: row['Meta Library ID'] || row['library_id'] || '',
+      shopUrl: row['CTA Shop Now URL'] || row['shop_url'] || '',
+    });
+  });
+
+  return Object.values(creatorMap);
+}
+```
+
+### 3b. Add state variables to the main dashboard component
+
+Inside `MainDashboard` (or `App`, wherever the main state lives), add:
+
+```tsx
+const [showUploadModal, setShowUploadModal] = useState(false);
+const [filterCompany, setFilterCompany] = useState('all');
+```
+
+### 3c. Auto-load the default CSV on mount and tag it as “Markable”
+
+Find the existing `useEffect` that loads `markable-ads-v2.csv` (or similar). Add the `company` tag to that call:
+
+```tsx
+// In the existing CSV fetch useEffect, change the buildCreatorsFromCSV call to:
+const parsed = buildCreatorsFromCSV(data as any[], 'Markable');
+```
+
+If there’s no existing CSV fetch, add this useEffect:
+
+```tsx
+useEffect(() => {
+  fetch('/markable-ads-v2.csv')
+    .then(r => r.text())
+    .then(text => {
+      Papa.parse(text, {
+        header: true, skipEmptyLines: true,
+        complete: (results) => {
+          const parsed = buildCreatorsFromCSV(results.data as any[], 'Markable');
+          setCreators(parsed);
+        }
+      });
+    });
+}, []);
+```
+
+### 3d. Add the upload handler
+
+```tsx
+const handleCsvUpload = (newCreators: any[], company: string) => {
+  setCreators(prev => {
+    const existingIds = new Set(newCreators.map((c: any) => c.id));
+    const kept = prev.filter((c: any) => !existingIds.has(c.id));
+    return [...kept, ...newCreators];
+  });
+  setFilterCompany(company);
+};
+```
+
+### 3e. Derive the companies list for filter chips
+
+```tsx
+const companies = ['all', ...Array.from(new Set(creators.map((c: any) => c.company).filter(Boolean)))];
+```
+
+### 3f. Apply company filter in the filtered creators list
+
+Find where `filteredCreators` is computed. Add a company check:
+
+```tsx
+const filteredCreators = creators.filter((c: any) => {
+  const typeMatch = filterType === 'all' || c.adType === filterType;
+  const companyMatch = filterCompany === 'all' || c.company === filterCompany;
+  return typeMatch && companyMatch;
+});
+```
+
+### 3g. Add the Upload button to the nav
+
+In the main dashboard nav, add a button next to any existing nav actions:
+
+```tsx
+<button
+  style={{ background: 'transparent', color: '#FF6B6B', border: '1px solid #FF6B6B', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+  onClick={() => setShowUploadModal(true)}
+>
+  + Upload CSV
+</button>
+```
+
+### 3h. Render the modal and company filter chips
+
+At the top of the home screen return, just inside the outer `<div>`, add:
+
+```tsx
+{showUploadModal && (
+  <CsvUploadModal
+    onClose={() => setShowUploadModal(false)}
+    onUpload={handleCsvUpload}
+  />
+)}
+```
+
+In the filter bar (where format filter chips like “All / Video / Static / Mixed” live), add company chips after them — but only when there are 2 or more companies loaded:
+
+```tsx
+{companies.length > 1 && (
+  <>
+    <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginLeft: '12px' }}>Company:</span>
+    {companies.map(co => (
+      <button
+        key={co}
+        style={{
+          padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+          background: filterCompany === co ? '#FF6B6B' : '#F3F4F6',
+          color: filterCompany === co ? '#fff' : '#6B7280',
+          border: filterCompany === co ? 'none' : '1px solid #E5E7EB',
+        }}
+        onClick={() => setFilterCompany(co)}
+      >
+        {co === 'all' ? 'All Companies' : co}
+      </button>
+    ))}
+  </>
+)}
+```
+
+### 3i. Show company tag on creator cards
+
+Inside each creator card in the grid, add a subtle company label:
+
+```tsx
+{c.company && (
+  <div style={{ fontSize: '10px', color: '#9CA3AF', marginBottom: '6px' }}>📁 {c.company}</div>
+)}
+```
+
+-----
+
+## Summary of What Should NOT Change
+
+- `DannyPage` component and its `DS` styles — leave completely untouched
+- `server/` directory — no changes
+- All existing API integrations (`/api/anthropic`, `/api/product`, `/api/storefront`, etc.)
+- All existing features: ad flagging, compliance checker, ProductLookup, ScrapedProductCard, saved products, saved generations, boost recommendations, content calendar, favorites
+- The `/danny` route detection logic
+- `CREATORS` hardcoded array (keep as fallback — CSV data supplements it)
