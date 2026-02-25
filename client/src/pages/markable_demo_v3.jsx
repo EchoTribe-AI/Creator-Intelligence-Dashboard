@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CREATOR DATA — Real scrape from Markable Meta Ad Library
+// CREATOR DATA — Real scrape from Meta Ad Library
 // ─────────────────────────────────────────────────────────────────────────────
 const CREATORS = [
   {
@@ -117,194 +117,181 @@ const CREATORS = [
   }
 ];
 
+const DS: any = {
+  page: { minHeight: '100vh', background: '#F9FAFB', color: '#111827', fontFamily: "'DM Sans', sans-serif" },
+  nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', background: 'rgba(255,255,255,0.8)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' },
+  navBrand: { fontSize: '16px', fontWeight: '800', color: '#111827', letterSpacing: '-0.3px' },
+  container: { maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' },
+  card: { background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' },
+  sectionLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: '#6B7280', textTransform: 'uppercase', marginBottom: '14px' },
+  creatorBtn: (active: boolean) => ({
+    display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
+    padding: '12px', borderRadius: '12px', border: active ? '2px solid #FF6B6B' : '1px solid #E5E7EB',
+    background: active ? '#FFF5F5' : '#fff', cursor: 'pointer', transition: 'all 0.2s',
+    color: active ? '#FF6B6B' : '#4B5563', textAlign: 'left' as const
+  }),
+  tabBtn: (active: boolean) => ({
+    padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
+    border: 'none', background: active ? '#FF6B6B' : 'transparent',
+    color: active ? '#fff' : '#6B7280', cursor: 'pointer', transition: 'all 0.2s'
+  }),
+  statValue: { fontSize: '24px', fontWeight: '800', color: '#111827', lineHeight: 1.2 },
+  statLabel: { fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }
+};
+
 export default function MarkableDemoV3() {
   const [selectedCreator, setSelectedCreator] = useState(CREATORS[0]);
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#0f172a", color: "#f8fafc", fontFamily: "Inter, system-ui, sans-serif", padding: "2rem" }}>
-      {/* Header */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 style={{ fontSize: "2rem", fontWeight: "800", background: "linear-gradient(to right, #60a5fa, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Markable Analytics V3
-          </h1>
-          <p style={{ color: "#94a3b8" }}>Real-time Creator & Ad Intelligence</p>
+    <div style={DS.page}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');`}</style>
+      
+      {/* Navigation */}
+      <nav style={DS.nav}>
+        <div style={DS.navBrand}>AD INTELLIGENCE DASHBOARD</div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #E5E7EB', background: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Export</button>
+          <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#FF6B6B', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Connect Data</button>
         </div>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <button style={{ padding: "0.5rem 1rem", backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "0.5rem", color: "#f8fafc", cursor: "pointer" }}>
-            Export Report
-          </button>
-          <button style={{ padding: "0.5rem 1rem", backgroundColor: "#3b82f6", border: "none", borderRadius: "0.5rem", color: "white", fontWeight: "600", cursor: "pointer" }}>
-            Connect API
-          </button>
-        </div>
-      </div>
+      </nav>
 
-      <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "300px 1fr", gap: "2rem" }}>
-        {/* Sidebar: Creator List */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <h3 style={{ fontSize: "0.875rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Creators</h3>
-          {CREATORS.map(c => (
-            <div
-              key={c.id}
-              onClick={() => setSelectedCreator(c)}
-              style={{
-                padding: "1rem",
-                borderRadius: "0.75rem",
-                backgroundColor: selectedCreator.id === c.id ? "#1e293b" : "transparent",
-                border: "1px solid",
-                borderColor: selectedCreator.id === c.id ? "#3b82f6" : "transparent",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem"
-              }}
-            >
-              <div style={{ width: "2.5rem", height: "2.5rem", borderRadius: "50%", backgroundColor: c.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem" }}>
-                {c.emoji}
-              </div>
-              <div>
-                <div style={{ fontWeight: "600", fontSize: "0.9375rem" }}>{c.name}</div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{c.handle}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Main Content */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          {/* Creator Profile Header */}
-          <div style={{ padding: "1.5rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-              <div>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{selectedCreator.name}</h2>
-                <p style={{ color: "#94a3b8" }}>{selectedCreator.niche} • {selectedCreator.audience}</p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <span style={{ padding: "0.25rem 0.75rem", borderRadius: "1rem", backgroundColor: "#0f172a", border: "1px solid #334155", fontSize: "0.75rem", fontWeight: "600", color: selectedCreator.color }}>
-                  {selectedCreator.adType.toUpperCase()} FOCUS
-                </span>
-              </div>
-            </div>
-            <p style={{ fontSize: "0.9375rem", color: "#cbd5e1", fontStyle: "italic" }}>"{selectedCreator.tone}"</p>
-          </div>
-
-          {/* Quick Stats Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
-            <StatCard label="7d Spend" value={`$${selectedCreator.metaData.spend_7d.toLocaleString()}`} icon="💰" />
-            <StatCard label="Avg CTR" value={`${selectedCreator.metaData.ctr_avg}%`} icon="🖱️" />
-            <StatCard label="7d Revenue" value={`$${selectedCreator.amazonData.revenue_7d.toLocaleString()}`} icon="📈" />
-            <StatCard label="Conv. Rate" value={`${selectedCreator.amazonData.conversion_rate}%`} icon="🎯" />
-          </div>
-
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: "2rem", borderBottom: "1px solid #334155", paddingBottom: "0.5rem" }}>
-            <Tab active={activeTab === "overview"} onClick={() => setActiveTab("overview")}>Overview</Tab>
-            <Tab active={activeTab === "ads"} onClick={() => setActiveTab("ads")}>Ad Library</Tab>
-            <Tab active={activeTab === "products"} onClick={() => setActiveTab("products")}>Top Products</Tab>
-          </div>
-
-          {/* Tab Content */}
-          <div style={{ minHeight: "400px" }}>
-            {activeTab === "overview" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-                <div style={{ padding: "1.5rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155" }}>
-                  <h4 style={{ marginBottom: "1rem", fontWeight: "600" }}>Meta Ads Performance</h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <StatRow label="Impressions" value={selectedCreator.metaData.impressions_7d.toLocaleString()} />
-                    <StatRow label="Clicks" value={selectedCreator.metaData.clicks_7d.toLocaleString()} />
-                    <StatRow label="Avg CPC" value={`$${selectedCreator.metaData.cpc_avg}`} />
-                    <StatRow label="Avg CPM" value={`$${selectedCreator.metaData.cpm_avg}`} />
+      <div style={DS.container}>
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
+          
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={DS.sectionLabel}>Creators</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {CREATORS.map(c => (
+                <button key={c.id} onClick={() => setSelectedCreator(c)} style={DS.creatorBtn(selectedCreator.id === c.id)}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
+                    {c.emoji}
                   </div>
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '14px' }}>{c.name}</div>
+                    <div style={{ fontSize: '11px', opacity: 0.7 }}>{c.handle}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            
+            {/* Header Card */}
+            <div style={DS.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px' }}>{selectedCreator.name}</h2>
+                  <p style={{ color: '#6B7280', fontSize: '14px', marginTop: '2px' }}>{selectedCreator.niche} • {selectedCreator.audience}</p>
                 </div>
-                <div style={{ padding: "1.5rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155" }}>
-                  <h4 style={{ marginBottom: "1rem", fontWeight: "600" }}>Amazon Affiliate Metrics</h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <StatRow label="7d Revenue" value={`$${selectedCreator.amazonData.revenue_7d.toLocaleString()}`} />
-                    <StatRow label="EPC (7d)" value={`$${selectedCreator.amazonData.epc_7d}`} />
-                    <StatRow label="Top Category" value={selectedCreator.amazonData.top_category} />
-                    <StatRow label="Active Ads" value={selectedCreator.metaData.active_ad_count} />
-                  </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#FF6B6B', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Primary Ad Format</div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#111827' }}>{selectedCreator.adType.toUpperCase()}</div>
                 </div>
               </div>
-            )}
-
-            {activeTab === "ads" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {selectedCreator.existingAds.map((ad, i) => (
-                  <div key={i} style={{ padding: "1.25rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-                      <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Started {ad.started}</span>
-                      <span style={{ fontSize: "0.75rem", color: "#60a5fa" }}>{ad.hasVideo ? "Video Ad" : "Static Ad"}</span>
-                    </div>
-                    <p style={{ fontSize: "0.875rem", lineHeight: "1.5", color: "#e2e8f0" }}>{ad.copy}</p>
-                  </div>
-                ))}
+              <div style={{ marginTop: '16px', padding: '12px', background: '#F3F4F6', borderRadius: '10px', fontSize: '13px', fontStyle: 'italic', color: '#4B5563' }}>
+                "{selectedCreator.tone}"
               </div>
-            )}
+            </div>
 
-            {activeTab === "products" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                {selectedCreator.products.map((p, i) => (
-                  <div key={i} style={{ padding: "1.25rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontWeight: "600", fontSize: "0.9375rem" }}>{p.name}</div>
-                      <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{p.category} • {p.commission} comm.</div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: "0.75rem", color: p.trend.includes("↑") ? "#4ade80" : "#facc15" }}>{p.trend}</div>
-                      {p.badge && <div style={{ fontSize: "0.625rem", backgroundColor: "#334155", padding: "0.125rem 0.375rem", borderRadius: "0.25rem", marginTop: "0.25rem" }}>{p.badge}</div>}
+            {/* Stats Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+              <div style={DS.card}>
+                <div style={DS.statLabel}>7d Spend</div>
+                <div style={DS.statValue}>${selectedCreator.metaData.spend_7d.toLocaleString()}</div>
+              </div>
+              <div style={DS.card}>
+                <div style={DS.statLabel}>Avg CTR</div>
+                <div style={DS.statValue}>{selectedCreator.metaData.ctr_avg}%</div>
+              </div>
+              <div style={DS.card}>
+                <div style={DS.statLabel}>7d Revenue</div>
+                <div style={DS.statValue}>${selectedCreator.amazonData.revenue_7d.toLocaleString()}</div>
+              </div>
+              <div style={DS.card}>
+                <div style={DS.statLabel}>Conv. Rate</div>
+                <div style={DS.statValue}>{selectedCreator.amazonData.conversion_rate}%</div>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: '8px', background: '#F3F4F6', padding: '4px', borderRadius: '24px', alignSelf: 'flex-start' }}>
+              <button onClick={() => setActiveTab("overview")} style={DS.tabBtn(activeTab === "overview")}>Overview</button>
+              <button onClick={() => setActiveTab("ads")} style={DS.tabBtn(activeTab === "ads")}>Ad Library</button>
+              <button onClick={() => setActiveTab("products")} style={DS.tabBtn(activeTab === "products")}>Top Products</button>
+            </div>
+
+            {/* Tab Content */}
+            <div style={{ minHeight: '400px' }}>
+              {activeTab === "overview" && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  <div style={DS.card}>
+                    <div style={DS.sectionLabel}>Performance Metrics</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <StatRow label="Impressions" value={selectedCreator.metaData.impressions_7d.toLocaleString()} />
+                      <StatRow label="Clicks" value={selectedCreator.metaData.clicks_7d.toLocaleString()} />
+                      <StatRow label="Avg CPC" value={`$${selectedCreator.metaData.cpc_avg}`} />
+                      <StatRow label="Avg CPM" value={`$${selectedCreator.metaData.cpm_avg}`} />
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div style={DS.card}>
+                    <div style={DS.sectionLabel}>Conversion Metrics</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <StatRow label="EPC (7d)" value={`$${selectedCreator.amazonData.epc_7d}`} />
+                      <StatRow label="Top Category" value={selectedCreator.amazonData.top_category} />
+                      <StatRow label="Active Ads" value={selectedCreator.metaData.active_ad_count} />
+                      <StatRow label="Revenue/Ad" value={`$${Math.round(selectedCreator.amazonData.revenue_7d / selectedCreator.metaData.active_ad_count).toLocaleString()}`} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "ads" && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {selectedCreator.existingAds.map((ad, i) => (
+                    <div key={i} style={DS.card}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280' }}>STARTED {ad.started.toUpperCase()}</div>
+                        <div style={{ fontSize: '11px', fontWeight: '700', color: '#FF6B6B' }}>{ad.hasVideo ? "VIDEO" : "STATIC"} FORMAT</div>
+                      </div>
+                      <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151' }}>{ad.copy}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === "products" && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  {selectedCreator.products.map((p, i) => (
+                    <div key={i} style={{ ...DS.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: '700', fontSize: '15px', color: '#111827' }}>{p.name}</div>
+                        <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>{p.category} • {p.commission} commission</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '12px', fontWeight: '700', color: p.trend.includes('↑') ? '#059669' : '#D97706' }}>{p.trend}</div>
+                        {p.badge && <div style={{ fontSize: '10px', background: '#F3F4F6', color: '#4B5563', padding: '2px 8px', borderRadius: '4px', marginTop: '4px', fontWeight: '600' }}>{p.badge}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, icon }) {
-  return (
-    <div style={{ padding: "1.25rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-        <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase" }}>{label}</span>
-        <span>{icon}</span>
-      </div>
-      <div style={{ fontSize: "1.25rem", fontWeight: "700" }}>{value}</div>
     </div>
   );
 }
 
 function StatRow({ label, value }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={{ color: "#94a3b8", fontSize: "0.875rem" }}>{label}</span>
-      <span style={{ fontWeight: "600" }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #F3F4F6' }}>
+      <span style={{ color: '#6B7280', fontSize: '13px', fontWeight: '500' }}>{label}</span>
+      <span style={{ fontWeight: '700', color: '#111827', fontSize: '14px' }}>{value}</span>
     </div>
-  );
-}
-
-function Tab({ children, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: "0.5rem 0",
-        backgroundColor: "transparent",
-        border: "none",
-        borderBottom: active ? "2px solid #3b82f6" : "2px solid transparent",
-        color: active ? "#3b82f6" : "#94a3b8",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "all 0.2s"
-      }}
-    >
-      {children}
-    </button>
   );
 }
