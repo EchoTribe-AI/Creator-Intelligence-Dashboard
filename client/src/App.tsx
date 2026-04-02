@@ -2473,11 +2473,23 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     inputLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#6B7280', textTransform: 'uppercase', marginBottom: '10px' },
   };
 
+  const PLATFORM_LABELS: Record<string, { label: string; color: string }> = {
+    markable:  { label: '✨ Markable',  color: '#C084FC' },
+    urlgenius: { label: '🔗 URLGenius', color: '#34D399' },
+    mavely:    { label: '🎯 Mavely',    color: '#F472B6' },
+  };
+
+  const filteredCreators = creators
+    .filter((c: any) => filterType === "all" || c.adType === filterType)
+    .filter((c: any) => filterPlatform === "all" || c.platform === filterPlatform);
+
+  const visibleCreators = filteredCreators.slice(0, visibleCreatorCount);
+
   const stats = [
-    { label: 'Total Creators', value: creators.length },
-    { label: 'Total Ads', value: creators.reduce((sum: any, c: any) => sum + (c.totalAds || 0), 0) },
-    { label: 'Video Only', value: creators.filter((c: any) => c.adType === 'video').length },
-    { label: 'Static Only', value: creators.filter((c: any) => c.adType === 'static').length },
+    { label: 'Creators', value: filteredCreators.length },
+    { label: 'Total Ads', value: filteredCreators.reduce((sum: any, c: any) => sum + (c.totalAds || 0), 0) },
+    { label: 'Video Only', value: filteredCreators.filter((c: any) => c.adType === 'video').length },
+    { label: 'Static Only', value: filteredCreators.filter((c: any) => c.adType === 'static').length },
   ];
 
   const topOpportunities = creators
@@ -2535,12 +2547,6 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     acc[creatorId].flags.push(flag);
     return acc;
   }, {});
-
-  const filteredCreators = creators
-    .filter((c: any) => filterType === "all" || c.adType === filterType)
-    .filter((c: any) => filterPlatform === "all" || c.platform === filterPlatform);
-
-  const visibleCreators = filteredCreators.slice(0, visibleCreatorCount);
 
   // ── HOME ──────────────────────────────────────────────────────────────────
   if (screen === "home") return (
@@ -2613,10 +2619,18 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "14px" }}>
                 {visibleCreators.map((c: any) => {
                   const adMeta = AD_TYPE_LABELS[c.adType as keyof typeof AD_TYPE_LABELS];
+                  const platform = PLATFORM_LABELS[c.platform];
                   return (
                     <div key={c.id} className="cc" style={{ ...S.card, borderLeft: `3px solid ${c.color}` }} onClick={() => selectCreator(c)}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                        <div style={{ fontSize: "22px" }}>{c.emoji}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ fontSize: "22px" }}>{c.emoji}</div>
+                          {platform && (
+                            <span style={{ fontSize: "11px", fontWeight: "700", color: platform.color, background: `${platform.color}15`, padding: "2px 8px", borderRadius: "20px" }}>
+                              {platform.label}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                           <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color }}>{adMeta.label}</span>
                           <span style={{ ...S.tag, background: `${c.color}20`, color: c.color }}>{c.totalAds} ads</span>
@@ -2630,13 +2644,13 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 })}
               </div>
 
-              {creators.length > visibleCreatorCount && (
+              {filteredCreators.length > visibleCreatorCount && (
                 <div style={{ textAlign: 'center', marginTop: '32px', marginBottom: '48px' }}>
                   <button
                     style={{ ...S.btnOutline, padding: '12px 32px', fontSize: '14px' }}
                     onClick={() => setVisibleCreatorCount(prev => prev + 10)}
                   >
-                    Load More Creators ({creators.length - visibleCreatorCount} remaining)
+                    Load More Creators ({filteredCreators.length - visibleCreatorCount} remaining)
                   </button>
                 </div>
               )}
