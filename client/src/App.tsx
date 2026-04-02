@@ -2548,7 +2548,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); @keyframes spin { to { transform: rotate(360deg); } } .cc:hover { border-color: rgba(201,169,110,0.5) !important; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }`}</style>
       <nav style={S.nav}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={S.navBrand}>Markable</span>
+          <span style={S.navBrand}>EchoTribe</span>
           <span style={S.navBadge}>Creator Intelligence</span>
         </div>
         <span style={{ fontSize: "12px", color: "#999999" }}>Demo · Feb 2026</span>
@@ -2753,7 +2753,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
             <div style={{ display: "flex", alignItems: "center" }}>
-              <span style={S.navBrand}>Markable</span>
+              <span style={S.navBrand}>EchoTribe</span>
               <span style={S.navBadge}>Creator Intelligence</span>
             </div>
             <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("home")}>← All</button>
@@ -3232,7 +3232,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBrand}>EchoTribe</span>
             <span style={S.navBadge}>Creator Intelligence</span>
           </div>
           <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>
@@ -3317,7 +3317,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBrand}>EchoTribe</span>
             <span style={S.navBadge}>Creator Intelligence</span>
           </div>
           <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>
@@ -3367,7 +3367,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBrand}>EchoTribe</span>
             <span style={S.navBadge}>Creator Intelligence</span>
           </div>
           <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>

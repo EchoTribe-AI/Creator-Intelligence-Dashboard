@@ -1,6 +1,61 @@
 {
   "generations": [
     {
+      "_id": "1775159938889",
+      "creatorId": "becomingbrittanyjohnson",
+      "productName": "These Walmart PJs are tooooo good",
+      "productData": {
+        "name": "These Walmart PJs are tooooo good",
+        "category": "Lifestyle & Finds",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "These PJs are a total game changer",
+          "Found the coziest PJs ever",
+          "Can't get over how soft these are"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "These PJs are tooooo good y'all!",
+            "caption": "I'm not even kidding - these pajamas are everything! The fabric is buttery soft and they fit like a dream. Perfect for lounging around the house or actually sleeping in. I grabbed a few colors because at this price point, why not? They wash beautifully too and don't lose their softness. Who else is a sucker for cozy PJs?",
+            "cta": "Shop these cozy finds!",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Found my new favorite PJs!",
+            "caption": "Okay but seriously, these pajamas are incredible! Super soft, comfortable fit, and they come in the prettiest colors. I've been living in them lately and they're holding up so well. If you love cozy nights in as much as I do, you need these in your life!",
+            "cta": "Grab yours now!",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "Can we talk about these amazing PJs?",
+            "caption": "I had to share these because they're honestly incredible! Swipe to see why I'm obsessed. The comfort level is unmatched and they're so cute too. Perfect for cozy nights or lazy weekend mornings!",
+            "slides": [
+              "The fabric is buttery soft and feels luxury",
+              "They fit perfectly - not too tight, not too loose",
+              "Multiple colors available and they wash beautifully"
+            ],
+            "cta": "Shop the comfort!",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Video format would work well to show the fabric texture and fit in motion, allowing viewers to see the comfort factor. Static image should focus on lifestyle shot showing the cozy vibe. Carousel can highlight multiple product benefits and color options.",
+        "boost_recommendation": "Target women 25-45 interested in sleepwear, comfort wear, and home lifestyle content. Use lookalike audiences based on previous pajama/loungewear purchasers. Focus on evening and weekend scheduling when audience is thinking about relaxation.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-04-02T19:58:58.889Z"
+    },
+    {
       "_id": "1771688054074",
       "creatorId": "brookesbuys",
       "productName": "Back in Stock Home security hack hidden book sa",
