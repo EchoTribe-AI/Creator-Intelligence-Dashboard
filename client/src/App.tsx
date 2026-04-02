@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Papa from 'papaparse';
-import MultiBrandIntelligence from './pages/multi-brand-intelligence';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DANNY PAGE COMPONENTS & DATA
@@ -1799,9 +1798,6 @@ export default function App() {
     return <DannyPage />;
   }
 
-  const isBrandsRoute = pathname === '/brands' || pathname === '/brands/';
-  if (isBrandsRoute) return <MultiBrandIntelligence />;
-
   return <MainDashboard />;
 }
 
@@ -1888,22 +1884,28 @@ function MainDashboard() {
   const [loadingMsg, setLoadingMsg] = useState("");
 
   useEffect(() => {
-    fetch('/shared/markable-ads-v2.csv')
-      .then(res => {
-        if (!res.ok) throw new Error('CSV not found');
-        return res.text();
-      })
-      .then(csv => {
-        const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
-        const parsed = buildCreatorsFromCSV(data);
-        setCreators(parsed);
-        console.log("First creator parsed:", parsed[0]);
-        setCsvLoading(false);
-      })
-      .catch(err => {
-        console.error("CSV Loading Error:", err);
-        setCsvLoading(false);
-      });
+    const sources = [
+      { file: '/shared/markable-ads.csv', platform: 'markable' },
+      { file: '/shared/urlgenius-ads.csv', platform: 'urlgenius' },
+      { file: '/shared/mavely-ads.csv', platform: 'mavely' },
+    ];
+
+    Promise.all(
+      sources.map(({ file, platform }) =>
+        fetch(file)
+          .then(r => r.ok ? r.text() : '')
+          .then(csv => {
+            if (!csv) return [];
+            const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
+            return buildCreatorsFromCSV(data, platform);
+          })
+          .catch(() => [])
+      )
+    ).then(results => {
+      const all = (results.flat() as any[]).sort((a: any, b: any) => b.totalAds - a.totalAds);
+      setCreators(all);
+      setCsvLoading(false);
+    });
   }, []);
 
   function cleanShopUrl(url: string | null) {
@@ -1925,7 +1927,7 @@ function MainDashboard() {
     }
   }
 
-  function buildCreatorsFromCSV(rows: any[]) {
+  function buildCreatorsFromCSV(rows: any[], platform: string) {
     const map: any = {};
 
     rows.forEach(row => {
@@ -1949,6 +1951,7 @@ function MainDashboard() {
           emoji: assignEmoji(id, row['Ad Details']),
           profileImage: row['Profile Image']?.trim() || null,
           facebookPage: fbUrl,
+          platform,
           existingAds: [],
           products: [],
           // Keep structure for compatibility
@@ -2095,6 +2098,7 @@ function MainDashboard() {
     ];
   }
   const [filterType, setFilterType] = useState("all");
+  const [filterPlatform, setFilterPlatform] = useState("all");
   const [scrapedProducts, setScrapedProducts] = useState([]);
   const [savedProducts, setSavedProducts] = useState([]);
   const [savedGenerations, setSavedGenerations] = useState<any[]>([]);
@@ -2514,9 +2518,9 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     return acc;
   }, {});
 
-  const filteredCreators = filterType === "all" 
-    ? creators 
-    : creators.filter((c: any) => c.adType === filterType);
+  const filteredCreators = creators
+    .filter((c: any) => filterType === "all" || c.adType === filterType)
+    .filter((c: any) => filterPlatform === "all" || c.platform === filterPlatform);
 
   const visibleCreators = filteredCreators.slice(0, visibleCreatorCount);
 
@@ -2529,18 +2533,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           <span style={S.navBrand}>Markable</span>
           <span style={S.navBadge}>Creator Intelligence</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            onClick={() => {
-              window.history.pushState({}, '', '/brands');
-              window.dispatchEvent(new PopStateEvent('popstate'));
-            }}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #E5E7EB', background: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#7C3AED' }}
-          >
-            Multi-Brand →
-          </button>
-          <span style={{ fontSize: "12px", color: "#999999" }}>Demo · Feb 2026</span>
-        </div>
+        <span style={{ fontSize: "12px", color: "#999999" }}>Demo · Feb 2026</span>
       </nav>
       <div style={S.container}>
         <div style={{ marginBottom: "32px" }}>
@@ -2585,6 +2578,12 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                     ⚠️ Operational Flags
                   </button>
                 </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+                {[["all","All Brands"], ["markable","✨ Markable"], ["urlgenius","🔗 URLGenius"], ["mavely","🎯 Mavely"]].map(([val, label]) => (
+                  <button key={val} style={S.btnFilter(filterPlatform === val)} onClick={() => setFilterPlatform(val)}>{label}</button>
+                ))}
               </div>
 
               <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
