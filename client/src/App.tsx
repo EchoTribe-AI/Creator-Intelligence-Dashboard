@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Papa from 'papaparse';
+import MultiBrandIntelligence from './pages/multi-brand-intelligence';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DANNY PAGE COMPONENTS & DATA
@@ -1798,6 +1799,9 @@ export default function App() {
     return <DannyPage />;
   }
 
+  const isBrandsRoute = pathname === '/brands' || pathname === '/brands/';
+  if (isBrandsRoute) return <MultiBrandIntelligence />;
+
   return <MainDashboard />;
 }
 
@@ -2525,7 +2529,18 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           <span style={S.navBrand}>Markable</span>
           <span style={S.navBadge}>Creator Intelligence</span>
         </div>
-        <span style={{ fontSize: "12px", color: "#999999" }}>Demo · Feb 2026</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={() => {
+              window.history.pushState({}, '', '/brands');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #E5E7EB', background: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#7C3AED' }}
+          >
+            Multi-Brand →
+          </button>
+          <span style={{ fontSize: "12px", color: "#999999" }}>Demo · Feb 2026</span>
+        </div>
       </nav>
       <div style={S.container}>
         <div style={{ marginBottom: "32px" }}>

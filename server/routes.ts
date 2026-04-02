@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import express from "express";
 import type { Express } from "express";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -8,6 +9,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getProductData, getStorefrontProducts } from "./scraper.js";
 import { saveProduct, getProductsByCreator, getAllProducts, deleteProduct, saveGeneration, getGenerationsByCreator, getGenerationById, deleteGeneration } from './db.js';
+import { importCSV, queryAds, getCreatorsByPlatform, getStats, readPlatformsDb } from './services/csv-parser.js';
 
 export async function registerRoutes(
   httpServer: Server,
@@ -200,8 +202,81 @@ export async function registerRoutes(
     res.json({ status: 'ok', scraper_active: !!process.env.CRAWLBASE_JS_TOKEN });
   });
 
+  // ── PLATFORMS ──────────────────────────────────────────────────────────────
+  app.get('/api/platforms', (_req, res) => {
+    try {
+      const { platforms } = readPlatformsDb();
+      res.json({ success: true, platforms });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── META ADS IMPORT ────────────────────────────────────────────────────────
+  // Client sends raw CSV as text body; platform_id comes as query param.
+  app.post('/api/meta-ads/import', express.text({ limit: '10mb' }), async (req, res) => {
+    const { platform_id } = req.query as { platform_id?: string };
+    const csv_text = req.body as string;
+    if (!platform_id || !csv_text) {
+      return res.status(400).json({ error: 'platform_id query param and CSV body required' });
+    }
+    try {
+      const { platforms } = readPlatformsDb();
+      if (!platforms.find(p => p.id === platform_id)) {
+        return res.status(400).json({ error: `Unknown platform: ${platform_id}` });
+      }
+      const result = await importCSV(csv_text, platform_id);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── META ADS CREATORS ──────────────────────────────────────────────────────
+  app.get('/api/meta-ads/creators', (req, res) => {
+    const { platform } = req.query as { platform?: string };
+    if (!platform) return res.status(400).json({ error: 'platform query param required' });
+    try {
+      const creators = getCreatorsByPlatform(platform);
+      res.json({ success: true, creators });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── META ADS SEARCH ────────────────────────────────────────────────────────
+  app.get('/api/meta-ads/search', (req, res) => {
+    const { platform, creator, ad_type, q, limit, offset } = req.query as Record<string, string>;
+    try {
+      const result = queryAds({
+        platform_id: platform,
+        creator_handle: creator,
+        ad_type: (ad_type as 'video' | 'static') || undefined,
+        search: q,
+        limit: limit ? parseInt(limit, 10) : 50,
+        offset: offset ? parseInt(offset, 10) : 0,
+      });
+      res.json({ success: true, ...result });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ── META ADS STATS ─────────────────────────────────────────────────────────
+  app.get('/api/meta-ads/stats', (_req, res) => {
+    try {
+      const stats = getStats();
+      res.json({ success: true, ...stats });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   if (process.env.NODE_ENV === 'production') {
     app.get(['/danny', '/danny/'], (_req, res) => {
+      res.sendFile(path.resolve(process.cwd(), "dist/public/index.html"));
+    });
+    app.get(['/brands', '/brands/'], (_req, res) => {
       res.sendFile(path.resolve(process.cwd(), "dist/public/index.html"));
     });
   }
