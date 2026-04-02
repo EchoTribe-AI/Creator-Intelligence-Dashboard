@@ -1897,7 +1897,8 @@ function MainDashboard() {
           .then(csv => {
             if (!csv) return [];
             const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
-            return buildCreatorsFromCSV(data, platform);
+            const normalized = (data as any[]).map(normalizeCsvRow);
+            return buildCreatorsFromCSV(normalized, platform);
           })
           .catch(() => [])
       )
@@ -1925,6 +1926,23 @@ function MainDashboard() {
     } catch {
       return url;
     }
+  }
+
+  // Normalize CSS-class column names (from raw Meta Ad Library scrape) to
+  // the readable names buildCreatorsFromCSV expects. Pass-through if already normalized.
+  function normalizeCsvRow(row: any): any {
+    if ('Ad Details' in row) return row; // already has proper headers
+    return {
+      'Meta Library ID':         row['x8t9es0 2']    ?? '',
+      'Started Date':            row['x8t9es0 3']    ?? '',
+      'Profile Image':           row['_8nqq src']    ?? '',
+      'Influencer Facebook Page':row['xt0psk2 href'] ?? '',
+      'Ad Details':              row['_4ik4']         ?? '',
+      'Video URL':               row['x1lliihq src'] ?? '',
+      'Content Image URL':       row['x15mokao src'] ?? '',
+      'CTA Shop Now URL':        row['x1hl2dhg href']?? '',
+      'Ad Company':              '',
+    };
   }
 
   function buildCreatorsFromCSV(rows: any[], platform: string) {
