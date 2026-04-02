@@ -1,6 +1,63 @@
 {
   "generations": [
     {
+      "_id": "1775160185285",
+      "creatorId": "everythingenvy",
+      "productName": "Hair in the drain Not todayThis little gadget c",
+      "productData": {
+        "name": "Hair in the drain Not todayThis little gadget c",
+        "category": "Fashion & Lifestyle",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "Hair in the drain? Not today👏 This little gadget catches all the stray strands before they turn into a clogged nightmare",
+          "Finally, a drain cover that's actually cute AND functional - no more fishing hair out of the shower drain",
+          "This flower-shaped drain catcher is the bathroom upgrade you didn't know you needed"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "Hair in the drain? Not today👏",
+            "caption": "This little gadget catches all the stray strands before they turn into a clogged nightmare. Fits most shower drains, super easy to use, and honestly… kinda satisfying to watch it work. 😍\n\nWe've tried a ton of different drain hair catchers and this is one of the more subtle ones – the flower is kinda cute sitting on the drain like that! 🤭\n\nSend this to someone who has great hair but doesn't want a plumbing disaster on their hands💇🏼‍♀️",
+            "cta": "Comment \"DRAIN\" to get the details or check the \"bathroom favorites\" folder on our Amazon storefront!!",
+            "disclosure": "#ad #amazonfinds #founditonamazon #bathroomhacks #homeessentials",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Finally, a drain cover that's actually cute AND functional",
+            "caption": "No more fishing hair out of the shower drain 🙅🏼‍♀️ This flower-shaped drain catcher sits perfectly on most drains and catches all those stray strands before they cause problems!\n\nIt's so much prettier than those ugly plastic ones, and honestly… watching it work is oddly satisfying 😅\n\nSEND to someone who needs this in their life!",
+            "cta": "Comment \"NEED\" to get a DM or head to our Amazon Storefront bathroom folder to shop. Xx",
+            "disclosure": "#ad #founditonamazon #bathroomessentials #draincover #amazonhome",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "This flower-shaped drain catcher is the bathroom upgrade you didn't know you needed",
+            "caption": "Hair clogs are the WORST but this little gadget prevents them completely 🌸 It's functional, pretty, and fits most standard shower drains!\n\nWe're obsessed with how subtle and cute this looks compared to other drain catchers. Your bathroom deserves better than ugly plastic! ✨",
+            "slides": [
+              "Hair in the drain? Not today! 🌸",
+              "Fits most shower drains perfectly",
+              "Catches hair before it clogs your pipes",
+              "So much cuter than plastic alternatives",
+              "Easy to clean and maintain"
+            ],
+            "cta": "Comment \"FLOWER\" to get a DM or check our Amazon Storefront bathroom essentials folder!",
+            "disclosure": "#ad #amazonfinds #founditonamazon #bathroomhacks #homeessentials",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Video format works exceptionally well for this creator's audience based on existing high-performing drain catcher content. The product's visual functionality (watching hair get caught) creates natural ASMR/satisfying content that performs well in video. Static and carousel formats can highlight the aesthetic flower design that differentiates this product from competitors.",
+        "boost_recommendation": "Boost the video ad variation first as it aligns with the creator's proven format success. Target women 25-45 with interests in home organization, bathroom decor, and home maintenance. Use lookalike audiences based on existing Amazon storefront shoppers for optimal performance.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-04-02T20:03:05.285Z"
+    },
+    {
       "_id": "1775159938889",
       "creatorId": "becomingbrittanyjohnson",
       "productName": "These Walmart PJs are tooooo good",
