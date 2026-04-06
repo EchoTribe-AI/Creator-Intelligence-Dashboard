@@ -1,6 +1,61 @@
 {
   "generations": [
     {
+      "_id": "1775489878272",
+      "creatorId": "thecollecteddwelling",
+      "productName": "WOW  Comment Drapes for links The listing sho",
+      "productData": {
+        "name": "WOW  Comment Drapes for links The listing sho",
+        "category": "Home & Decor",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "Window transformation reveal - showing drapes dramatically changing room look",
+          "Price value emphasis - highlighting the two-panel deal with coupon savings",
+          "Room styling impact - demonstrating how drapes elevate home decor instantly"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "WOW 🤩 These drapes completely transformed our space!",
+            "caption": "WOW 🤩 Comment 'Drapes' for links. The listing shows price for TWO panels. Also make sure to clip the coupon for extra savings! These window treatments instantly elevate any room and give you that designer look without the designer price tag. The quality is amazing and they hang beautifully 🙌🏼",
+            "cta": "Comment 'Drapes' for links",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Designer look for less ✨",
+            "caption": "These drapes are a total game changer! Comment 'Window' for links. Love that the listing price is for TWO panels - such great value. Don't forget to clip that coupon too! Perfect for creating that luxury feel in any room without breaking the budget 💫",
+            "cta": "Comment 'Window' for links",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "Room refresh made easy 🏠",
+            "caption": "SO GOOD! Comment 'Transform' and I'll get you the link to these amazing drapes. Two panels included in the price plus there's a coupon to clip! These are the kind of home finds that make such a difference in your space 🤩",
+            "slides": [
+              "These drapes give instant designer vibes to any room",
+              "Two panels included in one price - amazing value!",
+              "Don't forget to clip the coupon for extra savings"
+            ],
+            "cta": "Comment 'Transform' for links",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Video format aligns perfectly with creator's existing successful drape content. The transformation reveal works well for window treatments, showing before/during/after styling. Static image can showcase the drapes in a styled room setting, while carousel allows for multiple styling examples or detail shots.",
+        "boost_recommendation": "Strong boost potential - matches creator's proven 'WOW' drape format that performs well. The two-panel value proposition and coupon mention create natural engagement drivers. Home decor audience responds well to transformation content.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-04-06T15:37:58.272Z"
+    },
+    {
       "_id": "1775160185285",
       "creatorId": "everythingenvy",
       "productName": "Hair in the drain Not todayThis little gadget c",
