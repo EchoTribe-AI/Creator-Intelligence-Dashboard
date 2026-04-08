@@ -1884,22 +1884,41 @@ function MainDashboard() {
   const [loadingMsg, setLoadingMsg] = useState("");
 
   useEffect(() => {
-    const sources = [
-      { file: '/shared/markable-ads.csv', platform: 'markable' },
-      { file: '/shared/urlgenius-ads.csv', platform: 'urlgenius' },
-      { file: '/shared/mavely-ads.csv', platform: 'mavely' },
-    ];
+    const platforms = ['markable', 'urlgenius', 'mavely'];
 
     Promise.all(
-      sources.map(({ file, platform }) =>
-        fetch(file)
-          .then(r => r.ok ? r.text() : '')
-          .then(csv => {
-            if (!csv) return [];
-            const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
-            const normalized = (data as any[]).map(normalizeCsvRow);
-            return buildCreatorsFromCSV(normalized, platform);
-          })
+      platforms.map(platform =>
+        fetch(`/api/meta-ads/creators?platform=${platform}`)
+          .then(r => r.ok ? r.json() : { creators: [] })
+          .then(({ creators: summaries }: { creators: any[] }) =>
+            (summaries || []).map((s: any) => {
+              const id = s.handle.toLowerCase().replace(/^@/, '');
+              const hasVideo = s.video_count > 0;
+              const hasStatic = s.static_count > 0;
+              const adType = hasVideo && hasStatic ? 'mixed' : hasVideo ? 'video' : 'static';
+              const niche = inferNiche(id, '');
+              return {
+                id,
+                name: formatCreatorName(s.display_name || id),
+                handle: s.handle.startsWith('@') ? s.handle : `@${s.handle}`,
+                niche,
+                tone: 'Authentic, relatable',
+                audience: 'Women 25–45',
+                color: assignColor(id),
+                emoji: assignEmoji(id, ''),
+                profileImage: s.profile_image_url || null,
+                facebookPage: s.facebook_page_url || null,
+                platform,
+                totalAds: s.ad_count,
+                adType,
+                existingAds: [],
+                products: inferProducts(niche),
+                metaData: { top_creative_type: adType === 'video' ? 'video' : 'static', active_ad_count: s.ad_count },
+                walmartData: { top_category: 'General', avg_commission_rate: '8%' },
+                amazonData: { top_category: 'General', avg_commission_rate: '8%' },
+              };
+            })
+          )
           .catch(() => [])
       )
     ).then(results => {
@@ -2171,6 +2190,36 @@ function MainDashboard() {
     loadSavedProducts(creator.id);
     loadSavedGenerations(creator.id);
     loadFavorites(creator.id);
+
+    if (creator.existingAds.length === 0) {
+      const handle = creator.handle.replace(/^@/, '');
+      fetch(`/api/meta-ads/search?platform=${creator.platform}&creator=${handle}&limit=100`)
+        .then(r => r.ok ? r.json() : { ads: [] })
+        .then(({ ads }: { ads: any[] }) => {
+          const mappedAds = ads.map((ad: any) => ({
+            started: ad.start_date || '',
+            copy: ad.ad_copy || '',
+            hasVideo: !!ad.video_url,
+            hasStatic: !!ad.image_url,
+            videoUrl: ad.video_url || null,
+            imageUrl: ad.image_url || null,
+            cached_thumbnail: ad.cached_thumbnail || null,
+            shopUrl: ad.cta_url || null,
+            landing_url: ad.landing_url || null,
+            libraryId: ad.library_id || '',
+          }));
+          setSelectedCreator((prev: any) =>
+            prev && prev.id === creator.id ? { ...prev, existingAds: mappedAds } : prev
+          );
+          setCreators((prev: any[]) =>
+            prev.map(c => c.id === creator.id && c.platform === creator.platform
+              ? { ...c, existingAds: mappedAds }
+              : c
+            )
+          );
+        })
+        .catch(e => console.warn('Could not lazy-load ads:', e));
+    }
   };
 
   const generateContent = async (product) => {
