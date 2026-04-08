@@ -2848,7 +2848,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
 
           {/* ── EXISTING ADS ── */}
           <div style={S.sectionLabel}>Existing Ads — Click to Generate AI Ad Variations</div>
-          {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => {
+          {selectedCreator.existingAds.filter((ad: any) => !!(ad.videoUrl || ad.imageUrl)).slice(0, visibleAdsCount).map((ad, i) => {
             const adProductName = (ad.copy || selectedCreator.name || 'Ad Creative').substring(0, 50).replace(/[^\w\s]/g, '').trim() || 'Ad Creative';
             const adProduct = {
               name: adProductName,
@@ -2863,22 +2863,28 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             const existingFlag = adFlags[flagKey];
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
-              <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
+              <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", position: "relative" }}>
                 {(() => {
-                  const thumbSrc = ad.cached_thumbnail || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null) || selectedCreator.profileImage;
-                  return ad.videoUrl && ad.videoUrl !== 'null' ? (
-                    <video
-                        src={ad.videoUrl}
-                        poster={thumbSrc ?? undefined}
+                  const thumbSrc = ad.cached_thumbnail
+                    || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null)
+                    || selectedCreator.profileImage
+                    || null;
+                  return thumbSrc ? (
+                    <>
+                      <img
+                        src={thumbSrc}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        preload="metadata"
-                        playsInline
-                        muted
+                        alt="Ad thumbnail"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
-                  ) : thumbSrc ? (
-                    <img src={thumbSrc} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
+                      {ad.videoUrl && ad.videoUrl !== 'null' && (
+                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "28px", height: "28px", background: "rgba(0,0,0,0.55)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                          <div style={{ width: 0, height: 0, borderStyle: "solid", borderWidth: "6px 0 6px 11px", borderColor: "transparent transparent transparent white", marginLeft: "2px" }} />
+                        </div>
+                      )}
+                    </>
                   ) : (
-                    <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
+                    <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.videoUrl ? "📹" : "🖼️"}</div>
                   );
                 })()}
               </div>
@@ -2984,12 +2990,12 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </div>
             );
           })}
-          {selectedCreator.existingAds.length > visibleAdsCount && (
+          {selectedCreator.existingAds.filter((ad: any) => !!(ad.videoUrl || ad.imageUrl)).length > visibleAdsCount && (
             <button
               style={{ ...S.btnOutline, marginTop: '12px', width: '100%', padding: '12px' }}
               onClick={() => setVisibleAdsCount(prev => prev + 6)}
             >
-              Load More Ads ({selectedCreator.existingAds.length - visibleAdsCount} remaining)
+              Load More Ads ({selectedCreator.existingAds.filter((ad: any) => !!(ad.videoUrl || ad.imageUrl)).length - visibleAdsCount} remaining)
             </button>
           )}
 
