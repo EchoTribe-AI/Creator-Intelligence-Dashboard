@@ -2865,30 +2865,51 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", position: "relative" }}>
-                {/* Emoji fallback always rendered behind — visible when image fails or is absent */}
+                {/* Emoji fallback always rendered behind — visible when image/video fails */}
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "24px" }}>
                   {ad.videoUrl ? "📹" : "🖼️"}
                 </div>
                 {(() => {
                   const thumbSrc = ad.cached_thumbnail
                     || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null)
+                    || selectedCreator.profileImage
                     || null;
-                  if (!thumbSrc) return null;
-                  return (
-                    <>
-                      <img
-                        src={thumbSrc}
-                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                        alt="Ad thumbnail"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                      {ad.videoUrl && ad.videoUrl !== 'null' && (
-                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "28px", height: "28px", background: "rgba(0,0,0,0.55)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                  const hasVideo = !!(ad.videoUrl && ad.videoUrl !== 'null');
+                  if (thumbSrc) {
+                    return (
+                      <>
+                        <img
+                          src={thumbSrc}
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                          alt="Ad thumbnail"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {hasVideo && (
+                          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "28px", height: "28px", background: "rgba(0,0,0,0.55)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 1 }}>
+                            <div style={{ width: 0, height: 0, borderStyle: "solid", borderWidth: "6px 0 6px 11px", borderColor: "transparent transparent transparent white", marginLeft: "2px" }} />
+                          </div>
+                        )}
+                      </>
+                    );
+                  }
+                  if (hasVideo) {
+                    return (
+                      <>
+                        <video
+                          src={ad.videoUrl!}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.001; }}
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "28px", height: "28px", background: "rgba(0,0,0,0.55)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 1 }}>
                           <div style={{ width: 0, height: 0, borderStyle: "solid", borderWidth: "6px 0 6px 11px", borderColor: "transparent transparent transparent white", marginLeft: "2px" }} />
                         </div>
-                      )}
-                    </>
-                  );
+                      </>
+                    );
+                  }
+                  return null;
                 })()}
               </div>
               <div style={{ flex: "1 1 250px", minWidth: 0 }}>
