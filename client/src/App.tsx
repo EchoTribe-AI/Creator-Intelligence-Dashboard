@@ -1884,22 +1884,29 @@ function MainDashboard() {
   const [loadingMsg, setLoadingMsg] = useState("");
 
   useEffect(() => {
-    fetch('/shared/markable-ads-v2.csv')
-      .then(res => {
-        if (!res.ok) throw new Error('CSV not found');
-        return res.text();
-      })
-      .then(csv => {
-        const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
-        const parsed = buildCreatorsFromCSV(data);
-        setCreators(parsed);
-        console.log("First creator parsed:", parsed[0]);
-        setCsvLoading(false);
-      })
-      .catch(err => {
-        console.error("CSV Loading Error:", err);
-        setCsvLoading(false);
-      });
+    const sources = [
+      { file: '/shared/markable-ads.csv', platform: 'markable' },
+      { file: '/shared/urlgenius-ads.csv', platform: 'urlgenius' },
+      { file: '/shared/mavely-ads.csv', platform: 'mavely' },
+    ];
+
+    Promise.all(
+      sources.map(({ file, platform }) =>
+        fetch(file)
+          .then(r => r.ok ? r.text() : '')
+          .then(csv => {
+            if (!csv) return [];
+            const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
+            const normalized = (data as any[]).map(normalizeCsvRow);
+            return buildCreatorsFromCSV(normalized, platform);
+          })
+          .catch(() => [])
+      )
+    ).then(results => {
+      const all = (results.flat() as any[]).sort((a: any, b: any) => b.totalAds - a.totalAds);
+      setCreators(all);
+      setCsvLoading(false);
+    });
   }, []);
 
   function cleanShopUrl(url: string | null) {
@@ -1921,7 +1928,24 @@ function MainDashboard() {
     }
   }
 
-  function buildCreatorsFromCSV(rows: any[]) {
+  // Normalize CSS-class column names (from raw Meta Ad Library scrape) to
+  // the readable names buildCreatorsFromCSV expects. Pass-through if already normalized.
+  function normalizeCsvRow(row: any): any {
+    if ('Ad Details' in row) return row; // already has proper headers
+    return {
+      'Meta Library ID':         row['x8t9es0 2']    ?? '',
+      'Started Date':            row['x8t9es0 3']    ?? '',
+      'Profile Image':           row['_8nqq src']    ?? '',
+      'Influencer Facebook Page':row['xt0psk2 href'] ?? '',
+      'Ad Details':              row['_4ik4']         ?? '',
+      'Video URL':               row['x1lliihq src'] ?? '',
+      'Content Image URL':       row['x15mokao src'] ?? '',
+      'CTA Shop Now URL':        row['x1hl2dhg href']?? '',
+      'Ad Company':              '',
+    };
+  }
+
+  function buildCreatorsFromCSV(rows: any[], platform: string) {
     const map: any = {};
 
     rows.forEach(row => {
@@ -1945,6 +1969,7 @@ function MainDashboard() {
           emoji: assignEmoji(id, row['Ad Details']),
           profileImage: row['Profile Image']?.trim() || null,
           facebookPage: fbUrl,
+          platform,
           existingAds: [],
           products: [],
           // Keep structure for compatibility
@@ -1964,7 +1989,9 @@ function MainDashboard() {
         hasStatic,
         videoUrl: row['Video URL']?.trim() || null,
         imageUrl: row['Content Image URL']?.trim() || null,
+        cached_thumbnail: null,
         shopUrl: cleanShopUrl(row['CTA Shop Now URL']?.trim()),
+        landing_url: cleanShopUrl(row['CTA Shop Now URL']?.trim()),
         libraryId: (row['Meta Library ID'] || '').replace('Library ID: ', '').trim(),
       });
     });
@@ -2091,6 +2118,7 @@ function MainDashboard() {
     ];
   }
   const [filterType, setFilterType] = useState("all");
+  const [filterPlatform, setFilterPlatform] = useState("all");
   const [scrapedProducts, setScrapedProducts] = useState([]);
   const [savedProducts, setSavedProducts] = useState([]);
   const [savedGenerations, setSavedGenerations] = useState<any[]>([]);
@@ -2447,11 +2475,23 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     inputLabel: { fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#6B7280', textTransform: 'uppercase', marginBottom: '10px' },
   };
 
+  const PLATFORM_LABELS: Record<string, { label: string; color: string }> = {
+    markable:  { label: '✨ Markable',  color: '#C084FC' },
+    urlgenius: { label: '🔗 URLGenius', color: '#34D399' },
+    mavely:    { label: '🎯 Mavely',    color: '#F472B6' },
+  };
+
+  const filteredCreators = creators
+    .filter((c: any) => filterType === "all" || c.adType === filterType)
+    .filter((c: any) => filterPlatform === "all" || c.platform === filterPlatform);
+
+  const visibleCreators = filteredCreators.slice(0, visibleCreatorCount);
+
   const stats = [
-    { label: 'Total Creators', value: creators.length },
-    { label: 'Total Ads', value: creators.reduce((sum: any, c: any) => sum + (c.totalAds || 0), 0) },
-    { label: 'Video Only', value: creators.filter((c: any) => c.adType === 'video').length },
-    { label: 'Static Only', value: creators.filter((c: any) => c.adType === 'static').length },
+    { label: 'Creators', value: filteredCreators.length },
+    { label: 'Total Ads', value: filteredCreators.reduce((sum: any, c: any) => sum + (c.totalAds || 0), 0) },
+    { label: 'Video Only', value: filteredCreators.filter((c: any) => c.adType === 'video').length },
+    { label: 'Static Only', value: filteredCreators.filter((c: any) => c.adType === 'static').length },
   ];
 
   const topOpportunities = creators
@@ -2510,19 +2550,13 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     return acc;
   }, {});
 
-  const filteredCreators = filterType === "all" 
-    ? creators 
-    : creators.filter((c: any) => c.adType === filterType);
-
-  const visibleCreators = filteredCreators.slice(0, visibleCreatorCount);
-
   // ── HOME ──────────────────────────────────────────────────────────────────
   if (screen === "home") return (
     <div style={S.app}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); @keyframes spin { to { transform: rotate(360deg); } } .cc:hover { border-color: rgba(201,169,110,0.5) !important; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }`}</style>
       <nav style={S.nav}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={S.navBrand}>Markable</span>
+          <span style={S.navBrand}>EchoTribe</span>
           <span style={S.navBadge}>Creator Intelligence</span>
         </div>
         <span style={{ fontSize: "12px", color: "#999999" }}>Demo · Feb 2026</span>
@@ -2572,6 +2606,12 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 </div>
               </div>
 
+              <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+                {[["all","All Brands"], ["markable","✨ Markable"], ["urlgenius","🔗 URLGenius"], ["mavely","🎯 Mavely"]].map(([val, label]) => (
+                  <button key={val} style={S.btnFilter(filterPlatform === val)} onClick={() => setFilterPlatform(val)}>{label}</button>
+                ))}
+              </div>
+
               <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
                 {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"]].map(([val, label]) => (
                   <button key={val} style={S.btnFilter(filterType === val)} onClick={() => setFilterType(val)}>{label}</button>
@@ -2581,10 +2621,18 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "14px" }}>
                 {visibleCreators.map((c: any) => {
                   const adMeta = AD_TYPE_LABELS[c.adType as keyof typeof AD_TYPE_LABELS];
+                  const platform = PLATFORM_LABELS[c.platform];
                   return (
                     <div key={c.id} className="cc" style={{ ...S.card, borderLeft: `3px solid ${c.color}` }} onClick={() => selectCreator(c)}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                        <div style={{ fontSize: "22px" }}>{c.emoji}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ fontSize: "22px" }}>{c.emoji}</div>
+                          {platform && (
+                            <span style={{ fontSize: "11px", fontWeight: "700", color: platform.color, background: `${platform.color}15`, padding: "2px 8px", borderRadius: "20px" }}>
+                              {platform.label}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                           <span style={{ ...S.tag, background: adMeta.bg, color: adMeta.color }}>{adMeta.label}</span>
                           <span style={{ ...S.tag, background: `${c.color}20`, color: c.color }}>{c.totalAds} ads</span>
@@ -2598,13 +2646,13 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 })}
               </div>
 
-              {creators.length > visibleCreatorCount && (
+              {filteredCreators.length > visibleCreatorCount && (
                 <div style={{ textAlign: 'center', marginTop: '32px', marginBottom: '48px' }}>
                   <button
                     style={{ ...S.btnOutline, padding: '12px 32px', fontSize: '14px' }}
                     onClick={() => setVisibleCreatorCount(prev => prev + 10)}
                   >
-                    Load More Creators ({creators.length - visibleCreatorCount} remaining)
+                    Load More Creators ({filteredCreators.length - visibleCreatorCount} remaining)
                   </button>
                 </div>
               )}
@@ -2721,7 +2769,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
         <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
             <div style={{ display: "flex", alignItems: "center" }}>
-              <span style={S.navBrand}>Markable</span>
+              <span style={S.navBrand}>EchoTribe</span>
               <span style={S.navBadge}>Creator Intelligence</span>
             </div>
             <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("home")}>← All</button>
@@ -2761,26 +2809,29 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               badge: ad.hasVideo && ad.hasStatic ? 'Mixed' : ad.hasVideo ? 'Video' : 'Static',
               copy: ad.copy,
             };
-            const cleanShopUrl = ad.shopUrl ? ad.shopUrl.split('?')[0] : null;
+            const cleanShopUrl = ad.landing_url || (ad.shopUrl ? ad.shopUrl.split('?')[0] : null);
             const flagKey = `${selectedCreator.id}_${ad.libraryId}`;
             const existingFlag = adFlags[flagKey];
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
-                {ad.videoUrl && ad.videoUrl !== 'null' ? (
-                  <video 
-                      src={ad.videoUrl} 
-                      poster={ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : undefined}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                      preload="metadata" 
-                      playsInline 
-                      muted
-                    />
-                ) : ad.imageUrl && ad.imageUrl !== 'null' ? (
-                  <img src={ad.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
-                ) : (
-                  <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
-                )}
+                {(() => {
+                  const thumbSrc = ad.cached_thumbnail || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null);
+                  return ad.videoUrl && ad.videoUrl !== 'null' ? (
+                    <video
+                        src={ad.videoUrl}
+                        poster={thumbSrc ?? undefined}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        preload="metadata"
+                        playsInline
+                        muted
+                      />
+                  ) : thumbSrc ? (
+                    <img src={thumbSrc} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
+                  ) : (
+                    <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
+                  );
+                })()}
               </div>
               <div style={{ flex: "1 1 250px", minWidth: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
@@ -3200,7 +3251,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBrand}>EchoTribe</span>
             <span style={S.navBadge}>Creator Intelligence</span>
           </div>
           <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>
@@ -3285,7 +3336,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBrand}>EchoTribe</span>
             <span style={S.navBadge}>Creator Intelligence</span>
           </div>
           <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>
@@ -3335,7 +3386,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
       <nav style={{ ...S.nav, flexDirection: "column", gap: "12px", padding: "12px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={S.navBrand}>Markable</span>
+            <span style={S.navBrand}>EchoTribe</span>
             <span style={S.navBadge}>Creator Intelligence</span>
           </div>
           <button style={{ ...S.btnOutline, padding: "6px 12px", fontSize: "12px" }} onClick={() => setScreen("profile")}>← Back</button>

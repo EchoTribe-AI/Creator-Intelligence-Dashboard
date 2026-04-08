@@ -1,6 +1,173 @@
 {
   "generations": [
     {
+      "_id": "1775489878272",
+      "creatorId": "thecollecteddwelling",
+      "productName": "WOW  Comment Drapes for links The listing sho",
+      "productData": {
+        "name": "WOW  Comment Drapes for links The listing sho",
+        "category": "Home & Decor",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "Window transformation reveal - showing drapes dramatically changing room look",
+          "Price value emphasis - highlighting the two-panel deal with coupon savings",
+          "Room styling impact - demonstrating how drapes elevate home decor instantly"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "WOW 🤩 These drapes completely transformed our space!",
+            "caption": "WOW 🤩 Comment 'Drapes' for links. The listing shows price for TWO panels. Also make sure to clip the coupon for extra savings! These window treatments instantly elevate any room and give you that designer look without the designer price tag. The quality is amazing and they hang beautifully 🙌🏼",
+            "cta": "Comment 'Drapes' for links",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Designer look for less ✨",
+            "caption": "These drapes are a total game changer! Comment 'Window' for links. Love that the listing price is for TWO panels - such great value. Don't forget to clip that coupon too! Perfect for creating that luxury feel in any room without breaking the budget 💫",
+            "cta": "Comment 'Window' for links",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "Room refresh made easy 🏠",
+            "caption": "SO GOOD! Comment 'Transform' and I'll get you the link to these amazing drapes. Two panels included in the price plus there's a coupon to clip! These are the kind of home finds that make such a difference in your space 🤩",
+            "slides": [
+              "These drapes give instant designer vibes to any room",
+              "Two panels included in one price - amazing value!",
+              "Don't forget to clip the coupon for extra savings"
+            ],
+            "cta": "Comment 'Transform' for links",
+            "disclosure": "#ad #amazonfinds",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Video format aligns perfectly with creator's existing successful drape content. The transformation reveal works well for window treatments, showing before/during/after styling. Static image can showcase the drapes in a styled room setting, while carousel allows for multiple styling examples or detail shots.",
+        "boost_recommendation": "Strong boost potential - matches creator's proven 'WOW' drape format that performs well. The two-panel value proposition and coupon mention create natural engagement drivers. Home decor audience responds well to transformation content.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-04-06T15:37:58.272Z"
+    },
+    {
+      "_id": "1775160185285",
+      "creatorId": "everythingenvy",
+      "productName": "Hair in the drain Not todayThis little gadget c",
+      "productData": {
+        "name": "Hair in the drain Not todayThis little gadget c",
+        "category": "Fashion & Lifestyle",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "Hair in the drain? Not today👏 This little gadget catches all the stray strands before they turn into a clogged nightmare",
+          "Finally, a drain cover that's actually cute AND functional - no more fishing hair out of the shower drain",
+          "This flower-shaped drain catcher is the bathroom upgrade you didn't know you needed"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "Hair in the drain? Not today👏",
+            "caption": "This little gadget catches all the stray strands before they turn into a clogged nightmare. Fits most shower drains, super easy to use, and honestly… kinda satisfying to watch it work. 😍\n\nWe've tried a ton of different drain hair catchers and this is one of the more subtle ones – the flower is kinda cute sitting on the drain like that! 🤭\n\nSend this to someone who has great hair but doesn't want a plumbing disaster on their hands💇🏼‍♀️",
+            "cta": "Comment \"DRAIN\" to get the details or check the \"bathroom favorites\" folder on our Amazon storefront!!",
+            "disclosure": "#ad #amazonfinds #founditonamazon #bathroomhacks #homeessentials",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Finally, a drain cover that's actually cute AND functional",
+            "caption": "No more fishing hair out of the shower drain 🙅🏼‍♀️ This flower-shaped drain catcher sits perfectly on most drains and catches all those stray strands before they cause problems!\n\nIt's so much prettier than those ugly plastic ones, and honestly… watching it work is oddly satisfying 😅\n\nSEND to someone who needs this in their life!",
+            "cta": "Comment \"NEED\" to get a DM or head to our Amazon Storefront bathroom folder to shop. Xx",
+            "disclosure": "#ad #founditonamazon #bathroomessentials #draincover #amazonhome",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "This flower-shaped drain catcher is the bathroom upgrade you didn't know you needed",
+            "caption": "Hair clogs are the WORST but this little gadget prevents them completely 🌸 It's functional, pretty, and fits most standard shower drains!\n\nWe're obsessed with how subtle and cute this looks compared to other drain catchers. Your bathroom deserves better than ugly plastic! ✨",
+            "slides": [
+              "Hair in the drain? Not today! 🌸",
+              "Fits most shower drains perfectly",
+              "Catches hair before it clogs your pipes",
+              "So much cuter than plastic alternatives",
+              "Easy to clean and maintain"
+            ],
+            "cta": "Comment \"FLOWER\" to get a DM or check our Amazon Storefront bathroom essentials folder!",
+            "disclosure": "#ad #amazonfinds #founditonamazon #bathroomhacks #homeessentials",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Video format works exceptionally well for this creator's audience based on existing high-performing drain catcher content. The product's visual functionality (watching hair get caught) creates natural ASMR/satisfying content that performs well in video. Static and carousel formats can highlight the aesthetic flower design that differentiates this product from competitors.",
+        "boost_recommendation": "Boost the video ad variation first as it aligns with the creator's proven format success. Target women 25-45 with interests in home organization, bathroom decor, and home maintenance. Use lookalike audiences based on existing Amazon storefront shoppers for optimal performance.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-04-02T20:03:05.285Z"
+    },
+    {
+      "_id": "1775159938889",
+      "creatorId": "becomingbrittanyjohnson",
+      "productName": "These Walmart PJs are tooooo good",
+      "productData": {
+        "name": "These Walmart PJs are tooooo good",
+        "category": "Lifestyle & Finds",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "These PJs are a total game changer",
+          "Found the coziest PJs ever",
+          "Can't get over how soft these are"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "These PJs are tooooo good y'all!",
+            "caption": "I'm not even kidding - these pajamas are everything! The fabric is buttery soft and they fit like a dream. Perfect for lounging around the house or actually sleeping in. I grabbed a few colors because at this price point, why not? They wash beautifully too and don't lose their softness. Who else is a sucker for cozy PJs?",
+            "cta": "Shop these cozy finds!",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Found my new favorite PJs!",
+            "caption": "Okay but seriously, these pajamas are incredible! Super soft, comfortable fit, and they come in the prettiest colors. I've been living in them lately and they're holding up so well. If you love cozy nights in as much as I do, you need these in your life!",
+            "cta": "Grab yours now!",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "Can we talk about these amazing PJs?",
+            "caption": "I had to share these because they're honestly incredible! Swipe to see why I'm obsessed. The comfort level is unmatched and they're so cute too. Perfect for cozy nights or lazy weekend mornings!",
+            "slides": [
+              "The fabric is buttery soft and feels luxury",
+              "They fit perfectly - not too tight, not too loose",
+              "Multiple colors available and they wash beautifully"
+            ],
+            "cta": "Shop the comfort!",
+            "disclosure": "#ad",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Video format would work well to show the fabric texture and fit in motion, allowing viewers to see the comfort factor. Static image should focus on lifestyle shot showing the cozy vibe. Carousel can highlight multiple product benefits and color options.",
+        "boost_recommendation": "Target women 25-45 interested in sleepwear, comfort wear, and home lifestyle content. Use lookalike audiences based on previous pajama/loungewear purchasers. Focus on evening and weekend scheduling when audience is thinking about relaxation.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-04-02T19:58:58.889Z"
+    },
+    {
       "_id": "1771688054074",
       "creatorId": "brookesbuys",
       "productName": "Back in Stock Home security hack hidden book sa",
