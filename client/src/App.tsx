@@ -1899,7 +1899,7 @@ function MainDashboard() {
               const niche = inferNiche(id, '');
               return {
                 id,
-                name: formatCreatorName(s.display_name || id),
+                name: formatCreatorName((s.display_name && s.display_name !== 'This ad has multiple versions') ? s.display_name : id),
                 handle: s.handle.startsWith('@') ? s.handle : `@${s.handle}`,
                 niche,
                 tone: 'Authentic, relatable',
@@ -2849,7 +2849,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           {/* ── EXISTING ADS ── */}
           <div style={S.sectionLabel}>Existing Ads — Click to Generate AI Ad Variations</div>
           {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => {
-            const adProductName = ad.copy.substring(0, 50).replace(/[^\w\s]/g, '').trim() || 'Ad Creative';
+            const adProductName = (ad.copy || selectedCreator.name || 'Ad Creative').substring(0, 50).replace(/[^\w\s]/g, '').trim() || 'Ad Creative';
             const adProduct = {
               name: adProductName,
               category: selectedCreator.niche || 'General',
@@ -2865,7 +2865,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
                 {(() => {
-                  const thumbSrc = ad.cached_thumbnail || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null);
+                  const thumbSrc = ad.cached_thumbnail || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null) || selectedCreator.profileImage;
                   return ad.videoUrl && ad.videoUrl !== 'null' ? (
                     <video
                         src={ad.videoUrl}
