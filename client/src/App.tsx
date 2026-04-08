@@ -2662,7 +2662,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               </div>
 
               <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
-                {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"]].map(([val, label]) => (
+                {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"], ["thumbnail-missing","Thumbnail Missing"]].map(([val, label]) => (
                   <button key={val} style={S.btnFilter(filterType === val)} onClick={() => setFilterType(val)}>{label}</button>
                 ))}
               </div>
