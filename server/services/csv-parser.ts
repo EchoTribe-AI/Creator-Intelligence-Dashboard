@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
+import https from 'https';
+import http from 'http';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +27,8 @@ export interface MetaAd {
   video_url: string | null;
   image_url: string | null;
   cta_url: string | null;
+  cached_thumbnail: string | null; // local path e.g. /creator-images/{slug}.jpg
+  landing_url: string | null;      // decoded real destination URL
   ad_type: 'video' | 'static'; // video if Video URL non-empty
   start_date: string;        // stripped "Started running on " prefix
   imported_at: string;       // ISO timestamp
@@ -68,6 +72,7 @@ export interface CreatorSummary {
 
 const META_ADS_PATH = path.resolve(process.cwd(), 'server', 'data', 'meta_ads.json');
 const PLATFORMS_PATH = path.resolve(process.cwd(), 'server', 'data', 'platforms.json');
+const CREATOR_IMAGES_DIR = path.resolve(process.cwd(), 'public', 'creator-images');
 const MAX_ADS_PER_PLATFORM = 1000;
 
 // ── Platforms DB ─────────────────────────────────────────────────────────────
@@ -120,7 +125,93 @@ export function formatCreatorHandle(slug: string): string {
   return slug.charAt(0).toUpperCase() + slug.slice(1);
 }
 
+/**
+ * Decode a landing page URL. Handles Facebook-wrapped URLs like
+ * https://l.facebook.com/l.php?u=<encoded> by extracting and decoding the u= param.
+ * Returns the clean destination URL, or null if rawUrl is falsy.
+ */
+export function extractLandingUrl(rawUrl: string | null): string | null {
+  if (!rawUrl || !rawUrl.trim()) return null;
+  const url = rawUrl.trim();
+  try {
+    if (url.includes('l.facebook.com') || url.includes('facebook.com/l.php')) {
+      const parsed = new URL(url);
+      const u = parsed.searchParams.get('u');
+      if (u) {
+        const decoded = decodeURIComponent(u);
+        return decoded.split('?')[0];
+      }
+    }
+    return url.split('?')[0];
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Fetch an image from imageUrl and save it to CREATOR_IMAGES_DIR/{slug}.jpg.
+ * Returns the public URL path /creator-images/{slug}.jpg on success, null on failure.
+ * Idempotent: skips the fetch if the file already exists.
+ */
+export async function cacheCreatorImage(imageUrl: string, slug: string): Promise<string | null> {
+  if (!imageUrl || !imageUrl.trim()) return null;
+  try {
+    if (!fs.existsSync(CREATOR_IMAGES_DIR)) {
+      fs.mkdirSync(CREATOR_IMAGES_DIR, { recursive: true });
+    }
+    const filename = `${slug}.jpg`;
+    const filePath = path.join(CREATOR_IMAGES_DIR, filename);
+    if (fs.existsSync(filePath)) {
+      return `/creator-images/${filename}`;
+    }
+    await new Promise<void>((resolve, reject) => {
+      const urlObj = new URL(imageUrl.trim());
+      const client = urlObj.protocol === 'https:' ? https : http;
+      const req = client.get(urlObj, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+        if (res.statusCode && res.statusCode >= 400) {
+          res.resume();
+          reject(new Error(`HTTP ${res.statusCode}`));
+          return;
+        }
+        const fileStream = fs.createWriteStream(filePath);
+        res.pipe(fileStream);
+        fileStream.on('finish', () => { fileStream.close(); resolve(); });
+        fileStream.on('error', (err) => { fs.unlink(filePath, () => {}); reject(err); });
+      });
+      req.on('error', reject);
+      req.setTimeout(10000, () => { req.destroy(); reject(new Error('timeout')); });
+    });
+    return `/creator-images/${filename}`;
+  } catch (err: any) {
+    console.warn(`[image-cache] Failed to cache image for ${slug}: ${err.message}`);
+    return null;
+  }
+}
+
 // ── CSV Parsing ──────────────────────────────────────────────────────────────
+
+/**
+ * Detect if a CSV row uses Markable readable headers or raw CSS-class column names,
+ * then return a normalized row with readable column names in both cases.
+ */
+function normalizeRow(row: Record<string, string>): Record<string, string> {
+  if ('Ad Details' in row || 'Meta Library ID' in row) {
+    return row; // Already Markable-style readable headers
+  }
+  // Mavely / URLGenius CSS-class column names
+  return {
+    'Meta Library ID':          row['x8t9es0 2']     ?? '',
+    'Started Date':             row['x8t9es0 3']     ?? '',
+    'Profile Image':            row['_8nqq src']     ?? '',
+    'Influencer Facebook Page': row['xt0psk2 href']  ?? '',
+    'Ad Details':               row['_4ik4']          ?? '',
+    'Video URL':                row['x1lliihq src']  ?? '',
+    'Content Image URL':        row['x15mokao src']  ?? '',
+    '_raw_image_src':           row['_8nqq src']     ?? '', // profile image for thumbnail caching
+    '_raw_cta_href':            row['x1hl2dhg href'] ?? '', // raw landing URL (may be FB-wrapped)
+    'CTA Shop Now URL':         row['x1hl2dhg href'] ?? '',
+  };
+}
 
 export function parseMetaAdCSV(csvText: string, platformId: string): { ads: MetaAd[]; skipped: number } {
   const result = Papa.parse(csvText, { header: true, skipEmptyLines: true });
@@ -129,15 +220,34 @@ export function parseMetaAdCSV(csvText: string, platformId: string): { ads: Meta
   const ads: MetaAd[] = [];
   let skipped = 0;
 
-  for (const row of rows) {
+  // Detect format from first row
+  const firstRow = rows[0] ?? {};
+  const isMarkable = 'Ad Details' in firstRow || 'Meta Library ID' in firstRow;
+
+  for (const rawRow of rows) {
+    const row = normalizeRow(rawRow);
+
     const rawLibraryId = (row['Meta Library ID'] ?? '').trim();
     const rawStartDate = (row['Started Date'] ?? '').trim();
     const profileImageUrl = (row['Profile Image'] ?? '').trim() || null;
     const fbPageUrl = (row['Influencer Facebook Page'] ?? '').trim() || null;
     const adCopy = (row['Ad Details'] ?? '').trim();
     const videoUrl = (row['Video URL'] ?? '').trim() || null;
-    const imageUrl = (row['Content Image URL'] ?? '').trim() || null;
-    const ctaUrl = (row['CTA Shop Now URL'] ?? '').trim() || null;
+
+    // Image URL to use for caching:
+    // - Markable: Content Image URL (already a content image)
+    // - Mavely/URLGenius: _8nqq src (profile image used as thumbnail)
+    const imageUrl = isMarkable
+      ? ((row['Content Image URL'] ?? '').trim() || null)
+      : ((row['_raw_image_src'] ?? row['Profile Image'] ?? '').trim() || null);
+
+    // Raw CTA/landing URL — may be Facebook-wrapped for non-Markable
+    const rawCtaUrl = isMarkable
+      ? ((row['CTA Shop Now URL'] ?? '').trim() || null)
+      : ((row['_raw_cta_href'] ?? row['CTA Shop Now URL'] ?? '').trim() || null);
+
+    const ctaUrl = rawCtaUrl;
+    const landing_url = extractLandingUrl(rawCtaUrl);
 
     // Skip rows with no meaningful content
     if (!adCopy && !videoUrl && !imageUrl) {
@@ -164,6 +274,8 @@ export function parseMetaAdCSV(csvText: string, platformId: string): { ads: Meta
       video_url: videoUrl,
       image_url: imageUrl,
       cta_url: ctaUrl,
+      cached_thumbnail: null, // populated by importCSV after async caching
+      landing_url,
       ad_type: videoUrl ? 'video' : 'static',
       start_date,
       imported_at: new Date().toISOString(),
@@ -183,12 +295,26 @@ export async function importCSV(csvText: string, platformId: string): Promise<Im
   const { ads: parsedAds, skipped } = parseMetaAdCSV(csvText, platformId);
   const db = readMetaAdsDb();
 
+  // Cache images for all ads that have an image_url
+  for (const ad of parsedAds) {
+    if (ad.image_url) {
+      const slug = ad.library_id
+        ? `${ad.creator_handle}_${ad.library_id}`.replace(/[^a-z0-9_-]/gi, '_')
+        : `${ad.creator_handle}_${Date.now()}`;
+      ad.cached_thumbnail = await cacheCreatorImage(ad.image_url, slug);
+    }
+  }
+
   let new_count = 0;
   let updated = 0;
 
   for (const ad of parsedAds) {
     const existingIndex = db.ads.findIndex(a => a._key === ad._key);
     if (existingIndex >= 0) {
+      // Preserve existing cached_thumbnail if new import didn't produce one
+      if (!ad.cached_thumbnail && db.ads[existingIndex].cached_thumbnail) {
+        ad.cached_thumbnail = db.ads[existingIndex].cached_thumbnail;
+      }
       db.ads[existingIndex] = ad; // replace in place (update)
       updated++;
     } else {

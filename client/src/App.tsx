@@ -1989,7 +1989,9 @@ function MainDashboard() {
         hasStatic,
         videoUrl: row['Video URL']?.trim() || null,
         imageUrl: row['Content Image URL']?.trim() || null,
+        cached_thumbnail: null,
         shopUrl: cleanShopUrl(row['CTA Shop Now URL']?.trim()),
+        landing_url: cleanShopUrl(row['CTA Shop Now URL']?.trim()),
         libraryId: (row['Meta Library ID'] || '').replace('Library ID: ', '').trim(),
       });
     });
@@ -2807,26 +2809,29 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               badge: ad.hasVideo && ad.hasStatic ? 'Mixed' : ad.hasVideo ? 'Video' : 'Static',
               copy: ad.copy,
             };
-            const cleanShopUrl = ad.shopUrl ? ad.shopUrl.split('?')[0] : null;
+            const cleanShopUrl = ad.landing_url || (ad.shopUrl ? ad.shopUrl.split('?')[0] : null);
             const flagKey = `${selectedCreator.id}_${ad.libraryId}`;
             const existingFlag = adFlags[flagKey];
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
-                {ad.videoUrl && ad.videoUrl !== 'null' ? (
-                  <video 
-                      src={ad.videoUrl} 
-                      poster={ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : undefined}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                      preload="metadata" 
-                      playsInline 
-                      muted
-                    />
-                ) : ad.imageUrl && ad.imageUrl !== 'null' ? (
-                  <img src={ad.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
-                ) : (
-                  <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
-                )}
+                {(() => {
+                  const thumbSrc = ad.cached_thumbnail || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null);
+                  return ad.videoUrl && ad.videoUrl !== 'null' ? (
+                    <video
+                        src={ad.videoUrl}
+                        poster={thumbSrc ?? undefined}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        preload="metadata"
+                        playsInline
+                        muted
+                      />
+                  ) : thumbSrc ? (
+                    <img src={thumbSrc} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
+                  ) : (
+                    <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
+                  );
+                })()}
               </div>
               <div style={{ flex: "1 1 250px", minWidth: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
