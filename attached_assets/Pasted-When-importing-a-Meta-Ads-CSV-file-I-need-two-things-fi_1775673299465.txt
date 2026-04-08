@@ -1,0 +1,29 @@
+When importing a Meta Ads CSV file, I need two things fixed: image caching so thumbnails don't break when Meta CDN links expire, and landing page URL extraction that works consistently across all brand CSV files.
+Column mapping by brand:
+
+Markable CSV: image URL is in Content Image URL, landing page is in CTA Shop Now URL (already clean URLs)
+Mavely CSV and URLGenius CSV (and any future brand CSVs): image URL is in _8nqq src, landing page is in x1hl2dhg href
+
+The import logic should detect which column set is present and handle both automatically.
+Fix 1 — Image caching:
+In the CSV import route, after reading each row:
+
+Read the image URL from the appropriate column (Content Image URL or _8nqq src)
+Fetch that image server-side and save it to /public/creator-images/{pageId-or-slug}.jpg — create the directory if needed
+Store the local path as cached_thumbnail in the creator's record in meta_ads.json
+Skip the fetch if the file already exists (idempotent on re-import)
+If the fetch fails (expired or 403), log a warning and set cached_thumbnail to null — don't crash the import
+
+Fix 2 — Landing page URL extraction:
+
+Read the landing page value from CTA Shop Now URL (Markable) or x1hl2dhg href (all other brands)
+For the Facebook-wrapped format (https://l.facebook.com/l.php?u=...), extract and decode the real destination URL from the u= query parameter using URLSearchParams or equivalent
+Store the clean, decoded URL as landing_url in the creator's record in meta_ads.json
+If the value is already a clean URL (Markable), store it as-is
+
+Frontend:
+
+Update creator cards to use cached_thumbnail if present, falling back to the original image URL
+All brand creator cards should display the landing_url as a clickable link — Markable cards already do this, make sure Mavely and URLGenius cards match that same behavior
+
+Add the image caching as a helper function and the URL extraction as a separate helper. Call both from within the existing CSV import route. Follow existing patterns in storage.ts and routes.ts — no rewrites, additions only.
