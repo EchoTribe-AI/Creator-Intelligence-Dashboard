@@ -1884,7 +1884,7 @@ function MainDashboard() {
   const [loadingMsg, setLoadingMsg] = useState("");
 
   useEffect(() => {
-    const platforms = ['markable', 'urlgenius', 'mavely'];
+    const platforms = ['markable', 'urlgenius', 'mavely', 'creator-finds-iq'];
 
     Promise.all(
       platforms.map(platform =>
@@ -2199,8 +2199,8 @@ function MainDashboard() {
           const mappedAds = ads.map((ad: any) => ({
             started: ad.start_date || '',
             copy: ad.ad_copy || '',
-            hasVideo: !!ad.video_url,
-            hasStatic: !!ad.image_url,
+            hasVideo: ad.ad_type === 'video',
+            hasStatic: ad.ad_type === 'static',
             videoUrl: ad.video_url || null,
             imageUrl: ad.image_url || null,
             cached_thumbnail: ad.cached_thumbnail || null,
@@ -2525,9 +2525,10 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
   };
 
   const PLATFORM_LABELS: Record<string, { label: string; color: string }> = {
-    markable:  { label: '✨ Markable',  color: '#C084FC' },
-    urlgenius: { label: '🔗 URLGenius', color: '#34D399' },
-    mavely:    { label: '🎯 Mavely',    color: '#F472B6' },
+    markable:           { label: '✨ Markable',        color: '#C084FC' },
+    urlgenius:          { label: '🔗 URLGenius',       color: '#34D399' },
+    mavely:             { label: '🎯 Mavely',          color: '#F472B6' },
+    'creator-finds-iq': { label: '🔍 Creator Finds IQ', color: '#FB923C' },
   };
 
   const filteredCreators = creators
@@ -2656,7 +2657,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               </div>
 
               <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
-                {[["all","All Brands"], ["markable","✨ Markable"], ["urlgenius","🔗 URLGenius"], ["mavely","🎯 Mavely"]].map(([val, label]) => (
+                {[["all","All Brands"], ["markable","✨ Markable"], ["urlgenius","🔗 URLGenius"], ["mavely","🎯 Mavely"], ["creator-finds-iq","🔍 Creator Finds IQ"]].map(([val, label]) => (
                   <button key={val} style={S.btnFilter(filterPlatform === val)} onClick={() => setFilterPlatform(val)}>{label}</button>
                 ))}
               </div>
@@ -2848,7 +2849,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
 
           {/* ── EXISTING ADS ── */}
           <div style={S.sectionLabel}>Existing Ads — Click to Generate AI Ad Variations</div>
-          {selectedCreator.existingAds.filter((ad: any) => !!(ad.videoUrl || ad.imageUrl)).slice(0, visibleAdsCount).map((ad, i) => {
+          {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => {
             const adProductName = (ad.copy || selectedCreator.name || 'Ad Creative').substring(0, 50).replace(/[^\w\s]/g, '').trim() || 'Ad Creative';
             const adProduct = {
               name: adProductName,
@@ -2864,16 +2865,20 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", position: "relative" }}>
+                {/* Emoji fallback always rendered behind — visible when image fails or is absent */}
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "24px" }}>
+                  {ad.videoUrl ? "📹" : "🖼️"}
+                </div>
                 {(() => {
                   const thumbSrc = ad.cached_thumbnail
                     || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null)
-                    || selectedCreator.profileImage
                     || null;
-                  return thumbSrc ? (
+                  if (!thumbSrc) return null;
+                  return (
                     <>
                       <img
                         src={thumbSrc}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
                         alt="Ad thumbnail"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
@@ -2883,8 +2888,6 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                         </div>
                       )}
                     </>
-                  ) : (
-                    <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.videoUrl ? "📹" : "🖼️"}</div>
                   );
                 })()}
               </div>
@@ -2990,12 +2993,12 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             </div>
             );
           })}
-          {selectedCreator.existingAds.filter((ad: any) => !!(ad.videoUrl || ad.imageUrl)).length > visibleAdsCount && (
+          {selectedCreator.existingAds.length > visibleAdsCount && (
             <button
               style={{ ...S.btnOutline, marginTop: '12px', width: '100%', padding: '12px' }}
               onClick={() => setVisibleAdsCount(prev => prev + 6)}
             >
-              Load More Ads ({selectedCreator.existingAds.filter((ad: any) => !!(ad.videoUrl || ad.imageUrl)).length - visibleAdsCount} remaining)
+              Load More Ads ({selectedCreator.existingAds.length - visibleAdsCount} remaining)
             </button>
           )}
 

@@ -2,6 +2,7 @@
   "platforms": [
     { "id": "markable", "name": "Markable", "color": "#C084FC", "logo": "✨", "description": "Markable creator affiliate network", "created_at": "2026-04-02" },
     { "id": "urlgenius", "name": "URLGenius", "color": "#34D399", "logo": "🔗", "description": "URLGenius deep link platform", "created_at": "2026-04-02" },
-    { "id": "mavely", "name": "Mavely", "color": "#F472B6", "logo": "🎯", "description": "Mavely talent and affiliate platform", "created_at": "2026-04-02" }
+    { "id": "mavely", "name": "Mavely", "color": "#F472B6", "logo": "🎯", "description": "Mavely talent and affiliate platform", "created_at": "2026-04-02" },
+    { "id": "creator-finds-iq", "name": "Creator Finds IQ", "color": "#FB923C", "logo": "🔍", "description": "Creator Finds IQ affiliate discovery platform", "created_at": "2026-04-08" }
   ]
 }
