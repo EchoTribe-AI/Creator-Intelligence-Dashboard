@@ -1,6 +1,63 @@
 {
   "generations": [
     {
+      "_id": "1775693536570",
+      "creatorId": "everythingenvy",
+      "productName": "5 finds to transform your fridgeWhich is your f",
+      "productData": {
+        "name": "5 finds to transform your fridgeWhich is your f",
+        "category": "Lifestyle & Finds",
+        "commission": "8%"
+      },
+      "generatedContent": {
+        "hook_angles": [
+          "These 5 fridge finds will completely transform how organized and functional your refrigerator feels",
+          "Your fridge is about to become your favorite part of the kitchen with these game-changing finds",
+          "Finally, fridge organization that actually works and looks amazing too"
+        ],
+        "ad_variations": [
+          {
+            "type": "Video Ad",
+            "hook": "5 finds to transform your fridge!🤍",
+            "caption": "Which is your favorite?👇 These Amazon finds make fridge organization so much easier and way more aesthetic! From keeping produce fresh to maximizing space, each one solves a real problem we all deal with daily✨ SAVE this for your next fridge reset!🛍️Comment \"FRIDGE\" to get a DM or head to our Amazon Storefront Fridge Essentials folder to shop. Xx",
+            "cta": "Comment \"FRIDGE\" to get a DM or head to our Amazon Storefront Fridge Essentials folder to shop",
+            "disclosure": "#ad #founditonamazon #amazonhome #fridgefavorites",
+            "compliance_flags": []
+          },
+          {
+            "type": "Static Image Ad",
+            "hook": "Your fridge deserves this glow up✨",
+            "caption": "These 5 Amazon finds completely changed how we organize our refrigerator! Each one tackles a different storage challenge and makes everything look so much more put-together🤍 From produce storage to space-saving solutions, these are the fridge essentials we can't live without! SAVE this for your next kitchen refresh!🛍️Comment \"ORGANIZE\" to get a DM or head to our Amazon Storefront Fridge Essentials folder to shop. Xx",
+            "cta": "Comment \"ORGANIZE\" to get a DM or head to our Amazon Storefront Fridge Essentials folder to shop",
+            "disclosure": "#ad #founditonamazon #amazonhome",
+            "compliance_flags": []
+          },
+          {
+            "type": "Carousel Ad",
+            "hook": "Fridge organization that actually works🙌",
+            "caption": "These 5 Amazon finds make refrigerator storage so much easier! Swipe to see each one and how they transform your fridge setup✨ Which one are you adding to cart first?👇🛍️Comment \"FRIDGE\" to get a DM or head to our Amazon Storefront Fridge Essentials folder to shop. Xx",
+            "slides": [
+              "Find #1: This clear storage system keeps produce fresh and visible so nothing gets forgotten in the back!",
+              "Find #2: Space-saving stackable containers that maximize every inch of fridge real estate",
+              "Find #3: This genius organizer turns your fridge door into extra storage without the clutter",
+              "Find #4: Keeps beverages perfectly organized and easily accessible for the whole family",
+              "Find #5: The aesthetic touch that makes your fridge look like it belongs in a magazine"
+            ],
+            "cta": "Comment \"FRIDGE\" to get a DM or head to our Amazon Storefront Fridge Essentials folder to shop",
+            "disclosure": "#ad #founditonamazon #amazonhome #fridgeorganization",
+            "compliance_flags": []
+          }
+        ],
+        "format_insight": "Based on Everythingenvy's existing content, the original fridge organization post performed well with its simple, direct approach. The creator's audience responds to practical solutions with aesthetic appeal. Video format works well for showing multiple products in action, while carousel allows detailed explanation of each find's specific benefit.",
+        "boost_recommendation": "Recommend boosting the Video Ad variation as it aligns most closely with the creator's successful existing format. The authentic, enthusiastic tone and practical focus on organization solutions matches what resonates with their audience of women 25-45 seeking lifestyle improvements.",
+        "policy_review": {
+          "overall_status": "approved",
+          "flags": []
+        }
+      },
+      "createdAt": "2026-04-09T00:12:16.570Z"
+    },
+    {
       "_id": "1775489878272",
       "creatorId": "thecollecteddwelling",
       "productName": "WOW  Comment Drapes for links The listing sho",
