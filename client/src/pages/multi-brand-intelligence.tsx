@@ -245,19 +245,60 @@ function CreatorCard({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
-              fontWeight: '700',
-              fontSize: '14px',
-              color: '#111827',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '2px',
             }}
           >
-            {creator.display_name}
+            <div
+              style={{
+                fontWeight: '700',
+                fontSize: '14px',
+                color: '#111827',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                flex: 1,
+              }}
+            >
+              {creator.display_name}
+            </div>
+            {creator.facebook_page_url && (
+              <a
+                href={creator.facebook_page_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                style={{
+                  fontSize: '14px',
+                  color: '#7C3AED',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  opacity: 0.7,
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLAnchorElement).style.opacity = '1';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLAnchorElement).style.opacity = '0.7';
+                }}
+                title="Visit Facebook profile"
+              >
+                ↗
+              </a>
+            )}
           </div>
-          <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: '#9CA3AF' }}>
             @{creator.handle}
           </div>
+          {creator.latest_ad_date && (
+            <div style={{ fontSize: '10px', color: '#D1D5DB', marginTop: '2px' }}>
+              Latest: {creator.latest_ad_date}
+            </div>
+          )}
         </div>
         <div
           style={{
@@ -737,6 +778,7 @@ export default function MultiBrandIntelligence() {
   const [searchQuery, setSearchQuery] = useState('');
   const [adTypeFilter, setAdTypeFilter] = useState<'all' | 'video' | 'static'>('all');
   const [creators, setCreators] = useState<CreatorSummary[]>([]);
+  const [allCreators, setAllCreators] = useState<CreatorSummary[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [importState, setImportState] = useState<ImportState>({
@@ -770,8 +812,25 @@ export default function MultiBrandIntelligence() {
       .then(d => setCreators(d.creators || []));
   }, [selectedPlatformId]);
 
+  // Load all creators (for global search)
+  useEffect(() => {
+    if (platforms.length === 0) return;
+    Promise.all(
+      platforms.map(p =>
+        fetch(`/api/meta-ads/creators?platform=${encodeURIComponent(p.id)}`)
+          .then(r => r.json())
+          .then(d => d.creators || [])
+          .catch(() => [])
+      )
+    ).then(results => {
+      const combined = results.flat();
+      setAllCreators(combined);
+    });
+  }, [platforms]);
+
   // Filtered creators (derived)
-  const filteredCreators = creators.filter(c => {
+  const searchCreators = searchQuery.trim().length > 0 ? allCreators : creators;
+  const filteredCreators = searchCreators.filter(c => {
     const matchSearch =
       !searchQuery ||
       c.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -841,6 +900,29 @@ export default function MultiBrandIntelligence() {
           />
         </div>
 
+        {/* Global search */}
+        <div style={{ marginBottom: '20px' }}>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search creators by name..."
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '10px',
+              border: '1px solid #E5E7EB',
+              fontSize: '14px',
+              outline: 'none',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          />
+          {searchQuery && (
+            <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '6px' }}>
+              Showing creators from all brands matching "{searchQuery}"
+            </div>
+          )}
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '28px' }}>
           {/* Sidebar */}
           <aside>
@@ -908,29 +990,14 @@ export default function MultiBrandIntelligence() {
           <main>
             {selectedCreator === null ? (
               <>
-                {/* Search + filter */}
+                {/* Ad type filter */}
                 <div
                   style={{
                     display: 'flex',
                     gap: '10px',
                     marginBottom: '20px',
-                    alignItems: 'center',
                   }}
                 >
-                  <input
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search creators..."
-                    style={{
-                      flex: 1,
-                      padding: '10px 14px',
-                      borderRadius: '10px',
-                      border: '1px solid #E5E7EB',
-                      fontSize: '14px',
-                      outline: 'none',
-                      fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  />
                   {(['all', 'video', 'static'] as const).map(t => (
                     <button
                       key={t}

@@ -37,6 +37,26 @@ export interface MetaAd {
   ad_type: 'video' | 'static'; // video if Video URL non-empty
   start_date: string;        // stripped "Started running on " prefix
   imported_at: string;       // ISO timestamp
+
+  // Stable Meta fields for future media URL refreshes
+  meta_library_id: string;   // numeric ID extracted from "Library ID: 1520208379276277"
+  started_date_raw: string;  // original "Started Date" text before parsing
+  started_date: string | null; // parsed date if possible
+  influencer_facebook_page_url: string | null; // "Influencer Facebook Page"
+  ad_details: string;        // "Ad Details"
+  content_image_url: string | null; // "Content Image URL"
+  cta_shop_now_url: string | null;  // "CTA Shop Now URL"
+  ad_company: string | null; // "Ad Company"
+
+  // Derived media tracking fields
+  ad_library_url: string | null; // built from meta_library_id if possible
+  video_url_host: string | null; // hostname from video_url, e.g. "video-bos5-1.xx.fbcdn.net"
+  video_url_expires_at: string | null; // ISO timestamp parsed from oe= query param
+  media_type: 'video' | 'image' | 'unknown'; // based on what media exists
+  last_media_refresh_at: string | null; // timestamp of last refresh attempt
+  media_refresh_status: 'not_checked' | 'valid' | 'expired' | 'failed' | null; // current status
+  created_at: string;        // ISO timestamp when record was created
+  updated_at: string;        // ISO timestamp of last update
 }
 
 export interface ImportResult {
@@ -151,6 +171,53 @@ export function extractLandingUrl(rawUrl: string | null): string | null {
   } catch {
     return url;
   }
+}
+
+/**
+ * Extract numeric Meta Library ID from strings like "Library ID: 1520208379276277"
+ */
+function extractNumericLibraryId(rawId: string): string {
+  return (rawId ?? '').replace(/^Library ID:\s*/i, '').trim();
+}
+
+/**
+ * Extract hostname from a URL, e.g. "video-bos5-1.xx.fbcdn.net" from the video CDN URL
+ */
+function extractUrlHost(url: string | null): string | null {
+  if (!url?.trim()) return null;
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse expiration timestamp from Meta CDN video URL's "oe" (original expiry) query param.
+ * Returns ISO 8601 timestamp or null if not found or invalid.
+ */
+function extractVideoExpiryFromUrl(url: string | null): string | null {
+  if (!url?.trim()) return null;
+  try {
+    const urlObj = new URL(url);
+    const oeParam = urlObj.searchParams.get('oe');
+    if (oeParam && /^\d+$/.test(oeParam)) {
+      // oe is a Unix timestamp in seconds
+      const timestamp = parseInt(oeParam, 10) * 1000;
+      return new Date(timestamp).toISOString();
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Build Meta Ad Library URL from numeric Library ID
+ * Format: https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&media_type=all&search_type=keyword_exactmatch&media_adv_details=all&view_all_by_impression_count=true&library_id={id}
+ */
+function buildAdLibraryUrl(metaLibraryId: string | null): string | null {
+  if (!metaLibraryId?.trim()) return null;
+  return `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&media_type=all&search_type=keyword_exactmatch&media_adv_details=all&view_all_by_impression_count=true&library_id=${metaLibraryId}`;
 }
 
 /**
@@ -355,6 +422,8 @@ export function parseMetaAdCSV(csvText: string, platformId: string): { ads: Meta
   const firstRow = rows[0] ?? {};
   const isMarkable = 'Ad Details' in firstRow || 'Meta Library ID' in firstRow;
 
+  const now = new Date().toISOString();
+
   for (const rawRow of rows) {
     const row = normalizeRow(rawRow);
 
@@ -364,13 +433,15 @@ export function parseMetaAdCSV(csvText: string, platformId: string): { ads: Meta
     const fbPageUrl = (row['Influencer Facebook Page'] ?? '').trim() || null;
     const adCopy = (row['Ad Details'] ?? '').trim();
     const videoUrl = (row['Video URL'] ?? '').trim() || null;
+    const adCompany = (row['Ad Company'] ?? '').trim() || null;
 
     // Image URL to use for caching:
     // - Markable: Content Image URL (already a content image)
     // - Mavely/URLGenius: _8nqq src (profile image used as thumbnail)
-    const imageUrl = isMarkable
+    const contentImageUrl = isMarkable
       ? ((row['Content Image URL'] ?? '').trim() || null)
       : ((row['_raw_image_src'] ?? row['Profile Image'] ?? '').trim() || null);
+    const imageUrl = contentImageUrl; // alias for backwards compat
 
     // Raw CTA/landing URL — may be Facebook-wrapped for non-Markable
     const rawCtaUrl = isMarkable
@@ -378,6 +449,7 @@ export function parseMetaAdCSV(csvText: string, platformId: string): { ads: Meta
       : ((row['_raw_cta_href'] ?? row['CTA Shop Now URL'] ?? '').trim() || null);
 
     const ctaUrl = rawCtaUrl;
+    const ctaShopNowUrl = rawCtaUrl;
     const landing_url = extractLandingUrl(rawCtaUrl);
 
     // Skip rows with no meaningful content
@@ -386,14 +458,25 @@ export function parseMetaAdCSV(csvText: string, platformId: string): { ads: Meta
       continue;
     }
 
-    const library_id = rawLibraryId.replace(/^Library ID:\s*/i, '');
+    // Extract and parse stable fields
+    const library_id = extractNumericLibraryId(rawLibraryId);
+    const meta_library_id = library_id; // numeric only
     const start_date = rawStartDate.replace(/^Started running on\s*/i, '');
+    const started_date_raw = rawStartDate;
+    const started_date = start_date || null; // store original text as-is, could be parsed elsewhere
 
     const handle = fbPageUrl ? extractCreatorHandle(fbPageUrl) : null;
     const creator_handle = handle ?? 'unknown';
     const creator_display_name = formatCreatorHandle(creator_handle);
 
+    // Derived media tracking fields
+    const video_url_host = extractUrlHost(videoUrl);
+    const video_url_expires_at = extractVideoExpiryFromUrl(videoUrl);
+    const media_type = videoUrl ? 'video' : (imageUrl ? 'image' : 'unknown');
+    const ad_library_url = buildAdLibraryUrl(meta_library_id);
+
     const ad: MetaAd = {
+      // Legacy fields (kept for backwards compat)
       _key: `${platformId}_${library_id}`,
       library_id,
       platform_id: platformId,
@@ -409,7 +492,27 @@ export function parseMetaAdCSV(csvText: string, platformId: string): { ads: Meta
       landing_url,
       ad_type: videoUrl ? 'video' : 'static',
       start_date,
-      imported_at: new Date().toISOString(),
+      imported_at: now,
+
+      // New stable Meta fields for future media URL refreshes
+      meta_library_id,
+      started_date_raw,
+      started_date,
+      influencer_facebook_page_url: fbPageUrl,
+      ad_details: adCopy,
+      content_image_url: contentImageUrl,
+      cta_shop_now_url: ctaShopNowUrl,
+      ad_company: adCompany,
+
+      // Derived media tracking fields
+      ad_library_url,
+      video_url_host,
+      video_url_expires_at,
+      media_type,
+      last_media_refresh_at: null, // will be set when refresh is attempted
+      media_refresh_status: null, // will be set when refresh is attempted
+      created_at: now,
+      updated_at: now,
     };
 
     ads.push(ad);

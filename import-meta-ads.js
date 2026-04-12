@@ -40,6 +40,34 @@ const cleanLibraryId = (raw) => (raw ?? '').replace(/^Library ID:\s*/i, '').trim
 const cleanStartDate = (raw) => (raw ?? '').replace(/^Started running on\s*/i, '').trim();
 const cleanStr       = (raw) => (raw ?? '').trim() || null;
 
+function extractUrlHost(url) {
+  if (!url?.trim()) return null;
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch {
+    return null;
+  }
+}
+
+function extractVideoExpiryFromUrl(url) {
+  if (!url?.trim()) return null;
+  try {
+    const urlObj = new URL(url);
+    const oeParam = urlObj.searchParams.get('oe');
+    if (oeParam && /^\d+$/.test(oeParam)) {
+      const timestamp = parseInt(oeParam, 10) * 1000;
+      return new Date(timestamp).toISOString();
+    }
+  } catch {}
+  return null;
+}
+
+function buildAdLibraryUrl(metaLibraryId) {
+  if (!metaLibraryId?.trim()) return null;
+  return `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&media_type=all&search_type=keyword_exactmatch&media_adv_details=all&view_all_by_impression_count=true&library_id=${metaLibraryId}`;
+}
+
 function extractCreatorHandle(fbUrl) {
   if (!fbUrl) return 'unknown';
   const slug = fbUrl.replace(/\/$/, '').split('/').pop() ?? '';
@@ -124,20 +152,27 @@ async function main() {
 
   // Per-platform counters
   const platformCounts = {};
+  const now = new Date().toISOString();
 
   for (const row of rows) {
     const rawLibraryId = (row['Meta Library ID'] ?? '').trim();
     if (!rawLibraryId.startsWith('Library ID:')) { skipped++; continue; }
 
     const library_id    = cleanLibraryId(rawLibraryId);
-    const start_date    = cleanStartDate(row['Started Date']);
+    const meta_library_id = library_id; // numeric ID
+    const rawStartDate = row['Started Date'] ?? '';
+    const start_date    = cleanStartDate(rawStartDate);
+    const started_date_raw = rawStartDate.trim();
     const fbPageUrl     = cleanStr(row['Influencer Facebook Page']);
     const ad_copy       = (row['Ad Details'] ?? '').trim();
+    const ad_company    = (row['Ad Company'] ?? '').trim();
     const video_url     = cleanStr(row['Video URL']);
-    const image_url     = cleanStr(row['Content Image URL']);
-    const cta_url       = cleanStr(row['CTA Shop Now URL']);
+    const content_image_url = cleanStr(row['Content Image URL']);
+    const image_url     = content_image_url; // alias
+    const cta_shop_now_url = cleanStr(row['CTA Shop Now URL']);
+    const cta_url       = cta_shop_now_url;
     const landing_url   = extractLandingUrl(cta_url);
-    const brand         = (row['Ad Company'] ?? '').trim();
+    const brand         = ad_company;
     if (!brand) { skipped++; continue; }
     const platform_id   = BRAND_TO_PLATFORM[brand] ?? brand.toLowerCase().replace(/\s+/g, '-');
 
@@ -154,11 +189,17 @@ async function main() {
       : creator_handle.charAt(0).toUpperCase() + creator_handle.slice(1);
 
     const _key = `${platform_id}_${library_id}`;
-
     platformCounts[platform_id] = (platformCounts[platform_id] ?? 0) + 1;
+
+    // Derived media tracking fields
+    const video_url_host = extractUrlHost(video_url);
+    const video_url_expires_at = extractVideoExpiryFromUrl(video_url);
+    const media_type = video_url ? 'video' : (image_url ? 'image' : 'unknown');
+    const ad_library_url = buildAdLibraryUrl(meta_library_id);
 
     if (!seen.has(_key)) {
       seen.set(_key, {
+        // Legacy fields (for backwards compat)
         _key,
         library_id,
         platform_id,
@@ -174,7 +215,27 @@ async function main() {
         landing_url,
         ad_type: video_url ? 'video' : 'static',
         start_date,
-        imported_at: new Date().toISOString(),
+        imported_at: now,
+
+        // New stable Meta fields for future media URL refreshes
+        meta_library_id,
+        started_date_raw,
+        started_date: start_date || null,
+        influencer_facebook_page_url: fbPageUrl,
+        ad_details: ad_copy,
+        content_image_url,
+        cta_shop_now_url,
+        ad_company,
+
+        // Derived media tracking fields
+        ad_library_url,
+        video_url_host,
+        video_url_expires_at,
+        media_type,
+        last_media_refresh_at: null,
+        media_refresh_status: null,
+        created_at: now,
+        updated_at: now,
       });
     }
   }
