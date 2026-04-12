@@ -2,19 +2,27 @@ import path from "path";
 import { fileURLToPath } from "url";
 import express from "express";
 import type { Express } from "express";
+import fs from "fs";
+import https from "https";
+import http, { createServer, type Server } from "http";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getProductData, getStorefrontProducts } from "./scraper.js";
 import { saveProduct, getProductsByCreator, getAllProducts, deleteProduct, saveGeneration, getGenerationsByCreator, getGenerationById, deleteGeneration } from './db.js';
-import { importCSV, queryAds, getCreatorsByPlatform, getStats, readPlatformsDb } from './services/csv-parser.js';
+import { importCSV, queryAds, getCreatorsByPlatform, getStats, readPlatformsDb, readMetaAdsDb, writeMetaAdsDb, cacheCreatorImage, extractVideoThumbnail } from './services/csv-parser.js';
+
+const PUBLIC_DIR = path.resolve(process.cwd(), 'public');
+const CREATOR_IMAGES_DIR = path.resolve(PUBLIC_DIR, 'creator-images');
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Serve public/ assets (creator-images, etc.) at all times — dev and prod
+  app.use(express.static(PUBLIC_DIR));
+
   // Proxy endpoint for Anthropic API
   app.post("/api/anthropic/v1/messages", async (req, res) => {
     try {
@@ -212,6 +220,80 @@ export async function registerRoutes(
     }
   });
 
+  // ── VIDEO PROXY (CORS passthrough for canvas thumbnail capture) ────────────
+  // Only allows Meta CDN URLs. Forwards Range headers so seeking works.
+  app.get('/api/video-proxy', (req, res) => {
+    const { url } = req.query as { url?: string };
+    if (!url) return res.status(400).end();
+
+    let decodedUrl: string;
+    try { decodedUrl = decodeURIComponent(url); } catch { return res.status(400).end(); }
+
+    // Strict allowlist: only Meta CDN
+    if (!/^https?:\/\/([a-z0-9-]+\.)?fbcdn\.net\//i.test(decodedUrl)) {
+      return res.status(403).end();
+    }
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+    let urlObj: URL;
+    try { urlObj = new URL(decodedUrl); } catch { return res.status(400).end(); }
+
+    const client = urlObj.protocol === 'https:' ? https : http;
+    const proxyHeaders: Record<string, string> = { 'User-Agent': 'Mozilla/5.0' };
+    if (req.headers.range) proxyHeaders['Range'] = req.headers.range as string;
+
+    const proxyReq = client.get(urlObj, { headers: proxyHeaders }, (proxyRes) => {
+      const status = proxyRes.statusCode || 200;
+      const headers: Record<string, string | string[]> = {
+        'Content-Type': proxyRes.headers['content-type'] || 'video/mp4',
+      };
+      if (proxyRes.headers['content-length']) headers['Content-Length'] = proxyRes.headers['content-length']!;
+      if (proxyRes.headers['content-range']) headers['Content-Range'] = proxyRes.headers['content-range']!;
+      if (proxyRes.headers['accept-ranges']) headers['Accept-Ranges'] = proxyRes.headers['accept-ranges']!;
+      res.writeHead(status, headers);
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', () => { if (!res.headersSent) res.status(502).end(); });
+    proxyReq.setTimeout(15000, () => { proxyReq.destroy(); });
+    req.on('close', () => proxyReq.destroy());
+  });
+
+  // ── CACHE VIDEO THUMBNAIL (base64 canvas frame → disk + meta_ads.json) ────
+  app.post('/api/meta-ads/cache-thumbnail', express.json({ limit: '2mb' }), (req, res) => {
+    const { ad_key, image_data } = req.body as { ad_key?: string; image_data?: string };
+    if (!ad_key || !image_data) return res.status(400).json({ error: 'ad_key and image_data required' });
+
+    const match = image_data.match(/^data:image\/(jpeg|png);base64,(.+)$/s);
+    if (!match) return res.status(400).json({ error: 'Invalid image_data' });
+
+    const imageBuffer = Buffer.from(match[2], 'base64');
+    if (imageBuffer.length < 100) return res.status(400).json({ error: 'Image too small' });
+
+    const safeKey = ad_key.replace(/[^a-z0-9_-]/gi, '_');
+    const filename = `${safeKey}.jpg`;
+    const filePath = path.join(CREATOR_IMAGES_DIR, filename);
+
+    try {
+      if (!fs.existsSync(CREATOR_IMAGES_DIR)) fs.mkdirSync(CREATOR_IMAGES_DIR, { recursive: true });
+      fs.writeFileSync(filePath, imageBuffer);
+      const cachedPath = `/creator-images/${filename}`;
+
+      const db = readMetaAdsDb();
+      const idx = db.ads.findIndex(a => a._key === ad_key);
+      if (idx >= 0 && !db.ads[idx].cached_thumbnail) {
+        db.ads[idx].cached_thumbnail = cachedPath;
+        writeMetaAdsDb(db);
+      }
+
+      res.json({ success: true, cached_thumbnail: cachedPath });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // ── META ADS IMPORT ────────────────────────────────────────────────────────
   // Client sends raw CSV as text body; platform_id comes as query param.
   app.post('/api/meta-ads/import', express.text({ limit: '10mb' }), async (req, res) => {
@@ -270,6 +352,58 @@ export async function registerRoutes(
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
+  });
+
+  // ── BACKFILL THUMBNAILS ────────────────────────────────────────────────────
+  // POST /api/meta-ads/backfill-thumbnails
+  // Processes all ads in meta_ads.json that have a video_url or image_url but
+  // no cached_thumbnail. Run this on Replit while Meta CDN URLs are still fresh.
+  // Streams progress as newline-delimited JSON so the client can show live updates.
+  app.post('/api/meta-ads/backfill-thumbnails', async (req, res) => {
+    const db = readMetaAdsDb();
+
+    // Candidates: have a media URL but no cached thumbnail
+    const candidates = db.ads.filter(a =>
+      !a.cached_thumbnail && (a.video_url || a.image_url)
+    );
+
+    res.setHeader('Content-Type', 'application/x-ndjson');
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.flushHeaders();
+
+    const write = (obj: object) => res.write(JSON.stringify(obj) + '\n');
+    write({ type: 'start', total: candidates.length });
+
+    let done = 0;
+    let succeeded = 0;
+    let failed = 0;
+
+    for (const ad of candidates) {
+      const slug = `${ad.creator_handle}_${ad.library_id}`.replace(/[^a-z0-9_-]/gi, '_');
+      let result: string | null = null;
+
+      if (ad.video_url) {
+        result = await extractVideoThumbnail(ad.video_url, slug);
+      } else if (ad.image_url) {
+        result = await cacheCreatorImage(ad.image_url, slug);
+      }
+
+      if (result) {
+        ad.cached_thumbnail = result;
+        succeeded++;
+      } else {
+        failed++;
+      }
+
+      done++;
+      if (done % 10 === 0 || done === candidates.length) {
+        write({ type: 'progress', done, total: candidates.length, succeeded, failed });
+      }
+    }
+
+    writeMetaAdsDb(db);
+    write({ type: 'done', done, succeeded, failed });
+    res.end();
   });
 
   if (process.env.NODE_ENV === 'production') {
