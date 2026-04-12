@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="psxjJRQO8N2aiKiN3OykC3RmQlqtfuCYnz56+tm6x0KQ0oNDMYme6TP814Ab5H1341LzHzsCR5+hEtBCsK6JiA==" />
+</head>
+
+<body>
+
+      <noscript>
+    <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1417710753125927&ev=PageView&noscript=1" />
+  </noscript>
+  <script>
+    ! function(f, b, e, v, n, t, s) {
+      if (f.fbq) return;
+      n = f.fbq = function() {
+        n.callMethod ?
+          n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n;
+      n.push = n;
+      n.loaded = !0;
+      n.version = '2.0';
+      n.queue = [];
+      t = b.createElement(e);
+      t.async = !0;
+      t.src = v;
+      s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', "1417710753125927");
+      fbq('track', 'PageView');
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7DN08PNNR5"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', "G-7DN08PNNR5");
+  </script>
+
+
+  <script>
+    window.return_url = "https://www.amazon.com/shop/disneyfoodblog/list/W45FJ7FVQFES?ccs_id=bf62cc48-4813-4059-8fb9-5f8d4c7ea3ec&linkCode=ll2&tag=dfbcom-facebook-dfbsitevisitors-amazon-hoka-lal-ug-20&linkId=d552b183c57c5ed01e7776c625ccdba8&language=en_US&ref_=as_li_ss_tl"
+
+    setTimeout(function() {
+      window.location = window.return_url
+    }, 300);
+  </script>
+
+</body>
+</html>

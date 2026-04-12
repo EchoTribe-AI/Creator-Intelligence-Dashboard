@@ -1884,22 +1884,41 @@ function MainDashboard() {
   const [loadingMsg, setLoadingMsg] = useState("");
 
   useEffect(() => {
-    const sources = [
-      { file: '/shared/markable-ads.csv', platform: 'markable' },
-      { file: '/shared/urlgenius-ads.csv', platform: 'urlgenius' },
-      { file: '/shared/mavely-ads.csv', platform: 'mavely' },
-    ];
+    const platforms = ['markable', 'urlgenius', 'mavely', 'creator-finds-iq'];
 
     Promise.all(
-      sources.map(({ file, platform }) =>
-        fetch(file)
-          .then(r => r.ok ? r.text() : '')
-          .then(csv => {
-            if (!csv) return [];
-            const { data } = Papa.parse(csv, { header: true, skipEmptyLines: true });
-            const normalized = (data as any[]).map(normalizeCsvRow);
-            return buildCreatorsFromCSV(normalized, platform);
-          })
+      platforms.map(platform =>
+        fetch(`/api/meta-ads/creators?platform=${platform}`)
+          .then(r => r.ok ? r.json() : { creators: [] })
+          .then(({ creators: summaries }: { creators: any[] }) =>
+            (summaries || []).map((s: any) => {
+              const id = s.handle.toLowerCase().replace(/^@/, '');
+              const hasVideo = s.video_count > 0;
+              const hasStatic = s.static_count > 0;
+              const adType = hasVideo && hasStatic ? 'mixed' : hasVideo ? 'video' : 'static';
+              const niche = inferNiche(id, '');
+              return {
+                id,
+                name: formatCreatorName((s.display_name && s.display_name !== 'This ad has multiple versions') ? s.display_name : id),
+                handle: s.handle.startsWith('@') ? s.handle : `@${s.handle}`,
+                niche,
+                tone: 'Authentic, relatable',
+                audience: 'Women 25–45',
+                color: assignColor(id),
+                emoji: assignEmoji(id, ''),
+                profileImage: s.profile_image_url || null,
+                facebookPage: s.facebook_page_url || null,
+                platform,
+                totalAds: s.ad_count,
+                adType,
+                existingAds: [],
+                products: inferProducts(niche),
+                metaData: { top_creative_type: adType === 'video' ? 'video' : 'static', active_ad_count: s.ad_count },
+                walmartData: { top_category: 'General', avg_commission_rate: '8%' },
+                amazonData: { top_category: 'General', avg_commission_rate: '8%' },
+              };
+            })
+          )
           .catch(() => [])
       )
     ).then(results => {
@@ -2171,6 +2190,36 @@ function MainDashboard() {
     loadSavedProducts(creator.id);
     loadSavedGenerations(creator.id);
     loadFavorites(creator.id);
+
+    if (creator.existingAds.length === 0) {
+      const handle = creator.handle.replace(/^@/, '');
+      fetch(`/api/meta-ads/search?platform=${creator.platform}&creator=${handle}&limit=100`)
+        .then(r => r.ok ? r.json() : { ads: [] })
+        .then(({ ads }: { ads: any[] }) => {
+          const mappedAds = ads.map((ad: any) => ({
+            started: ad.start_date || '',
+            copy: ad.ad_copy || '',
+            hasVideo: ad.ad_type === 'video',
+            hasStatic: ad.ad_type === 'static',
+            videoUrl: ad.video_url || null,
+            imageUrl: ad.image_url || null,
+            cached_thumbnail: ad.cached_thumbnail || null,
+            shopUrl: ad.cta_url || null,
+            landing_url: ad.landing_url || null,
+            libraryId: ad.library_id || '',
+          }));
+          setSelectedCreator((prev: any) =>
+            prev && prev.id === creator.id ? { ...prev, existingAds: mappedAds } : prev
+          );
+          setCreators((prev: any[]) =>
+            prev.map(c => c.id === creator.id && c.platform === creator.platform
+              ? { ...c, existingAds: mappedAds }
+              : c
+            )
+          );
+        })
+        .catch(e => console.warn('Could not lazy-load ads:', e));
+    }
   };
 
   const generateContent = async (product) => {
@@ -2476,9 +2525,10 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
   };
 
   const PLATFORM_LABELS: Record<string, { label: string; color: string }> = {
-    markable:  { label: '✨ Markable',  color: '#C084FC' },
-    urlgenius: { label: '🔗 URLGenius', color: '#34D399' },
-    mavely:    { label: '🎯 Mavely',    color: '#F472B6' },
+    markable:           { label: '✨ Markable',        color: '#C084FC' },
+    urlgenius:          { label: '🔗 URLGenius',       color: '#34D399' },
+    mavely:             { label: '🎯 Mavely',          color: '#F472B6' },
+    'creator-finds-iq': { label: '🔍 Creator Finds IQ', color: '#FB923C' },
   };
 
   const filteredCreators = creators
@@ -2607,13 +2657,13 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
               </div>
 
               <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
-                {[["all","All Brands"], ["markable","✨ Markable"], ["urlgenius","🔗 URLGenius"], ["mavely","🎯 Mavely"]].map(([val, label]) => (
+                {[["all","All Brands"], ["markable","✨ Markable"], ["urlgenius","🔗 URLGenius"], ["mavely","🎯 Mavely"], ["creator-finds-iq","🔍 Creator Finds IQ"]].map(([val, label]) => (
                   <button key={val} style={S.btnFilter(filterPlatform === val)} onClick={() => setFilterPlatform(val)}>{label}</button>
                 ))}
               </div>
 
               <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
-                {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"]].map(([val, label]) => (
+                {[["all","All Creators"], ["video","Video Only"], ["static","Static Only"], ["mixed","Mixed"], ["thumbnail-missing","Thumbnail Missing"]].map(([val, label]) => (
                   <button key={val} style={S.btnFilter(filterType === val)} onClick={() => setFilterType(val)}>{label}</button>
                 ))}
               </div>
@@ -2800,7 +2850,7 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
           {/* ── EXISTING ADS ── */}
           <div style={S.sectionLabel}>Existing Ads — Click to Generate AI Ad Variations</div>
           {selectedCreator.existingAds.slice(0, visibleAdsCount).map((ad, i) => {
-            const adProductName = ad.copy.substring(0, 50).replace(/[^\w\s]/g, '').trim() || 'Ad Creative';
+            const adProductName = (ad.copy || selectedCreator.name || 'Ad Creative').substring(0, 50).replace(/[^\w\s]/g, '').trim() || 'Ad Creative';
             const adProduct = {
               name: adProductName,
               category: selectedCreator.niche || 'General',
@@ -2814,23 +2864,52 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
             const existingFlag = adFlags[flagKey];
             return (
             <div key={i} style={{ ...S.adRow, display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
-              <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
+              <div style={{ flexShrink: 0, width: "100px", height: "133px", background: "#f3f4f6", borderRadius: "8px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", position: "relative" }}>
+                {/* Emoji fallback always rendered behind — visible when image/video fails */}
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "24px" }}>
+                  {ad.videoUrl ? "📹" : "🖼️"}
+                </div>
                 {(() => {
-                  const thumbSrc = ad.cached_thumbnail || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null);
-                  return ad.videoUrl && ad.videoUrl !== 'null' ? (
-                    <video
-                        src={ad.videoUrl}
-                        poster={thumbSrc ?? undefined}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        preload="metadata"
-                        playsInline
-                        muted
-                      />
-                  ) : thumbSrc ? (
-                    <img src={thumbSrc} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Ad thumbnail" />
-                  ) : (
-                    <div style={{ color: "#9ca3af", fontSize: "20px" }}>{ad.hasVideo ? "📹" : "🖼️"}</div>
-                  );
+                  const thumbSrc = ad.cached_thumbnail
+                    || (ad.imageUrl && ad.imageUrl !== 'null' ? ad.imageUrl : null)
+                    || selectedCreator.profileImage
+                    || null;
+                  const hasVideo = !!(ad.videoUrl && ad.videoUrl !== 'null');
+                  if (thumbSrc) {
+                    return (
+                      <>
+                        <img
+                          src={thumbSrc}
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                          alt="Ad thumbnail"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {hasVideo && (
+                          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "28px", height: "28px", background: "rgba(0,0,0,0.55)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 1 }}>
+                            <div style={{ width: 0, height: 0, borderStyle: "solid", borderWidth: "6px 0 6px 11px", borderColor: "transparent transparent transparent white", marginLeft: "2px" }} />
+                          </div>
+                        )}
+                      </>
+                    );
+                  }
+                  if (hasVideo) {
+                    return (
+                      <>
+                        <video
+                          src={ad.videoUrl!}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.001; }}
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "28px", height: "28px", background: "rgba(0,0,0,0.55)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 1 }}>
+                          <div style={{ width: 0, height: 0, borderStyle: "solid", borderWidth: "6px 0 6px 11px", borderColor: "transparent transparent transparent white", marginLeft: "2px" }} />
+                        </div>
+                      </>
+                    );
+                  }
+                  return null;
                 })()}
               </div>
               <div style={{ flex: "1 1 250px", minWidth: 0 }}>

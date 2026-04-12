@@ -1,70 +1,168 @@
-# Markable — Creator Commerce Content Generator
+# EchoTribe — Creator Intelligence Dashboard
 
 ## Overview
 
-Markable is a creator commerce platform that helps generate ad content for Amazon affiliate creators. It scrapes Amazon product data, analyzes creator ad styles from Meta Ad Library data, and uses Claude (Anthropic) AI to generate personalized ad copy variations matching each creator's tone and audience.
+EchoTribe is a creator commerce intelligence platform for analyzing Facebook/Meta ad activity across affiliate marketing platforms. It ingests ad library CSV exports from four affiliate platforms (Markable, URLGenius, Mavely, Creator Finds IQ), de-duplicates them into a unified database, and presents a searchable creator dashboard showing ad copy, thumbnails, and performance signals.
 
-The app is a full-stack TypeScript project with a React SPA frontend and Express backend. It includes an Amazon product scraper (via Crawlbase), a storefront photo scraper, persistent product history, and an AI content generation engine powered by the Anthropic API.
+The app is a full-stack TypeScript project with a React SPA frontend and Express backend. No database — all ad data is stored in a flat JSON file (`server/data/meta_ads.json`).
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
+---
+
 ## System Architecture
 
 ### Frontend
 - **Framework**: React 18 with TypeScript, single-page application
-- **Routing**: No router library — screen state is managed via `useState` in `App.tsx` (screens like "dashboard", "generator", etc.)
-- **Styling**: Tailwind CSS with a custom dark brand theme (Markable coral/red `#FF3B3B` accent on near-black `#0A0A0A` background). CSS variables defined in `client/src/index.css`
-- **UI Components**: shadcn/ui (new-york style) with Radix UI primitives. Components live in `client/src/components/ui/`
-- **Data Fetching**: TanStack React Query for server state, plus direct `fetch` calls to backend API
+- **Routing**: No router library — screen state is managed via `useState` in `App.tsx`
+- **Styling**: Tailwind CSS with dark brand theme. CSS variables defined in `client/src/index.css`
+- **UI Components**: shadcn/ui (new-york style) with Radix UI primitives in `client/src/components/ui/`
+- **Data Fetching**: TanStack React Query v5 for server state; `apiRequest` from `@lib/queryClient` for mutations
 - **Build Tool**: Vite with React plugin, outputs to `dist/public`
-- **Path Aliases**: `@/` maps to `client/src/`, `@shared/` maps to `shared/`
+- **Path Aliases**: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `attached_assets/`
 
 ### Backend
 - **Framework**: Express.js on Node with TypeScript (run via `tsx`)
-- **Entry Point**: `server/index.ts` → registers routes, serves static files in production, uses Vite dev server in development
-- **API Routes**: Defined in `server/routes.ts` — includes Anthropic proxy, product scraping, storefront scraping, and product CRUD
-- **Anthropic Proxy**: `/api/anthropic/v1/messages` — proxies requests to Claude API using server-side `ANTHROPIC_API_KEY` secret
-- **Amazon Scraper**: `server/scraper.js` — uses Crawlbase JS token to fetch rendered Amazon pages, then parses with Cheerio. Handles affiliate URL resolution, ASIN extraction, and product detail extraction
-- **Storefront Scraper**: Also in `server/scraper.js` — scrapes Amazon influencer storefront photo pages for bulk product discovery
-- **Standalone Scraper API**: `server/scraper-api.js` exists as a standalone Express server (port 3001) but the main app integrates scraping directly into `server/routes.ts`
+- **Entry Point**: `server/index.ts` → registers routes, serves static files in production, uses Vite dev middleware in development
+- **API Routes**: `server/routes.ts`
+  - `GET /api/meta-ads/creators?platform=` — returns creator summaries for a platform
+  - `GET /api/meta-ads/search?platform=&creator=&ad_type=&q=&limit=&offset=` — filtered ad search, returns full `MetaAd[]` with `cached_thumbnail`
+  - `GET /api/meta-ads/stats` — platform/creator/ad counts
+  - `POST /api/meta-ads/import?platform_id=` — import a CSV (body = raw CSV text)
+- **CSV Parser / DB layer**: `server/services/csv-parser.ts` — all ad data CRUD, CSV ingestion, image caching logic
 
 ### Data Storage
-- **Primary Storage (Products)**: JSON file at `server/data/products.json` — simple file-based persistence for scraped product history. Managed by `server/db.js` with upsert-by-ASIN+creatorId logic
-- **User Storage**: In-memory `MemStorage` class in `server/storage.ts` — stores users in a Map (not persistent across restarts)
-- **Database Schema (Drizzle/PostgreSQL)**: `shared/schema.ts` defines a `users` table with Drizzle ORM targeting PostgreSQL. The `drizzle.config.ts` requires `DATABASE_URL` env var. This is set up but the app currently uses in-memory storage for users — Postgres can be provisioned and connected
-- **Schema Push**: `npm run db:push` runs `drizzle-kit push` to sync schema to database
+- **Ad Data**: `server/data/meta_ads.json` — flat JSON with `{ ads: MetaAd[], last_import, import_log }`
+- **Platform Config**: `server/data/platforms.json` — list of 4 platform definitions (id, name, color, logo, description)
+- **No SQL database** — everything is file-based
 
-### Creator Data
-- Creator profiles (name, niche, tone, audience, existing ad samples) are hardcoded in `client/src/App.tsx` as the `CREATORS` array
-- Each creator includes placeholder fields for Meta Ads API data and Amazon Associates API data (marked as `CONNECT_META_API` / `CONNECT_AFFILIATE_API`)
-- Products per creator are also defined in the hardcoded data, with scraped product details augmenting them at runtime
+---
 
-### Build & Deploy
-- **Dev**: `npm run dev` — runs `tsx server/index.ts` with Vite dev middleware for HMR
-- **Build**: `npm run build` — runs `script/build.ts` which builds client with Vite and bundles server with esbuild into `dist/index.cjs`
-- **Production**: `npm start` — runs `node dist/index.cjs`, serves static files from `dist/public`
-- Server dependencies are selectively bundled (allowlisted) during build to reduce cold start syscalls
+## Data Model
 
-## External Dependencies
+### MetaAd (fields in `server/services/csv-parser.ts`)
+```
+_key                string   "${platform_id}_${library_id}"  (dedup key)
+library_id          string   Meta Ad Library ID
+platform_id         string   "markable" | "urlgenius" | "mavely" | "creator_finds_iq"
+creator_handle      string   slug from FB URL (no @ prefix)
+creator_display_name string  formatted handle
+profile_image_url   null     always null (not in current CSV format)
+facebook_page_url   string|null
+ad_copy             string   "Ad Details" column
+video_url           string|null
+image_url           string|null  "Content Image URL" column (see KNOWN ISSUES)
+cta_url             string|null
+cached_thumbnail    string|null  local path e.g. /creator-images/{slug}.jpg
+landing_url         string|null  decoded CTA destination (strips FB redirect wrapper)
+ad_type             "video"|"static"  video if Video URL non-empty
+start_date          string
+imported_at         string   ISO timestamp
+```
 
-### APIs & Services
-- **Anthropic Claude API**: Used for AI content generation. Server proxies requests to avoid exposing API key. Requires `ANTHROPIC_API_KEY` in environment/secrets
-- **Crawlbase**: JavaScript rendering API for scraping Amazon product pages and storefront photos. Requires `CRAWLBASE_JS_TOKEN` in environment/secrets. Uses JS token with wait/ajax parameters for dynamic content
-- **Meta Marketing API**: Placeholder integration for pulling creator ad spend, CPC, CPM, CTR data. Not yet connected — fields marked `CONNECT_META_API`
-- **Amazon Associates API**: Placeholder integration for affiliate earnings, clicks, orders. Not yet connected — fields marked `CONNECT_AFFILIATE_API`
+---
 
-### Database
-- **PostgreSQL**: Configured via Drizzle ORM with `DATABASE_URL` environment variable. Currently only has a `users` table schema. The app can function without it (uses in-memory storage) but is ready for Postgres provisioning
+## Ad Data — Current State (as of April 2026)
 
-### Key NPM Packages
-- `express` — HTTP server
-- `axios` — HTTP client for scraping and API calls
-- `cheerio` — HTML parsing for Amazon scraping
-- `drizzle-orm` + `drizzle-kit` + `drizzle-zod` — ORM and schema management
-- `@tanstack/react-query` — client-side data fetching/caching
-- `@radix-ui/*` — UI primitive components (via shadcn/ui)
-- `tailwindcss` — utility-first CSS
-- `zod` — schema validation
-- `connect-pg-simple` — PostgreSQL session store (available but not actively used)
+### Single CSV Source
+- File: `creatorads_001.csv` (not tracked in git — must be re-provided to re-import)
+- 2,341 de-duplicated ads across 4 platforms
+- 289 unique creators
+
+### Platform Breakdown
+| Platform | Notes |
+|---|---|
+| Markable | Largest dataset; "Content Image URL" column contains Facebook profile picture URLs (60×60), NOT ad creative images |
+| URLGenius | **COLUMN MISMATCH** — CSV columns are shifted/mixed up; "Content Image URL" column is mapping to the wrong data. Needs re-export with correct column alignment. |
+| Mavely | Mavely-format CSVs use CSS class names as column headers (not readable labels); `normalizeRow()` in csv-parser.ts handles the mapping |
+| Creator Finds IQ | Smallest dataset |
+
+### Thumbnail / Image Cache — Current State
+- **`public/creator-images/`** — local static image cache, served by Vite at `/creator-images/*.jpg`
+- **459 valid cached files** (down from original 1,072 claimed)
+  - 454 are Facebook profile pictures (60×60 px) — these display but are not ad creative images
+  - 5 are from other non-image URL types (near-zero utility)
+- **608 files were purged** — they were 0-byte empty files created when the import script tried to download CTA redirect links (`l.facebook.com/l.php?u=...`) as if they were images. Now fixed.
+- **975 video-only ads** — no cached thumbnail; displayed via `<video preload="metadata">` with first-frame seek to `0.001s`
+- **~496 static ads** — no cached thumbnail; show emoji fallback
+
+### Facebook CDN URL Expiry
+- Facebook CDN URLs (both video and image) contain an `oe=` param (Unix hex timestamp) and expire ~April 13, 2026
+- The 459 locally-cached image files persist after expiry since they are saved to disk
+- The 975 video `video_url` values will stop working after expiry — no local cache exists for video frames
+- Fix: use `ffmpeg` (available at `/nix/store/.../bin/ffmpeg`) to extract first frames from video URLs and save as `.jpg` before expiry
+
+---
+
+## Thumbnail Rendering Logic (App.tsx)
+
+Priority chain for each ad card:
+1. `ad.cached_thumbnail` — local `/creator-images/` path (served as static file)
+2. `ad.imageUrl` (remote Facebook CDN — will expire April 13)
+3. `selectedCreator.profileImage` — always `null` in current data
+4. `<video preload="metadata">` element with `onLoadedMetadata` seek to `0.001s` (for video ads)
+5. Emoji fallback (📹 or 🖼️) for ads with no media at all
+
+### Image Validation Fix (April 2026)
+`cacheCreatorImage()` in `csv-parser.ts` now:
+- Skips Facebook redirect URLs (`l.facebook.com`, `/l.php`)
+- Validates `Content-Type: image/*` header before saving
+- Rejects 3xx redirects
+- Validates JPEG/PNG magic bytes after download
+- Re-validates existing cached files on next import (deletes corrupt/empty files)
+
+---
+
+## Import Pipeline
+
+### Bulk import script: `import-meta-ads.js`
+- Run from project root: `node import-meta-ads.js`
+- Reads `creatorads_001.csv` from project root
+- De-duplicates by `_key = ${platform_id}_${library_id}`
+- For each static ad with `image_url`, calls `cacheCreatorImage()` to download and save locally
+- Outputs `server/data/meta_ads.json`
+
+### Per-platform CSV import (via UI or API)
+- `POST /api/meta-ads/import?platform_id=markable` with CSV body
+- Handled by `importCSV()` in `csv-parser.ts`
+- Max 1,000 ads stored per platform
+
+---
+
+## Known Issues / Next Steps
+
+1. **URLGenius column mismatch** — The URLGenius CSV export has columns in the wrong order or uses different header names than expected. The `normalizeRow()` function maps Mavely-style CSS class columns, but URLGenius may be exporting with shifted/incorrect column alignment. Need to compare a raw URLGenius CSV export against the column mapping to identify which fields are swapped.
+
+2. **Static ad thumbnails show profile pics instead of product images** — The "Content Image URL" column in Markable CSVs contains the Facebook Page's profile photo URL (60×60px) rather than the actual ad creative image. To show real product/creative thumbnails, the CSV export needs to capture the ad creative image URL (Meta Ad Library shows this as the main image in the ad card).
+
+3. **Video thumbnail expiry (April 13, 2026)** — All 975 `video_url` values are Facebook CDN links that expire. Plan: run `ffmpeg -i <video_url> -vframes 1 output.jpg` for each video ad before expiry to cache first frames locally. `ffmpeg` is available in the Nix environment.
+
+4. **`profile_image_url` always null** — The unified CSV format has no profile image column. Creator cards show a letter-based avatar fallback instead of a real photo. Could be sourced from the `_raw_image_src` / `_8nqq src` column in Mavely-format CSVs if re-imported.
+
+---
+
+## File Structure
+
+```
+client/src/App.tsx          Main SPA — all UI, routing, creator dashboard, ad gallery
+server/index.ts             Express entry point
+server/routes.ts            All API route handlers
+server/services/
+  csv-parser.ts             CSV parsing, data model, image caching, queryAds, getCreators
+server/data/
+  meta_ads.json             Ad database (2,341 ads, 289 creators)
+  platforms.json            Platform definitions (4 platforms)
+public/creator-images/      Locally cached ad/profile images (~19MB, 459 valid files)
+import-meta-ads.js          Bulk CSV import script (run with node)
+```
+
+---
+
+## Build & Deploy
+
+- **Dev**: `npm run dev` — Express + Vite dev middleware, port 5000
+- **Build**: `npm run build` — Vite client build + esbuild server bundle → `dist/`
+- **Production**: `npm start` — serves `dist/public` as static, runs `dist/index.cjs`
+- **Routes**: `/danny` and `/brands` serve `index.html` in production (SPA catch-all)

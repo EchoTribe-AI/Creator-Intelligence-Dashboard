@@ -151,26 +151,54 @@ export function extractLandingUrl(rawUrl: string | null): string | null {
 /**
  * Fetch an image from imageUrl and save it to CREATOR_IMAGES_DIR/{slug}.jpg.
  * Returns the public URL path /creator-images/{slug}.jpg on success, null on failure.
- * Idempotent: skips the fetch if the file already exists.
+ * Idempotent: skips the fetch if the file already exists and is a valid image.
+ * Rejects redirect wrappers (l.facebook.com/l.php) and validates JPEG/PNG magic bytes.
  */
 export async function cacheCreatorImage(imageUrl: string, slug: string): Promise<string | null> {
   if (!imageUrl || !imageUrl.trim()) return null;
+  const trimmed = imageUrl.trim();
+
+  // Skip Facebook redirect wrapper URLs — they are CTA links, not images
+  if (trimmed.includes('l.facebook.com') || trimmed.includes('/l.php')) return null;
+  // Skip non-http URLs
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) return null;
+
   try {
     if (!fs.existsSync(CREATOR_IMAGES_DIR)) {
       fs.mkdirSync(CREATOR_IMAGES_DIR, { recursive: true });
     }
     const filename = `${slug}.jpg`;
     const filePath = path.join(CREATOR_IMAGES_DIR, filename);
+
+    // If cached file exists, validate it is a real image before trusting it
     if (fs.existsSync(filePath)) {
-      return `/creator-images/${filename}`;
+      const stat = fs.statSync(filePath);
+      if (stat.size > 0) {
+        const buf = Buffer.alloc(4);
+        const fd = fs.openSync(filePath, 'r');
+        fs.readSync(fd, buf, 0, 4, 0);
+        fs.closeSync(fd);
+        const isJpeg = buf[0] === 0xFF && buf[1] === 0xD8;
+        const isPng  = buf[0] === 0x89 && buf[1] === 0x50;
+        if (isJpeg || isPng) return `/creator-images/${filename}`;
+      }
+      // Invalid cached file — delete and re-fetch
+      fs.unlinkSync(filePath);
     }
+
     await new Promise<void>((resolve, reject) => {
-      const urlObj = new URL(imageUrl.trim());
+      const urlObj = new URL(trimmed);
       const client = urlObj.protocol === 'https:' ? https : http;
       const req = client.get(urlObj, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
-        if (res.statusCode && res.statusCode >= 400) {
+        if (res.statusCode && (res.statusCode >= 400 || res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 303)) {
           res.resume();
           reject(new Error(`HTTP ${res.statusCode}`));
+          return;
+        }
+        const contentType = res.headers['content-type'] ?? '';
+        if (!contentType.startsWith('image/')) {
+          res.resume();
+          reject(new Error(`Not an image: ${contentType}`));
           return;
         }
         const fileStream = fs.createWriteStream(filePath);
@@ -181,7 +209,20 @@ export async function cacheCreatorImage(imageUrl: string, slug: string): Promise
       req.on('error', reject);
       req.setTimeout(10000, () => { req.destroy(); reject(new Error('timeout')); });
     });
-    return `/creator-images/${filename}`;
+
+    // Final validation: confirm the saved file is a real image
+    const stat = fs.statSync(filePath);
+    if (stat.size > 0) {
+      const buf = Buffer.alloc(4);
+      const fd = fs.openSync(filePath, 'r');
+      fs.readSync(fd, buf, 0, 4, 0);
+      fs.closeSync(fd);
+      const isJpeg = buf[0] === 0xFF && buf[1] === 0xD8;
+      const isPng  = buf[0] === 0x89 && buf[1] === 0x50;
+      if (isJpeg || isPng) return `/creator-images/${filename}`;
+    }
+    fs.unlink(filePath, () => {});
+    return null;
   } catch (err: any) {
     console.warn(`[image-cache] Failed to cache image for ${slug}: ${err.message}`);
     return null;

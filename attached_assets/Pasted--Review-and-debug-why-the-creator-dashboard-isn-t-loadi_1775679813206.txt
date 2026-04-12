@@ -1,0 +1,32 @@
+ Review and debug why the creator dashboard isn't loading any data.            
+                                                                                
+  The dashboard fetches creator data in client/src/App.tsx around line
+  1886–1910. It tries to load 3 CSV files from /shared/markable-ads.csv,        
+  /shared/urlgenius-ads.csv, /shared/mavely-ads.csv via fetch(). These paths
+  don't exist — that's why nothing shows up.                                    
+                  
+  The server already has everything wired up correctly:                         
+  - server/data/meta_ads.json contains 1,558 pre-imported ads (781 Markable, 707
+   URLGenius, 70 Mavely)                                                        
+  - server/services/csv-parser.ts reads that file and exposes these endpoints:
+    - GET /api/meta-ads/creators?platform=markable → returns CreatorSummary[]   
+    - GET /api/meta-ads/search?platform=markable&creator=<handle> → returns     
+  individual ads                                                                
+    - GET /api/meta-ads/stats → returns totals                                  
+                                                                                
+  The fix: Replace the CSV fetch() block in App.tsx (~line 1886–1910) with calls
+   to /api/meta-ads/creators?platform=X for each of the 3 platforms. Map the API
+   response (CreatorSummary) into the same creator shape that                   
+  buildCreatorsFromCSV currently produces — same fields: id, name, handle,      
+  profileImage, facebookPage, platform, totalAds, adType, existingAds, etc. The
+  helper functions formatCreatorName, assignColor, assignEmoji, inferNiche,
+  inferProducts are all already defined in the file and should still be used.
+
+  For existingAds, either call                                                  
+  /api/meta-ads/search?platform=X&creator=<handle>&limit=100 per creator, or
+  lazy-load them when a creator card is clicked. Lazy-loading is preferred to   
+  avoid 200+ parallel requests.
+
+  Verify the fix works by confirming creator cards appear for all 3 platforms on
+   the dashboard.
+                     
