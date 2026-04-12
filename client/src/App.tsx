@@ -1834,6 +1834,7 @@ function MainDashboard() {
   const [visibleCreatorCount, setVisibleCreatorCount] = useState(10);
   const [visibleAdsCount, setVisibleAdsCount] = useState(6);
   const [selectedCreator, setSelectedCreator] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [scrapedProduct, setScrapedProduct] = useState(null);
   const [generatedContent, setGeneratedContent] = useState(null);
@@ -2541,9 +2542,17 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
     'creator-finds-iq': { label: '🔍 Creator Finds IQ', color: '#FB923C' },
   };
 
+  const globalSearch = searchQuery.trim().toLowerCase();
+  const isGlobalSearchActive = globalSearch.length > 0;
   const filteredCreators = creators
     .filter((c: any) => filterType === "all" || c.adType === filterType)
-    .filter((c: any) => filterPlatform === "all" || c.platform === filterPlatform);
+    .filter((c: any) => filterPlatform === "all" || c.platform === filterPlatform)
+    .filter((c: any) => {
+      if (!isGlobalSearchActive) return true;
+      return [c.name, c.handle, c.niche, c.audience]
+        .filter(Boolean)
+        .some((value: string) => value.toLowerCase().includes(globalSearch));
+    });
 
   const visibleCreators = filteredCreators.slice(0, visibleCreatorCount);
 
@@ -2666,6 +2675,24 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                 </div>
               </div>
 
+              <div style={{ marginBottom: "16px" }}>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search creators across all brands..."
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                    border: "1px solid #E0DDD8",
+                    background: "#FFFFFF",
+                    fontSize: "14px",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
               <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
                 {[["all","All Brands"], ["markable","✨ Markable"], ["urlgenius","🔗 URLGenius"], ["mavely","🎯 Mavely"], ["creator-finds-iq","🔍 Creator Finds IQ"]].map(([val, label]) => (
                   <button key={val} style={S.btnFilter(filterPlatform === val)} onClick={() => setFilterPlatform(val)}>{label}</button>
@@ -2684,9 +2711,34 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                   const platform = PLATFORM_LABELS[c.platform];
                   return (
                     <div key={c.id} className="cc" style={{ ...S.card, borderLeft: `3px solid ${c.color}` }} onClick={() => selectCreator(c)}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+                        <div style={{ fontSize: "22px" }}>{c.emoji}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                            <div style={{ fontSize: "15px", fontWeight: "700", color: "#1A1A1A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
+                              {c.name}
+                            </div>
+                            {c.facebookPage && (
+                              <a
+                                href={c.facebookPage}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                style={{ fontSize: "14px", color: "#C9A96E", textDecoration: "none", flexShrink: 0 }}
+                                title="Visit Facebook profile"
+                              >
+                                ↗
+                              </a>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#888", marginBottom: "2px" }}>@{c.handle}</div>
+                          {c.latest_ad_date && (
+                            <div style={{ fontSize: "11px", color: "#999999" }}>Latest: {c.latest_ad_date}</div>
+                          )}
+                        </div>
+                      </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div style={{ fontSize: "22px" }}>{c.emoji}</div>
                           {platform && (
                             <span style={{ fontSize: "11px", fontWeight: "700", color: platform.color, background: `${platform.color}15`, padding: "2px 8px", borderRadius: "20px" }}>
                               {platform.label}
@@ -2698,7 +2750,6 @@ Return ONLY a JSON array (no markdown) of 3 boost recommendations that specifica
                           <span style={{ ...S.tag, background: `${c.color}20`, color: c.color }}>{c.totalAds} ads</span>
                         </div>
                       </div>
-                      <div style={{ fontSize: "15px", fontWeight: "700", marginBottom: "3px" }}>{c.name}</div>
                       <div style={{ fontSize: "12px", color: "#888", marginBottom: "10px" }}>{c.niche} · {c.audience}</div>
                       <div style={{ fontSize: "12px", color: "#999999" }}>Click to explore → generate variations, calendar, boost plan</div>
                     </div>
