@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Papa from 'papaparse';
+import MultiBrandIntelligence from './pages/multi-brand-intelligence';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DANNY PAGE COMPONENTS & DATA
@@ -1789,13 +1790,22 @@ export default function App() {
     };
   }, []);
 
-  const isDannyRoute = pathname === '/danny' || 
-    window.location.pathname === '/danny' || 
+  const isDannyRoute = pathname === '/danny' ||
+    window.location.pathname === '/danny' ||
     window.location.hash === '#danny' ||
     window.location.search.includes('page=danny');
 
+  const isBrandsRoute = pathname === '/brands' ||
+    pathname === '/brands/' ||
+    window.location.pathname === '/brands' ||
+    window.location.pathname === '/brands/';
+
   if (isDannyRoute) {
     return <DannyPage />;
+  }
+
+  if (isBrandsRoute) {
+    return <MultiBrandIntelligence />;
   }
 
   return <MainDashboard />;
