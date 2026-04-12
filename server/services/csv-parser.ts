@@ -1,8 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+import { execFile, exec } from 'child_process';
+import { promisify } from 'util';
 import Papa from 'papaparse';
 import https from 'https';
 import http from 'http';
+
+const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,7 +103,7 @@ function ensureMetaAdsDb(): void {
   }
 }
 
-function readMetaAdsDb(): MetaAdsDb {
+export function readMetaAdsDb(): MetaAdsDb {
   ensureMetaAdsDb();
   try {
     const raw = fs.readFileSync(META_ADS_PATH, 'utf8');
@@ -108,7 +113,7 @@ function readMetaAdsDb(): MetaAdsDb {
   }
 }
 
-function writeMetaAdsDb(data: MetaAdsDb): void {
+export function writeMetaAdsDb(data: MetaAdsDb): void {
   ensureMetaAdsDb();
   fs.writeFileSync(META_ADS_PATH, JSON.stringify(data, null, 2));
 }
@@ -229,6 +234,91 @@ export async function cacheCreatorImage(imageUrl: string, slug: string): Promise
   }
 }
 
+// ── Video Thumbnail Extraction ───────────────────────────────────────────────
+
+let _ffmpegPath: string | null | undefined = undefined; // undefined = not yet resolved
+
+/**
+ * Locate ffmpeg on the system. Checks PATH first, then Replit's Nix store.
+ * Result is cached after first successful lookup.
+ */
+async function findFfmpeg(): Promise<string | null> {
+  if (_ffmpegPath !== undefined) return _ffmpegPath;
+  try {
+    const { stdout } = await execAsync('which ffmpeg');
+    _ffmpegPath = stdout.trim() || null;
+    if (_ffmpegPath) { console.log(`[video-thumb] ffmpeg found at ${_ffmpegPath}`); return _ffmpegPath; }
+  } catch {}
+  // Replit Nix store fallback — glob the store path
+  try {
+    const { stdout } = await execAsync('ls /nix/store/*/bin/ffmpeg 2>/dev/null | head -1');
+    const p = stdout.trim();
+    if (p && fs.existsSync(p)) {
+      _ffmpegPath = p;
+      console.log(`[video-thumb] ffmpeg found in nix store: ${_ffmpegPath}`);
+      return _ffmpegPath;
+    }
+  } catch {}
+  _ffmpegPath = null;
+  console.warn('[video-thumb] ffmpeg not found — video thumbnails will not be extracted server-side');
+  return null;
+}
+
+/**
+ * Extract the first video frame from videoUrl using ffmpeg and save as JPEG.
+ * Returns /creator-images/{slug}.jpg on success, null on failure or if ffmpeg unavailable.
+ * Idempotent: skips if a valid cached file already exists.
+ */
+export async function extractVideoThumbnail(videoUrl: string, slug: string): Promise<string | null> {
+  if (!videoUrl?.trim()) return null;
+
+  const ffmpegPath = await findFfmpeg();
+  if (!ffmpegPath) return null;
+
+  if (!fs.existsSync(CREATOR_IMAGES_DIR)) {
+    fs.mkdirSync(CREATOR_IMAGES_DIR, { recursive: true });
+  }
+
+  const filename = `${slug}.jpg`;
+  const filePath = path.join(CREATOR_IMAGES_DIR, filename);
+
+  // Already have a valid cached file
+  if (fs.existsSync(filePath) && fs.statSync(filePath).size > 500) {
+    return `/creator-images/${filename}`;
+  }
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // delete corrupt/empty
+
+  return new Promise<string | null>((resolve) => {
+    // -ss 0 -vframes 1: grab the very first decodable frame
+    // -vf scale=320:-1: resize to 320px wide, keep aspect ratio
+    // -q:v 3: good JPEG quality without large file size
+    const args = [
+      '-y',            // overwrite output
+      '-i', videoUrl,
+      '-ss', '0',
+      '-vframes', '1',
+      '-vf', 'scale=320:-1',
+      '-q:v', '3',
+      filePath,
+    ];
+    const proc = execFile(ffmpegPath, args, { timeout: 30000 }, (err) => {
+      if (err) {
+        console.warn(`[video-thumb] ffmpeg failed for ${slug}: ${err.message?.slice(0, 120)}`);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        return resolve(null);
+      }
+      if (fs.existsSync(filePath) && fs.statSync(filePath).size > 500) {
+        resolve(`/creator-images/${filename}`);
+      } else {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        resolve(null);
+      }
+    });
+    // Belt-and-suspenders timeout
+    setTimeout(() => { try { proc.kill(); } catch {} resolve(null); }, 31000);
+  });
+}
+
 // ── CSV Parsing ──────────────────────────────────────────────────────────────
 
 /**
@@ -336,12 +426,17 @@ export async function importCSV(csvText: string, platformId: string): Promise<Im
   const { ads: parsedAds, skipped } = parseMetaAdCSV(csvText, platformId);
   const db = readMetaAdsDb();
 
-  // Cache images for all ads that have an image_url
+  // Cache thumbnails for all ads at import time (while URLs are fresh)
   for (const ad of parsedAds) {
-    if (ad.image_url) {
-      const slug = ad.library_id
-        ? `${ad.creator_handle}_${ad.library_id}`.replace(/[^a-z0-9_-]/gi, '_')
-        : `${ad.creator_handle}_${Date.now()}`;
+    const slug = ad.library_id
+      ? `${ad.creator_handle}_${ad.library_id}`.replace(/[^a-z0-9_-]/gi, '_')
+      : `${ad.creator_handle}_${Date.now()}`;
+
+    if (ad.video_url) {
+      // Video ad: extract first frame via ffmpeg
+      ad.cached_thumbnail = await extractVideoThumbnail(ad.video_url, slug);
+    } else if (ad.image_url) {
+      // Static ad: download and save the image
       ad.cached_thumbnail = await cacheCreatorImage(ad.image_url, slug);
     }
   }
